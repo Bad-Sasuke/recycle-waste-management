@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <footer class="bg-[#c8edc5] text-[#0c270c] py-4">
+  <footer class="bg-[#c8edc5] text-[#0c270c] py-4 mt-auto">
     <div class="text-center">
       <p>&copy; 2024 RecycleMarket | ทุกสิทธิ์สงวน</p>
       <div class="mt-2">

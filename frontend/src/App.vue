@@ -5,7 +5,7 @@ import NavbarHeader from './components/NavbarHeader.vue'
 </script>
 
 <template>
-  <div class="font-kanit">
+  <div class="font-kanit flex flex-col min-h-screen">
     <header>
       <NavbarHeader />
     </header>

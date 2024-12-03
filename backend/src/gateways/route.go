@@ -12,7 +12,7 @@ func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 	api.Get("/get_user", gateway.GetUser)
 }
 
-func RouteIP(gateway HTTPGateway, app *fiber.App) {
-	api := app.Group("/api/ip")
-	api.Get("/check_ip", gateway.GetIp)
+func RouteRecycle(gateway HTTPGateway, app *fiber.App) {
+	api := app.Group("/api/recycle-waste")
+	api.Get("/get-wastes", gateway.GetRecycleWaste)
 }

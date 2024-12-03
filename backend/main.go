@@ -7,7 +7,6 @@ import (
 	ds "recycle-waste-management-backend/src/domain/datasources"
 	repo "recycle-waste-management-backend/src/domain/repositories"
 	"recycle-waste-management-backend/src/gateways"
-	"recycle-waste-management-backend/src/infrastructure/httpclients"
 	"recycle-waste-management-backend/src/middlewares"
 	sv "recycle-waste-management-backend/src/services"
 
@@ -37,12 +36,13 @@ func main() {
 	app.Use(middlewares.Logger())
 
 	mongodb := ds.NewMongoDB(10)
-	ipHC := httpclients.NewIPHttpClient()
-	userMongo := repo.NewUsersRepository(mongodb)
-	userSV := sv.NewUsersService(userMongo)
-	ipSV := sv.NewIpService(ipHC)
 
-	gateways.NewHTTPGateway(app, userSV, ipSV)
+	userMongo := repo.NewUsersRepository(mongodb)
+	recycleWastes := repo.NewRecyclableItemsRepository(mongodb)
+
+	userSV := sv.NewUsersService(userMongo)
+	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes)
+	gateways.NewHTTPGateway(app, userSV, recycleWasteSV)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
