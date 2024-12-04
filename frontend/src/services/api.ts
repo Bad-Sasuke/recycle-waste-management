@@ -3,14 +3,15 @@ interface ResponseAPI {
     data?: any;
 }
 
-const fetchData = async (url: string): Promise<ResponseAPI | null> => {
+const fetchData = async (url: string): Promise<ResponseAPI | string> => {
     try {
         // Make the GET request using Fetch API
         const response = await fetch(url);
 
-        // Check if the response status is OK (status code 200-299)
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
+            const data: ResponseAPI = await response.json();
+            return data.message
         }
 
         // Parse the response as JSON
@@ -20,7 +21,7 @@ const fetchData = async (url: string): Promise<ResponseAPI | null> => {
     } catch (error: any) {
         // Handle errors (e.g., network issues, invalid JSON, etc.)
         console.error("Error fetching data:", error);
-        return null; // Return null or handle the error as needed
+        return error.message;
     }
 };
 
