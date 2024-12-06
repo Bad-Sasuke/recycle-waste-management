@@ -3,18 +3,26 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import Card from './CardComponent.vue'
 import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
-import * as entities from '../types/recycle_waste'
+import type RecycleWaste from '../types/recycle_waste'
 import { IconFilter, IconTagPlus, IconTagMinus, IconCalendar, IconPlus } from '@tabler/icons-vue'
 
 const searchQuery = ref('')
 const selectedCategory = ref<string[]>([])
 const previewImage = ref('/favicon/favicon-96x96.png')
 
-const items = ref<entities.RecycleWaste[]>([])
+const items = ref<RecycleWaste[]>([])
 const isLoading = ref(true)
 const wastesStore = useWastesStore()
 const categoryWasteStore = useCategoryWasteStore()
-const formDataWaste = reactive({
+
+interface FormDataWaste {
+  name: string
+  price: string
+  category: string
+  imageFile: File | null // รองรับทั้ง File และ null
+}
+
+const formDataWaste = reactive<FormDataWaste>({
   name: '',
   price: '',
   category: 'เลือกหมวดหมู่',
@@ -39,10 +47,13 @@ const filteredItems = computed(() => {
   }
 
   return items.value.filter((item) => {
-    const matchesSearch = item.category.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesCategory =
-      selectedCategory.value.length === 0 ||
-      selectedCategory.value.includes(item.category.toLowerCase())
+    const matchesSearch = item.category
+      ? item.category.toLowerCase().includes(searchQuery.value.toLowerCase())
+      : false
+    const matchesCategory = item.category
+      ? selectedCategory.value.length === 0 ||
+        selectedCategory.value.includes(item.category?.toLowerCase())
+      : true
     return matchesSearch && matchesCategory
   })
 })
@@ -57,24 +68,24 @@ const toggleCategory = (category: string) => {
 }
 
 const sortByPrice = () => {
-  items.value.sort((a, b) => a.price - b.price)
+  items.value.sort((a, b) => (a?.price ?? 0) - (b?.price ?? 0))
 }
 const sortByPriceDesc = () => {
-  items.value.sort((a, b) => b.price - a.price)
+  items.value.sort((a, b) => (b?.price ?? 0) - (a?.price ?? 0))
 }
 
 const sortByLastUpdate = () => {
   items.value.sort((a, b) => {
-    const dateA = new Date(a.lastUpdate)
-    const dateB = new Date(b.lastUpdate)
+    const dateA = new Date(a?.lastUpdate ?? 0)
+    const dateB = new Date(b?.lastUpdate ?? 0)
     return dateB.getTime() - dateA.getTime()
   })
 }
 
 const sortByLastUpdateDesc = () => {
   items.value.sort((a, b) => {
-    const dateA = new Date(a.lastUpdate)
-    const dateB = new Date(b.lastUpdate)
+    const dateA = new Date(a.lastUpdate ?? 0)
+    const dateB = new Date(b.lastUpdate ?? 0)
     return dateA.getTime() - dateB.getTime()
   })
 }
@@ -84,21 +95,22 @@ const openModalWaste = () => {
   modal.showModal()
 }
 
-const loadFile = async (event) => {
-  const file = event.target.files[0]
+const loadFile = async (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
   if (file) {
     // สร้าง URL สำหรับไฟล์ที่อัพโหลด
     const objectURL = URL.createObjectURL(file)
     previewImage.value = objectURL
 
     // ใช้ ref เพื่ออ้างอิงไปที่ <img> และตั้ง onload ที่นั่น
-    const imgElement = document.querySelector('img')
-    imgElement.onload = () => {
-      // รีลีส URL หลังจากโหลดเสร็จ
-      URL.revokeObjectURL(objectURL) // free memory
+    const imgElement = document.getElementById('img') as HTMLImageElement | null
+    if (imgElement) {
+      imgElement.onload = () => {
+        URL.revokeObjectURL(objectURL) // free memory
+      }
     }
 
-    formDataWaste.imageFile = file
+    formDataWaste.imageFile = file as File | null
   }
 }
 
@@ -198,8 +210,12 @@ const createWaste = async () => {
           v-for="category in categoryWasteStore.category"
           :key="category.id"
         >
-          <input type="checkbox" :value="category.name" @change="toggleCategory(category.name)" />
-          <span>{{ category.name }}</span>
+          <input
+            type="checkbox"
+            :value="category.name"
+            @change="toggleCategory(category?.name ?? 'ไม่มี')"
+          />
+          <span>{{ category?.name ?? 'ไม่มี' }}</span>
         </label>
       </div>
     </div>

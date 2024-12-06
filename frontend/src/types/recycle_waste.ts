@@ -6,4 +6,3 @@ export default interface RecycleWaste {
     hours?: string;
     url?: string;
 }
-
