@@ -2,6 +2,8 @@ FROM oven/bun:alpine as builder
 
 WORKDIR /app
 
+ARG VITE_WEB_API
+
 COPY . /app
 
 RUN bun install
