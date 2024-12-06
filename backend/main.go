@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	err := godotenv.Load()
+	err := godotenv.Load(".env.local")
 	if err != nil {
 		fmt.Println("Error loading .env file")
 	}
@@ -39,9 +39,10 @@ func main() {
 
 	userMongo := repo.NewUsersRepository(mongodb)
 	recycleWastes := repo.NewRecyclableItemsRepository(mongodb)
+	categoryWasteRepo := repo.NewCategoryWasteRepository(mongodb)
 
 	userSV := sv.NewUsersService(userMongo)
-	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes)
+	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes, categoryWasteRepo)
 	gateways.NewHTTPGateway(app, userSV, recycleWasteSV)
 
 	PORT := os.Getenv("PORT")

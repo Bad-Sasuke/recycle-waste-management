@@ -15,4 +15,10 @@ func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 func RouteRecycle(gateway HTTPGateway, app *fiber.App) {
 	api := app.Group("/api/recycle-waste")
 	api.Get("/get-wastes", gateway.GetRecycleWaste)
+	api.Post("/add-waste", gateway.AddRecycleWaste)
+}
+
+func RouteCategoryWaste(gateway HTTPGateway, app *fiber.App) {
+	api := app.Group("/api/category-waste")
+	api.Get("/get-category", gateway.GetCategoryWaste)
 }

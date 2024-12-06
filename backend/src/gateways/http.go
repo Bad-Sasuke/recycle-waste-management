@@ -19,4 +19,5 @@ func NewHTTPGateway(app *fiber.App, users service.IUsersService, recWasteSV serv
 
 	RouteUsers(*gateway, app)
 	RouteRecycle(*gateway, app)
+	RouteCategoryWaste(*gateway, app)
 }

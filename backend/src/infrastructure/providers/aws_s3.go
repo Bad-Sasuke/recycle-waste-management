@@ -35,7 +35,7 @@ func (s3 *AwsS3Upload) HashString(id string) string {
 }
 
 func (s *AwsS3Upload) CreateKeyNameImage(fileName string, typeFile string) (string, string) {
-	keyName := fmt.Sprintf("images/%v.%v", strings.ToUpper(fileName), typeFile)
+	keyName := fmt.Sprintf("images/wastes/%v.%v", strings.ToUpper(fileName), typeFile)
 	contentType := fmt.Sprintf("image/%v", typeFile)
 	return keyName, contentType
 }

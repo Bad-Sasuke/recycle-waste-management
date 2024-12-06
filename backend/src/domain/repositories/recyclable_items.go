@@ -6,7 +6,6 @@ import (
 	"os"
 	ds "recycle-waste-management-backend/src/domain/datasources"
 	"recycle-waste-management-backend/src/domain/entities"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,6 +13,7 @@ import (
 
 type IRecyclableItemsRepository interface {
 	FindAll() (*[]entities.RecyclableItemsModel, error)
+	Create(data *entities.RecyclableItemsModel) error
 }
 
 type recyclableItemsRepository struct {
@@ -29,17 +29,15 @@ func NewRecyclableItemsRepository(db *ds.MongoDB) IRecyclableItemsRepository {
 }
 
 func (repo *recyclableItemsRepository) FindAll() (*[]entities.RecyclableItemsModel, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
-	cursor, err := repo.Collection.Find(ctx, bson.M{})
+	cursor, err := repo.Collection.Find(repo.Context, bson.M{})
 	if err != nil {
 		return nil, fmt.Errorf("error finding recyclable items: %v", err)
 	}
-	defer cursor.Close(ctx)
+	defer cursor.Close(repo.Context)
 
 	var recyclableItems []entities.RecyclableItemsModel
-	for cursor.Next(ctx) {
+	for cursor.Next(repo.Context) {
 		var recyclableItem entities.RecyclableItemsModel
 		if err := cursor.Decode(&recyclableItem); err != nil {
 			return nil, fmt.Errorf("error decoding recyclable item: %v", err)
@@ -52,4 +50,12 @@ func (repo *recyclableItemsRepository) FindAll() (*[]entities.RecyclableItemsMod
 	}
 
 	return &recyclableItems, nil
+}
+
+func (repo *recyclableItemsRepository) Create(data *entities.RecyclableItemsModel) error {
+	_, err := repo.Collection.InsertOne(repo.Context, data)
+	if err != nil {
+		return fmt.Errorf("error inserting recyclable item: %v", err)
+	}
+	return nil
 }
