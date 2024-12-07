@@ -54,6 +54,18 @@ func (h *HTTPGateway) AddRecycleWaste(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success"})
 }
 
+func (h *HTTPGateway) DeleteRecycleWaste(ctx *fiber.Ctx) error {
+	id := ctx.Params("waste_id")
+	if id == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid query params"})
+	}
+	err := h.RecycleService.DeleteWasteItem(id)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success"})
+}
+
 func (h *HTTPGateway) GetCategoryWaste(ctx *fiber.Ctx) error {
 	data, err := h.RecycleService.GetCategoryWaste()
 	if err != nil {

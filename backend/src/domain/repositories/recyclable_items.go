@@ -13,6 +13,7 @@ import (
 
 type IRecyclableItemsRepository interface {
 	FindAll() (*[]entities.RecyclableItemsModel, error)
+	FindByWasteID(wasteID string) (*entities.RecyclableItemsModel, error)
 	Create(data *entities.RecyclableItemsModel) error
 	Delete(wasteID string) error
 }
@@ -67,4 +68,13 @@ func (repo *recyclableItemsRepository) Delete(wasteID string) error {
 		return fmt.Errorf("error deleting recyclable item: %v", err)
 	}
 	return nil
+}
+
+func (repo *recyclableItemsRepository) FindByWasteID(wasteID string) (*entities.RecyclableItemsModel, error) {
+	var recyclableItem entities.RecyclableItemsModel
+	filter := bson.M{"waste_id": wasteID}
+	if err := repo.Collection.FindOne(repo.Context, filter).Decode(&recyclableItem); err != nil {
+		return nil, fmt.Errorf("error finding recyclable item: %v", err)
+	}
+	return &recyclableItem, nil
 }

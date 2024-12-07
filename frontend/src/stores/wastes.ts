@@ -64,6 +64,20 @@ export const useWastesStore = defineStore('wastes', {
       } catch (error) {
         console.error('err:', error)
       }
-    }
+    },
+    async deleteWaste(id: string) {
+      try {
+        const response = await fetch(webAPI + '/api/recycle-waste/delete-waste/' + id, {
+          method: 'DELETE',
+        });
+        if (response.status !== 200) {
+          return response.status
+        }
+        await this.fetchWastes()
+        return response.status
+      } catch (error) {
+        console.error('err:', error)
+      }
+    },
   },
 })

@@ -6,6 +6,7 @@ import (
 	"recycle-waste-management-backend/src/domain/entities"
 	"recycle-waste-management-backend/src/domain/repositories"
 	"recycle-waste-management-backend/src/infrastructure/providers"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,10 +23,11 @@ type RecycleWasteService struct {
 	RecyclableItemsRepo repositories.IRecyclableItemsRepository
 	CategoryWAsteRepo   repositories.ICategoryWasteRepository
 	AwsS3               providers.IAwsS3Upload
+	ImageURLDefault     string
 }
 
 func NewRecycleWasteService(recyclableItemsRepo repositories.IRecyclableItemsRepository, CategoryWAsteRepo repositories.ICategoryWasteRepository) IRecycleWasteService {
-	return &RecycleWasteService{RecyclableItemsRepo: recyclableItemsRepo, CategoryWAsteRepo: CategoryWAsteRepo, AwsS3: providers.NewAwsS3()}
+	return &RecycleWasteService{RecyclableItemsRepo: recyclableItemsRepo, CategoryWAsteRepo: CategoryWAsteRepo, AwsS3: providers.NewAwsS3(), ImageURLDefault: "https://bucketnaja2.s3.ap-southeast-1.amazonaws.com/images/wastes/DEFAULT.jpg"}
 }
 
 func (s *RecycleWasteService) GetRecyclableItems() (*[]entities.RecyclableItemsModel, error) {
@@ -51,7 +53,7 @@ func (s *RecycleWasteService) AddRecycleWaste(data entities.RecyclableItemsModel
 		}
 		data.URL = linkURL
 	} else {
-		data.URL = "https://bucketnaja2.s3.ap-southeast-1.amazonaws.com/images/wastes/DEFAULT.jpg"
+		data.URL = s.ImageURLDefault
 	}
 	data.LastUpdate = time.Now().UTC().Add(7 * time.Hour)
 	data.WasteID = generateRandomWasteID()
@@ -63,9 +65,23 @@ func (s *RecycleWasteService) AddRecycleWaste(data entities.RecyclableItemsModel
 }
 
 func (s *RecycleWasteService) DeleteWasteItem(wasteID string) error {
+	data, err := s.RecyclableItemsRepo.FindByWasteID(wasteID)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return err
+	}
+	if data == nil {
+		return fmt.Errorf("no data found")
+	}
 	if err := s.RecyclableItemsRepo.Delete(wasteID); err != nil {
 		return err
 	}
+	if data.URL != s.ImageURLDefault {
+		keyName := fmt.Sprintf("images/wastes/%v.webp", strings.ToUpper(data.Name))
+		if err := s.AwsS3.DeleteS3(keyName); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
