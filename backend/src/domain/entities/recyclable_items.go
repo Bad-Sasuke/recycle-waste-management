@@ -3,6 +3,7 @@ package entities
 import "time"
 
 type RecyclableItemsModel struct {
+	WasteID    string    `json:"waste_id,omitempty" bson:"waste_id,omitempty"`
 	Name       string    `json:"name,omitempty" bson:"name,omitempty"`
 	Category   string    `json:"category,omitempty" bson:"category,omitempty"`
 	Price      float64   `json:"price,omitempty" bson:"price,omitempty"`

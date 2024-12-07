@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const props = defineProps({
+  id: { type: String },
   name: { type: String },
   price: { type: Number },
   category: { type: String },
@@ -13,7 +14,7 @@ const props = defineProps({
     class="card w-full md:w-64 shadow-2xl border-neutral/30 rounded-lg border-[0.25px] cursor-pointer h-96"
   >
     <figure><img class="h-64 w-full object-cover bg-[#f2f2f2]" :src="props.url" /></figure>
-    <div class="card-body p-4">
+    <div class="card-body p-4" :data-id="props.id">
       <div class="flex flex-col items-between justify-between h-full gap-3">
         <h2 class="card-title text-base-content text-md">
           {{ props.name }}

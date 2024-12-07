@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import Card from './CardComponent.vue'
+import ModelWaste from './ModelWaste.vue'
 import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
 import type RecycleWaste from '../types/recycle_waste'
@@ -8,26 +9,11 @@ import { IconFilter, IconTagPlus, IconTagMinus, IconCalendar, IconPlus } from '@
 
 const searchQuery = ref('')
 const selectedCategory = ref<string[]>([])
-const previewImage = ref('/favicon/favicon-96x96.png')
 
 const items = ref<RecycleWaste[]>([])
 const isLoading = ref(true)
 const wastesStore = useWastesStore()
 const categoryWasteStore = useCategoryWasteStore()
-
-interface FormDataWaste {
-  name: string
-  price: string
-  category: string
-  imageFile: File | null // รองรับทั้ง File และ null
-}
-
-const formDataWaste = reactive<FormDataWaste>({
-  name: '',
-  price: '',
-  category: 'เลือกหมวดหมู่',
-  imageFile: null,
-})
 
 onMounted(async () => {
   if (!wastesStore.wastes.length) {
@@ -40,6 +26,13 @@ onMounted(async () => {
   items.value = wastesStore.wastes
   isLoading.value = false
 })
+
+watch(
+  () => wastesStore.wastes,
+  (newValue) => {
+    items.value = newValue
+  },
+)
 
 const filteredItems = computed(() => {
   if (items.value.length === 0) {
@@ -94,36 +87,6 @@ const openModalWaste = () => {
   const modal = document.getElementById('modal-waste') as HTMLDialogElement
   modal.showModal()
 }
-
-const loadFile = async (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) {
-    // สร้าง URL สำหรับไฟล์ที่อัพโหลด
-    const objectURL = URL.createObjectURL(file)
-    previewImage.value = objectURL
-
-    // ใช้ ref เพื่ออ้างอิงไปที่ <img> และตั้ง onload ที่นั่น
-    const imgElement = document.getElementById('img') as HTMLImageElement | null
-    if (imgElement) {
-      imgElement.onload = () => {
-        URL.revokeObjectURL(objectURL) // free memory
-      }
-    }
-
-    formDataWaste.imageFile = file as File | null
-  }
-}
-
-const createWaste = async () => {
-  await wastesStore.addWaste(formDataWaste)
-  items.value = wastesStore.wastes
-  const modal = document.getElementById('modal-waste') as HTMLDialogElement
-  formDataWaste.name = ''
-  formDataWaste.price = ''
-  formDataWaste.category = 'เลือกหมวดหมู่'
-  formDataWaste.imageFile = null
-  modal.close()
-}
 </script>
 
 <template>
@@ -138,64 +101,7 @@ const createWaste = async () => {
     </div>
   </div>
 
-  <dialog id="modal-waste" class="modal">
-    <div class="modal-box">
-      <form method="dialog">
-        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-      </form>
-      <h3 class="text-lg font-bold">เพิ่มขยะรีไซเคิล</h3>
-      <form class="py-4 flex flex-col gap-2">
-        <label class="input input-bordered flex items-center gap-2">
-          ชื่อขยะ
-          <input
-            type="text"
-            class="grow"
-            placeholder="เช่น ขวดพลาสติก"
-            v-model="formDataWaste.name"
-          />
-        </label>
-        <label class="input input-bordered flex items-center gap-2">
-          ราคา
-          <input type="number" class="grow" placeholder="เช่น 100" v-model="formDataWaste.price" />
-        </label>
-
-        <label class="flex items-center justify-between w-full gap-2">
-          <p class="px-2">หมวดหมู่</p>
-        </label>
-        <select class="select select-bordered w-full" v-model="formDataWaste.category">
-          <option disabled selected>เลือกหมวดหมู่</option>
-          <option
-            v-for="category in categoryWasteStore.category"
-            :key="category.id"
-            :value="category.name"
-          >
-            {{ category.name }}
-          </option>
-        </select>
-        <label class="flex items-center justify-between w-full gap-2">
-          <p class="px-2">รูปภาพ</p>
-        </label>
-        <div class="flex justify-center items-center border-2 border-dashed border-gray-300/50 p-2">
-          <label class="block">
-            <input
-              type="file"
-              @change="loadFile"
-              class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
-              accept="image/*"
-              required
-            />
-          </label>
-          <img :src="previewImage" class="h-32 rounded" alt="Current profile photo" />
-        </div>
-      </form>
-      <button
-        class="mt-4 btn bg-green-700 hover:bg-green-600 text-white w-full"
-        @click="createWaste"
-      >
-        เพิ่มขยะ
-      </button>
-    </div>
-  </dialog>
+  <ModelWaste />
 
   <div
     class="container px-4 py-6 grid grid-cols-1 lg:grid-cols-6 gap-4 max-w-full"
@@ -278,8 +184,9 @@ const createWaste = async () => {
 
       <!-- รายการราคาขยะ -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <div v-for="item in filteredItems" :key="item.category" class="flex justify-center">
+        <div v-for="(item, index) in filteredItems" :key="index" class="flex justify-center">
           <Card
+            :id="item.waste_id"
             :name="item.name"
             :price="item.price"
             :category="item.category"

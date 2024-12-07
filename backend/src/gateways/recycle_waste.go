@@ -24,17 +24,19 @@ func (h *HTTPGateway) AddRecycleWaste(ctx *fiber.Ctx) error {
 	imageFile, err := ctx.FormFile("image_file")
 	if err != nil {
 		fmt.Println(err)
-		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: err.Error()})
 	}
-	file, err := imageFile.Open()
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: err.Error()})
-	}
-	defer file.Close()
+	fileBytes := []byte{}
+	if imageFile != nil {
+		file, err := imageFile.Open()
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer file.Close()
 
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: err.Error()})
+		fileBytes, err = io.ReadAll(file)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	priceFloat, err := strconv.ParseFloat(price, 64)
 	if err != nil {

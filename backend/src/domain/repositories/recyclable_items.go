@@ -14,6 +14,7 @@ import (
 type IRecyclableItemsRepository interface {
 	FindAll() (*[]entities.RecyclableItemsModel, error)
 	Create(data *entities.RecyclableItemsModel) error
+	Delete(wasteID string) error
 }
 
 type recyclableItemsRepository struct {
@@ -56,6 +57,14 @@ func (repo *recyclableItemsRepository) Create(data *entities.RecyclableItemsMode
 	_, err := repo.Collection.InsertOne(repo.Context, data)
 	if err != nil {
 		return fmt.Errorf("error inserting recyclable item: %v", err)
+	}
+	return nil
+}
+
+func (repo *recyclableItemsRepository) Delete(wasteID string) error {
+	filter := bson.M{"waste_id": wasteID}
+	if _, err := repo.Collection.DeleteOne(repo.Context, filter); err != nil {
+		return fmt.Errorf("error deleting recyclable item: %v", err)
 	}
 	return nil
 }

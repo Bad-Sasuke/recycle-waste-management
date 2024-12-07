@@ -29,7 +29,7 @@ const fetchData = async (url: string): Promise<ResponseAPI> => {
     }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const postData = async (url: string, data: unknown): Promise<ResponseAPI | string> => {
     try {
         // Make the POST request using Fetch API
