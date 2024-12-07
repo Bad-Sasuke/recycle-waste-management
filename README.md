@@ -8,10 +8,12 @@
 
 </div>
 
-📋 About
+# 📋 About
+
 This is a Full-Stack Recycle Waste Management System designed to display the prices of recyclable waste. The app aims to make waste management more efficient by providing real-time price updates for different recyclable materials. It is built using Vue.js for the frontend and Fiber Golang for the backend.
 
-🛠️ Installation & Setup
+# 🛠️ Installation & Setup
+
 To get started with the project, follow these steps:
 
 1. Clone the repo to your local machine:
@@ -49,8 +51,10 @@ Run the server:
 go run main.go
 ```
 
-🚀 Contributing
+# 🚀 Contributing
+
 Feel free to fork the repository, open issues, or submit pull requests. Contributions are always welcome!
 
-📜 License
+# 📜 License
+
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
