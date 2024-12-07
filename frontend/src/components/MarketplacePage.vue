@@ -40,8 +40,8 @@ const filteredItems = computed(() => {
   }
 
   return items.value.filter((item) => {
-    const matchesSearch = item.category
-      ? item.category.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchesSearch = item.name
+      ? item.name.toLowerCase().includes(searchQuery.value.toLowerCase())
       : false
     const matchesCategory = item.category
       ? selectedCategory.value.length === 0 ||

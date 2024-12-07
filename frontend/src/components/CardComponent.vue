@@ -41,7 +41,7 @@ const deleteItem = async (id: string) => {
     <div class="flex items-end justify-end absolute top-0 right-0">
       <button
         class="btn btn-sm btn-ghost mr-2 mt-2 hover:bg-base-600/50 hover:text-white/50"
-        @click="deleteItem(props.id)"
+        @click="deleteItem(props?.id ?? '')"
       >
         X
       </button>
