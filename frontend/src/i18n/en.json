@@ -1,0 +1,79 @@
+{
+    "LandingHome": {
+        "hero": {
+            "title": "Join recycling and earn money together!",
+            "description": "Sell your recyclables or buy recyclable materials here!",
+            "button": "Get Started"
+        },
+        "how_it_works": {
+            "title": "Why choose us?",
+            "steps": {
+                "step1": {
+                    "title": "1. Find waste",
+                    "description": "Sell recyclables or unused materials"
+                },
+                "step2": {
+                    "title": "2. Price assessment",
+                    "description": "Get an online price estimate"
+                },
+                "step3": {
+                    "title": "3. Receive payment",
+                    "description": "Receive money easily via an online system"
+                }
+            }
+        },
+        "features": {
+            "title": "Outstanding Features",
+            "items": {
+                "feature1": {
+                    "title": "Online price evaluation",
+                    "description": "Easily assess the price online"
+                },
+                "feature2": {
+                    "title": "Convenient transportation",
+                    "description": "Quick and convenient delivery service"
+                },
+                "feature3": {
+                    "title": "Secure payment system",
+                    "description": "Receive payments securely and easily"
+                }
+            }
+        }
+    },
+    "Navbar": {
+        "menu": {
+            "home": "Home",
+            "marketplace": "Marketplace"
+        },
+        "notif": {
+            "title": "Inbox",
+            "read_all": "clear all",
+            "empty": "You have no notifications",
+            "view_all": "Go to inbox"
+        }
+    },
+    "Footer": {
+        "copyright": "All rights reserved",
+        "about_us": "About us",
+        "policy": "Privacy Policy",
+        "terms": "Terms and Conditions"
+    },
+    "Global": {
+        "loading": "Loading data"
+    },
+    "Marketplace": {
+        "title": "Recycling Waste Price",
+        "category": "Category",
+        "search": "Search e.g plastic, metal",
+        "filter_date": {
+            "title": "Date Updated",
+            "lastest": "Latest to Oldest",
+            "oldest": "Oldest to Latest"
+        },
+        "filter_price": {
+            "title": "Price",
+            "asc": "Low to High",
+            "desc": "High to Low"
+        }
+    }
+}

@@ -95,7 +95,7 @@ const openModalWaste = () => {
       <div class="max-w-md">
         <div class="flex flex-col justify-center w-full items-center h gap-4">
           <span class="loading loading-spinner loading-lg text-green-700"></span>
-          <h1 class="text-xl font-bold text-green-700">กำลังโหลดข้อมูล</h1>
+          <h1 class="text-xl font-bold text-green-700">{{ $t('Global.loading') }}</h1>
         </div>
       </div>
     </div>
@@ -109,7 +109,7 @@ const openModalWaste = () => {
   >
     <!-- ส่วนซ้าย : หมวดหมู่ -->
     <div class="bg-white shadow-md p-4 rounded lg:h-screen">
-      <h2 class="text-2xl font-bold text-green-700 mb-4">หมวดหมู่</h2>
+      <h2 class="text-2xl font-bold text-green-700 mb-4">{{ $t('Marketplace.category') }}</h2>
       <div class="overflow-y-auto max-h-[250px] md:max-h-[600px]">
         <label
           class="flex items-center space-x-2 mb-2"
@@ -128,7 +128,9 @@ const openModalWaste = () => {
     <!-- ส่วนขวา: รายการขยะ -->
 
     <div class="lg:col-span-5">
-      <h1 class="text-3xl font-bold text-green-700 mb-4 text-center">ราคาขยะรีไซเคิล</h1>
+      <h1 class="text-3xl font-bold text-green-700 mb-4 text-center">
+        {{ $t('Marketplace.title') }}
+      </h1>
 
       <div class="flex justify-center items-center gap-2 mb-2">
         <!-- ฟอร์มค้นหาขยะ -->
@@ -137,7 +139,7 @@ const openModalWaste = () => {
             type="text"
             v-model="searchQuery"
             class="input input-bordered w-full"
-            placeholder="ค้นหาขยะ เช่น พลาสติก, โลหะ"
+            :placeholder="$t('Marketplace.search')"
           />
         </div>
         <div>
@@ -149,34 +151,40 @@ const openModalWaste = () => {
       <div class="flex gap-2">
         <div class="dropdown mb-2">
           <div tabindex="0" role="button" class="btn btn-outline btn-sm">
-            <IconCalendar stroke="2" /> วันที่อัพเดท
+            <IconCalendar stroke="2" /> {{ $t('Marketplace.filter_date.title') }}
           </div>
           <ul
             tabindex="0"
             class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow border border-neutral/50"
           >
             <li>
-              <button @click="sortByLastUpdate">ล่าสุดไปเก่า</button>
+              <button @click="sortByLastUpdate">{{ $t('Marketplace.filter_date.lastest') }}</button>
             </li>
             <li>
-              <button @click="sortByLastUpdateDesc">เก่าไปล่าสุด</button>
+              <button @click="sortByLastUpdateDesc">
+                {{ $t('Marketplace.filter_date.oldest') }}
+              </button>
             </li>
           </ul>
         </div>
 
         <div class="dropdown mb-2">
           <div tabindex="0" role="button" class="btn btn-outline btn-sm">
-            <IconFilter stroke="2" /> ราคา
+            <IconFilter stroke="2" /> {{ $t('Marketplace.filter_price.title') }}
           </div>
           <ul
             tabindex="0"
             class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow border border-neutral/50"
           >
             <li>
-              <button @click="sortByPrice"><IconTagMinus stroke="2" /> น้อยไปมาก</button>
+              <button @click="sortByPrice">
+                <IconTagMinus stroke="2" /> {{ $t('Marketplace.filter_price.asc') }}
+              </button>
             </li>
             <li>
-              <button @click="sortByPriceDesc"><IconTagPlus stroke="2" />มากไปน้อย</button>
+              <button @click="sortByPriceDesc">
+                <IconTagPlus stroke="2" />{{ $t('Marketplace.filter_price.desc') }}
+              </button>
             </li>
           </ul>
         </div>

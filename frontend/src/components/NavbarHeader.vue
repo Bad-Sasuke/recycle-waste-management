@@ -1,27 +1,42 @@
 <script setup lang="ts">
-import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff } from "@tabler/icons-vue";
-import { RouterLink } from 'vue-router';
-import { ref } from "vue";
+import {
+  IconUserCircle,
+  IconBell,
+  IconMenu,
+  IconTrash,
+  IconBellOff,
+  IconLanguageHiragana,
+  IconChevronDown,
+} from '@tabler/icons-vue'
+import { RouterLink } from 'vue-router'
+import { ref, onBeforeMount } from 'vue'
+import { useI18nStore } from '@/stores/i18n'
 
-const isDrawerOpen = ref(false);
+const isDrawerOpen = ref(false)
+
+const i18nStore = useI18nStore()
 
 const closeDrawer = () => {
+  isDrawerOpen.value = !isDrawerOpen.value
+}
 
-  isDrawerOpen.value = !isDrawerOpen.value;
-};
+const changeLanguage = (lang: string) => {
+  i18nStore.setLocale(lang)
+}
 
+onBeforeMount(() => {
+  i18nStore.getLocale()
+})
 </script>
 
 <template>
   <div class="navbar bg-green-100 shadow-md">
-
     <!-- เมนูสำหรับ Mobile -->
     <div class="flex-none md:hidden">
       <label for="menu-mobile" class="btn btn-ghost btn-circle">
         <IconMenu stroke="1.5" size="24" />
       </label>
     </div>
-
 
     <!-- โลโก้และชื่อเว็บ -->
     <div class="flex-1">
@@ -32,18 +47,15 @@ const closeDrawer = () => {
       <div class="hidden md:flex">
         <ul class="menu menu-horizontal px-1">
           <li>
-            <RouterLink to="/marketplace" class="font-semibold hover:text-green-600">ราคาขยะรีไซเคิล</RouterLink>
+            <RouterLink to="/marketplace" class="font-semibold hover:text-green-600">{{
+              $t('Navbar.menu.marketplace')
+            }}</RouterLink>
           </li>
         </ul>
       </div>
     </div>
 
-
-
-
-
     <div class="flex-none gap-4">
-
       <!-- ปุ่มแจ้งเตือน -->
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
@@ -51,12 +63,16 @@ const closeDrawer = () => {
             <IconBell stroke="1.5" size="24" />
           </div>
         </div>
-        <ul tabindex="0"
-          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-72 p-2 shadow h-64 flex flex-col">
+        <ul
+          tabindex="0"
+          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-72 p-2 shadow h-64 flex flex-col"
+        >
           <span class="flex justify-between mx-2 py-4">
-            <p class="text-[1rem]">กล่องข้อความ</p>
+            <p class="text-[1rem]">{{ $t('Navbar.notif.title') }}</p>
             <div class="flex justify-between items-center gap-2">
-              <li><a class="text-xs">อ่านทั้งหมด</a></li>
+              <li>
+                <a class="text-xs">{{ $t('Navbar.notif.read_all') }}</a>
+              </li>
               <button class="hover:text-error">
                 <IconTrash stroke="1.5" size="24" />
               </button>
@@ -64,13 +80,9 @@ const closeDrawer = () => {
           </span>
           <div class="flex flex-col items-center justify-center flex-grow gap-2">
             <IconBellOff stroke="1.5" size="24" class="text-gray-500" />
-            <p class="text-sm text-gray-500">คุณยังไม่มีแจ้งเตือน</p>
+            <p class="text-sm text-gray-500">{{ $t('Navbar.notif.empty') }}</p>
           </div>
           <div class="flex flex-col overflow-auto h-38">
-
-
-
-
             <!-- <li>
               <a>ไปหน้ากล่องข้อความ</a>
             </li>
@@ -86,10 +98,39 @@ const closeDrawer = () => {
             <li>
               <a>ไปหน้ากล่องข้อความ</a>
             </li> -->
-
           </div>
           <li class="flex items-center justify-center w-full mt-auto">
-            <a>ไปหน้ากล่องข้อความ</a>
+            <a>{{ $t('Navbar.notif.view_all') }}</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="dropdown">
+        <div tabindex="0" role="button" class="btn btn-outline p-1 text-neutral">
+          <IconLanguageHiragana stroke="1.5" />
+          <IconChevronDown stroke="0.8" />
+        </div>
+        <ul
+          tabindex="0"
+          class="dropdown-content menu bg-base-100 rounded-box z-[1] w-32 p-2 shadow"
+        >
+          <li>
+            <button :class="{ active: $i18n.locale === 'en' }" @click="changeLanguage('en')">
+              <span
+                class="badge badge-sm badge-outline !pl-1.5 !pr-1 pt-px font-mono !text-[.6rem] font-bold tracking-widest opacity-50"
+                >EN</span
+              >
+              <span>English</span>
+            </button>
+          </li>
+          <li>
+            <button :class="{ active: $i18n.locale === 'th' }" @click="changeLanguage('th')">
+              <span
+                class="badge badge-sm badge-outline !pl-1.5 !pr-1 pt-px font-mono !text-[.6rem] font-bold tracking-widest opacity-50"
+                >TH</span
+              >
+              <span>ไทย</span>
+            </button>
           </li>
         </ul>
       </div>
@@ -101,7 +142,10 @@ const closeDrawer = () => {
             <IconUserCircle stroke="1.5" size="32" />
           </div>
         </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+        <ul
+          tabindex="0"
+          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+        >
           <li>
             <a class="justify-between">
               โปรไฟล์
@@ -122,14 +166,14 @@ const closeDrawer = () => {
     <div class="drawer-side">
       <label for="menu-mobile" aria-label="close sidebar" class="drawer-overlay"></label>
       <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
-        <p class="normal-case text-2xl font-bold text-green-700 m-2">
-          ♻️ Recycle Waste
-        </p>
+        <p class="normal-case text-2xl font-bold text-green-700 m-2">♻️ Recycle Waste</p>
         <li>
-          <RouterLink to="/" @click="closeDrawer">หน้าแรก</RouterLink>
+          <RouterLink to="/" @click="closeDrawer">{{ $t('Navbar.menu.home') }}</RouterLink>
         </li>
         <li>
-          <RouterLink to="/marketplace" @click="closeDrawer">ราคาขยะรีไซเคิล</RouterLink>
+          <RouterLink to="/marketplace" @click="closeDrawer">{{
+            $t('Navbar.menu.marketplace')
+          }}</RouterLink>
         </li>
       </ul>
     </div>
