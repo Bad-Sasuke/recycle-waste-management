@@ -16,6 +16,7 @@ type IRecyclableItemsRepository interface {
 	FindByWasteID(wasteID string) (*entities.RecyclableItemsModel, error)
 	Create(data *entities.RecyclableItemsModel) error
 	Delete(wasteID string) error
+	Update(wasteID string, data *entities.RecyclableItemsModel) error
 }
 
 type recyclableItemsRepository struct {
@@ -77,4 +78,13 @@ func (repo *recyclableItemsRepository) FindByWasteID(wasteID string) (*entities.
 		return nil, fmt.Errorf("error finding recyclable item: %v", err)
 	}
 	return &recyclableItem, nil
+}
+
+func (repo *recyclableItemsRepository) Update(wasteID string, data *entities.RecyclableItemsModel) error {
+	filter := bson.M{"waste_id": wasteID}
+	update := bson.M{"$set": data}
+	if _, err := repo.Collection.UpdateOne(repo.Context, filter, update); err != nil {
+		return fmt.Errorf("error updating recyclable item: %v", err)
+	}
+	return nil
 }

@@ -73,3 +73,41 @@ func (h *HTTPGateway) GetCategoryWaste(ctx *fiber.Ctx) error {
 	}
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success", Data: data})
 }
+
+func (h *HTTPGateway) EditRecycleWaste(ctx *fiber.Ctx) error {
+	wasteID := ctx.Params("waste_id")
+	name := ctx.FormValue("name")
+	price := ctx.FormValue("price")
+	category := ctx.FormValue("category")
+	imageFile, err := ctx.FormFile("image_file")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fileBytes := []byte{}
+	if imageFile != nil {
+		file, err := imageFile.Open()
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer file.Close()
+
+		fileBytes, err = io.ReadAll(file)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	priceFloat, err := strconv.ParseFloat(price, 64)
+	if err != nil {
+		fmt.Println(err)
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+	bodyData := entities.RecyclableItemsModel{
+		Name:     name,
+		Price:    priceFloat,
+		Category: category,
+	}
+	if err := h.RecycleService.EditWasteItem(wasteID, bodyData, fileBytes); err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success"})
+}

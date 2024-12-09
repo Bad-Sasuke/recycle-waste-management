@@ -17,6 +17,7 @@ type IRecycleWasteService interface {
 	AddRecycleWaste(data entities.RecyclableItemsModel, image []byte) error
 	DeleteWasteItem(wasteID string) error
 	GetCategoryWaste() (*[]entities.CategoryWasteModel, error)
+	EditWasteItem(wasteID string, data entities.RecyclableItemsModel, image []byte) error
 }
 
 type RecycleWasteService struct {
@@ -94,6 +95,25 @@ func (s *RecycleWasteService) GetCategoryWaste() (*[]entities.CategoryWasteModel
 		return nil, fmt.Errorf("no data found")
 	}
 	return data, nil
+}
+
+func (s *RecycleWasteService) EditWasteItem(wasteID string, data entities.RecyclableItemsModel, image []byte) error {
+	if data.Name == "" || data.Category == "" || data.Price == 0 {
+		return fmt.Errorf("invalid data")
+	}
+	if len(image) > 0 {
+		keyname, contentType := providers.NewAwsS3().CreateKeyNameImage(data.Name, "webp")
+		linkURL, err := providers.NewAwsS3().UploadS3FromString(image, keyname, contentType)
+		if err != nil {
+			return err
+		}
+		data.URL = linkURL
+	}
+	data.LastUpdate = time.Now().UTC().Add(7 * time.Hour)
+	if err := s.RecyclableItemsRepo.Update(wasteID, &data); err != nil {
+		return err
+	}
+	return nil
 }
 
 func generateRandomWasteID() string {

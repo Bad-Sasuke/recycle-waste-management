@@ -17,6 +17,7 @@ func RouteRecycle(gateway HTTPGateway, app *fiber.App) {
 	api.Get("/get-wastes", gateway.GetRecycleWaste)
 	api.Post("/add-waste", gateway.AddRecycleWaste)
 	api.Delete("/delete-waste/:waste_id", gateway.DeleteRecycleWaste)
+	api.Put("/edit-waste/:waste_id", gateway.EditRecycleWaste)
 }
 
 func RouteCategoryWaste(gateway HTTPGateway, app *fiber.App) {
