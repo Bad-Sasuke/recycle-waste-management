@@ -115,7 +115,7 @@ onBeforeMount(() => {
           class="dropdown-content menu bg-base-100 rounded-box z-[1] w-32 p-2 shadow"
         >
           <li>
-            <button :class="{ active: $i18n.locale === 'en' }" @click="changeLanguage('en')">
+            <button :class="{ active: $i18n.locale === 'en-US' }" @click="changeLanguage('en-US')">
               <span
                 class="badge badge-sm badge-outline !pl-1.5 !pr-1 pt-px font-mono !text-[.6rem] font-bold tracking-widest opacity-50"
                 >EN</span
