@@ -9,13 +9,15 @@ import {
   IconChevronDown,
 } from '@tabler/icons-vue'
 import { RouterLink } from 'vue-router'
-import { ref, onBeforeMount } from 'vue'
+import { ref, onBeforeMount, onMounted, watch } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
+import { useUsersStore } from '@/stores/users'
 import PopupLogin from './PopupLogin.vue'
 
 const isDrawerOpen = ref(false)
 
 const i18nStore = useI18nStore()
+const usersStore = useUsersStore()
 
 const closeDrawer = () => {
   isDrawerOpen.value = !isDrawerOpen.value
@@ -25,6 +27,17 @@ onBeforeMount(() => {
   i18nStore.getLocale()
 })
 
+watch(
+  () => document.cookie,
+  () => {
+    usersStore.checkLogin()
+    console.log(usersStore.isLogin)
+  },
+)
+
+onMounted(() => {
+  usersStore.checkLogin()
+})
 const changeLanguage = (lang: string) => {
   i18nStore.setLocale(lang)
 }
@@ -32,6 +45,9 @@ const changeLanguage = (lang: string) => {
 const handleLogin = () => {
   const modal = document.getElementById('popup-login') as HTMLDialogElement
   modal?.showModal()
+}
+const handleLogout = () => {
+  usersStore.logout()
 }
 </script>
 
@@ -146,27 +162,36 @@ const handleLogin = () => {
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
           <div class="rounded-full">
-            <IconUserCircle stroke="1.5" size="32" />
+            <IconUserCircle
+              stroke="1.5"
+              size="32"
+              @click="usersStore.isLogin !== true ? handleLogin() : ''"
+            />
           </div>
         </div>
         <ul
           tabindex="0"
           class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+          v-if="usersStore.isLogin"
         >
-          <li>
-            <a class="justify-between">
-              โปรไฟล์
-              <span class="badge">New</span>
-            </a>
-          </li>
+          <span v-if="usersStore.isLogin">
+            <li class="disabled">
+              <a class="justify-between">
+                {{ $t('Navbar.profile.textProfile') }}
+                <span class="badge">{{ $t('Global.comingSoon') }}</span>
+              </a>
+            </li>
 
-          <li><a>การตั้งค่า</a></li>
-          <li>
-            <a @click="handleLogin">{{ $t('Navbar.profile.textLogin') }}</a>
-          </li>
-          <li>
-            <a>{{ $t('Navbar.profile.textLogout') }}</a>
-          </li>
+            <li class="disabled">
+              <a>
+                {{ $t('Navbar.profile.textSettings') }}
+                <span class="badge">{{ $t('Global.comingSoon') }} </span>
+              </a>
+            </li>
+            <li>
+              <a @click="handleLogout">{{ $t('Navbar.profile.textLogout') }}</a>
+            </li>
+          </span>
         </ul>
       </div>
     </div>

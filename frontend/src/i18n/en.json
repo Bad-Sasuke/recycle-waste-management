@@ -53,7 +53,9 @@
         },
         "profile": {
             "textLogin": "Login",
-            "textLogout": "Logout"
+            "textLogout": "Logout",
+            "textProfile": "Profile",
+            "textSettings": "Settings"
         }
     },
     "Footer": {
@@ -63,7 +65,8 @@
         "terms": "Terms and Conditions"
     },
     "Global": {
-        "loading": "Loading data"
+        "loading": "Loading data",
+        "comingSoon": "Coming soon"
     },
     "Marketplace": {
         "title": "Recycling Waste Price",

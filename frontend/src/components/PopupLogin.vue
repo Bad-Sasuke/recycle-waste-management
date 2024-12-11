@@ -13,7 +13,7 @@ import { authLoginGithub } from '@/services/auth'
             <p class="mr-2"><IconBrandGithub stoke="1.5" /></p>
             {{ $t('PopupLogin.signInVia') }} Github
           </button>
-          <button class="btn btn-outline">
+          <button class="btn btn-outline" disabled>
             <p class="mr-2"><IconBrandGoogleFilled stoke="1.5" /></p>
             {{ $t('PopupLogin.signInVia') }} Google
           </button>
