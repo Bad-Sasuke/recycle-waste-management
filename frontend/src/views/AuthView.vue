@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { setCookie } from '../stores/cookie'
 import LandingPage from '../components/LandingPage.vue'
 
 const route = useRoute()
+const router = useRouter()
 const token = ref('')
 
 onMounted(() => {
@@ -13,6 +14,7 @@ onMounted(() => {
   if (token.value) {
     setCookie('token', token.value, 0, 6)
   }
+  router.push('/')
 })
 </script>
 
