@@ -1,7 +1,12 @@
 // ตั้งค่า cookie
-const setCookie = (name: string, value: string, days: number): void => {
+const setCookie = (name: string, value: string, days: number, hours: number = 0): void => {
     const d = new Date();
-    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000)); // กำหนดวันหมดอายุ
+    if (hours > 0) {
+        d.setTime(d.getTime() + (hours * 60 * 60 * 1000)); // กำหนดกี่ชั่วโมงหมดอายุ
+    } else {
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000)); // กำหนดวันหมดอายุ
+    }
+
     const expires = "expires=" + d.toUTCString();
     document.cookie = `${name}=${value}; ${expires}; path=/`;
 };

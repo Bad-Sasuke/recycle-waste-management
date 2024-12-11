@@ -22,6 +22,11 @@ const router = createRouter({
       name: 'marketplace',
       component: () => import('../views/MarketplaceView.vue'),
     },
+    {
+      path: '/auth',
+      name: 'auth',
+      component: () => import('../views/AuthView.vue'),
+    }
   ],
 })
 

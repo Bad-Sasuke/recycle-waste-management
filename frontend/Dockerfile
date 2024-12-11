@@ -3,6 +3,7 @@ FROM oven/bun:alpine as builder
 WORKDIR /app
 
 ARG VITE_WEB_API
+ARG VITE_GITHUB_CLIENT_ID
 
 COPY . /app
 

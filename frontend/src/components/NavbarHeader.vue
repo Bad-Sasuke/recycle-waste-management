@@ -30,7 +30,8 @@ const changeLanguage = (lang: string) => {
 }
 
 const handleLogin = () => {
-  document.getElementById('popup-login')?.showModal()
+  const modal = document.getElementById('popup-login') as HTMLDialogElement
+  modal?.showModal()
 }
 </script>
 

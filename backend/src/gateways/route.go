@@ -24,3 +24,8 @@ func RouteCategoryWaste(gateway HTTPGateway, app *fiber.App) {
 	api := app.Group("/api/category-waste")
 	api.Get("/get-category", gateway.GetCategoryWaste)
 }
+
+func RouteAuth(gateway HTTPGateway, app *fiber.App) {
+	api := app.Group("/api/auth")
+	api.Get("github/callback", gateway.AuthGithubCallback)
+}

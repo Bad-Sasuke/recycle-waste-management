@@ -55,9 +55,6 @@ func (sv *usersService) GetAllUser() (*[]entities.UserDataFormat, error) {
 }
 
 func (sv *usersService) UpdateUser(userID string, data *entities.NewUserBody) error {
-	if err := sv.UsersRepository.UpdateUser(userID, data); err != nil {
-		return err
-	}
 	return nil
 }
 
