@@ -191,10 +191,12 @@ const openModalWaste = () => {
       </div>
 
       <!-- รายการราคาขยะ -->
-      <div
+      <TransitionGroup
+        name="list"
+        tag="div"
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-6"
       >
-        <div v-for="(item, index) in filteredItems" :key="index" class="flex justify-center">
+        <div v-for="item in filteredItems" :key="item.waste_id" class="flex justify-center">
           <Card
             :id="item.waste_id"
             :name="item.name"
@@ -204,9 +206,25 @@ const openModalWaste = () => {
             :url="item.url"
           />
         </div>
-      </div>
+      </TransitionGroup>
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.list-leave-active {
+  display: none;
+}
+</style>
