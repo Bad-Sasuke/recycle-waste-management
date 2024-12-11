@@ -4,7 +4,12 @@
 
 ## Built with Vue.js (Frontend) and Fiber Golang (Backend)
 
-![image](screenshort.gif)
+![image](screenshots/screenshort.gif)
+
+<details>
+  <summary>Example More</summary>
+  <img src="screenshots/screenshort-github-auth.gif" alt="image-description"/>
+</details>
 
 </div>
 
