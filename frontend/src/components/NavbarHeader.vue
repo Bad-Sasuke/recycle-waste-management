@@ -27,16 +27,22 @@ onBeforeMount(() => {
   i18nStore.getLocale()
 })
 
-watch(
-  () => document.cookie,
-  () => {
+const cookies = ref(document.cookie)
+
+watch(cookies, (newCookie, oldCookie) => {
+  if (newCookie !== oldCookie) {
     usersStore.checkLogin()
-    console.log(usersStore.isLogin)
-  },
-)
+  }
+})
 
 onMounted(() => {
   usersStore.checkLogin()
+  setInterval(() => {
+    const currentCookies = document.cookie
+    if (cookies.value !== currentCookies) {
+      cookies.value = currentCookies
+    }
+  }, 500)
 })
 const changeLanguage = (lang: string) => {
   i18nStore.setLocale(lang)
@@ -45,6 +51,7 @@ const changeLanguage = (lang: string) => {
 const handleLogin = () => {
   const modal = document.getElementById('popup-login') as HTMLDialogElement
   modal?.showModal()
+  console.log(usersStore.isLogin)
 }
 const handleLogout = () => {
   usersStore.logout()
