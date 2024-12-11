@@ -159,14 +159,10 @@ const handleLogout = () => {
       </div>
 
       <!-- โปรไฟล์ผู้ใช้งาน -->
-      <div class="dropdown dropdown-end">
+      <div class="dropdown dropdown-end" @click="usersStore.isLogin !== true ? handleLogin() : ''">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
           <div class="rounded-full">
-            <IconUserCircle
-              stroke="1.5"
-              size="32"
-              @click="usersStore.isLogin !== true ? handleLogin() : ''"
-            />
+            <IconUserCircle stroke="1.5" size="32" />
           </div>
         </div>
         <ul
