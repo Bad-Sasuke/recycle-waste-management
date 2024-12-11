@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import Card from './CardComponent.vue'
-import ModelWaste from './ModelWaste.vue'
+import PopupWaste from './PopupWaste.vue'
 import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
 import type RecycleWaste from '../types/recycle_waste'
@@ -101,7 +101,7 @@ const openModalWaste = () => {
     </div>
   </div>
 
-  <ModelWaste />
+  <PopupWaste />
 
   <div
     class="container px-4 py-6 grid grid-cols-1 lg:grid-cols-6 gap-4 max-w-full"

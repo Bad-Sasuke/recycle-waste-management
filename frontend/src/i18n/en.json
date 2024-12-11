@@ -50,6 +50,10 @@
             "read_all": "clear all",
             "empty": "You have no notifications",
             "view_all": "Go to inbox"
+        },
+        "profile": {
+            "textLogin": "Login",
+            "textLogout": "Logout"
         }
     },
     "Footer": {
@@ -75,5 +79,9 @@
             "asc": "Low to High",
             "desc": "High to Low"
         }
+    },
+    "PopupLogin": {
+        "title": "Sign In",
+        "signInVia": "Sign in via"
     }
 }

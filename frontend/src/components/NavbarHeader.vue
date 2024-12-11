@@ -11,6 +11,7 @@ import {
 import { RouterLink } from 'vue-router'
 import { ref, onBeforeMount } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
+import PopupLogin from './PopupLogin.vue'
 
 const isDrawerOpen = ref(false)
 
@@ -20,16 +21,21 @@ const closeDrawer = () => {
   isDrawerOpen.value = !isDrawerOpen.value
 }
 
+onBeforeMount(() => {
+  i18nStore.getLocale()
+})
+
 const changeLanguage = (lang: string) => {
   i18nStore.setLocale(lang)
 }
 
-onBeforeMount(() => {
-  i18nStore.getLocale()
-})
+const handleLogin = () => {
+  document.getElementById('popup-login')?.showModal()
+}
 </script>
 
 <template>
+  <PopupLogin />
   <div class="navbar bg-green-100 shadow-md">
     <!-- เมนูสำหรับ Mobile -->
     <div class="flex-none md:hidden">
@@ -108,7 +114,7 @@ onBeforeMount(() => {
       <div class="dropdown">
         <div tabindex="0" role="button" class="btn btn-outline p-1 text-neutral">
           <IconLanguageHiragana stroke="1.5" />
-          <IconChevronDown stroke="0.8" />
+          <IconChevronDown stroke="1.5" />
         </div>
         <ul
           tabindex="0"
@@ -154,7 +160,12 @@ onBeforeMount(() => {
           </li>
 
           <li><a>การตั้งค่า</a></li>
-          <li><a>ออกจากระบบ</a></li>
+          <li>
+            <a @click="handleLogin">{{ $t('Navbar.profile.textLogin') }}</a>
+          </li>
+          <li>
+            <a>{{ $t('Navbar.profile.textLogout') }}</a>
+          </li>
         </ul>
       </div>
     </div>
