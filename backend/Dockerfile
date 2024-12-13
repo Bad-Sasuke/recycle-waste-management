@@ -7,7 +7,7 @@ COPY . .
 
 COPY ./src/docs/swagger.yaml /app/src/docs/swagger.yaml
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o /main .
 
 FROM scratch
 WORKDIR /
