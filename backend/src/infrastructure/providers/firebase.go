@@ -23,7 +23,15 @@ type IFirebaseProvider interface {
 
 func NewFirebaseProvider() IFirebaseProvider {
 	context := context.Background()
-	opt := option.WithAPIKey(os.Getenv("FIREBASE_API_KEY"))
+	// Get service account JSON from environment variable
+	firebaseConfig := os.Getenv("FIREBASE_SERVICE_ACCOUNT")
+	if firebaseConfig == "" {
+		fmt.Println("FIREBASE_SERVICE_ACCOUNT environment variable not set")
+
+	}
+	// Convert JSON string to option
+	creds := []byte(firebaseConfig)
+	opt := option.WithCredentialsJSON(creds)
 	app, err := firebase.NewApp(context, nil, opt)
 	if err != nil {
 		fmt.Printf("error initializing app: %v\n", err)
@@ -42,6 +50,7 @@ func NewFirebaseProvider() IFirebaseProvider {
 func (f *FirebaseProvider) GetUserFirebaseAuth(userID string) (auth.UserRecord, error) {
 	data, err := f.Auth.GetUser(f.Context, userID)
 	if err != nil {
+		fmt.Println(err)
 		return *data, err
 	}
 	if data == nil {
