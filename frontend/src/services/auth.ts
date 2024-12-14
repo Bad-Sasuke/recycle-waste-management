@@ -26,6 +26,8 @@ const authLoginGoogle = async () => {
       const userID = user.uid;
       console.log(userID);
       // send api google/callback?uid=${userID}
+      const url = new URL(config.webAPI + '/api/auth/google/callback' + '?uid=' + userID);
+      window.location.href = url.toString();
   } catch (error) {
       console.log("Error during redirect login:", error);
   }
