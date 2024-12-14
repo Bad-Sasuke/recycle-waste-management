@@ -28,4 +28,5 @@ func RouteCategoryWaste(gateway HTTPGateway, app *fiber.App) {
 func RouteAuth(gateway HTTPGateway, app *fiber.App) {
 	api := app.Group("/api/auth")
 	api.Get("github/callback", gateway.AuthGithubCallback)
+	api.Get("google/callback", gateway.AuthGoogleCallback)
 }

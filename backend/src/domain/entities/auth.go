@@ -9,6 +9,10 @@ type TokenResponseGithub struct {
 	JWT         string `json:"jwt"`
 }
 
+type TokenResponseGoogle struct {
+	JWT string `json:"jwt"`
+}
+
 type UserGithub struct {
 	Username string `json:"login"`
 	UserID   string `json:"node_id"`

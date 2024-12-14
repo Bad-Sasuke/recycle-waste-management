@@ -21,3 +21,17 @@ func (h *HTTPGateway) AuthGithubCallback(ctx *fiber.Ctx) error {
 	}
 	return ctx.Redirect(fmt.Sprintf("%v/auth?token=%v", os.Getenv("FRONTEND_URL"), data.JWT), fiber.StatusTemporaryRedirect)
 }
+
+func (h *HTTPGateway) AuthGoogleCallback(ctx *fiber.Ctx) error {
+	token := ctx.Query("uid")
+
+	if token == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid query params"})
+	}
+
+	data, err := h.AuthService.AuthGoogle(token)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+	return ctx.Redirect(fmt.Sprintf("%v/auth?token=%v", os.Getenv("FRONTEND_URL"), data.JWT), fiber.StatusTemporaryRedirect)
+}

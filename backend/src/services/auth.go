@@ -5,7 +5,9 @@ import (
 	"recycle-waste-management-backend/src/domain/entities"
 	"recycle-waste-management-backend/src/domain/repositories"
 	"recycle-waste-management-backend/src/infrastructure/httpclients"
+	"recycle-waste-management-backend/src/infrastructure/providers"
 	"recycle-waste-management-backend/src/middlewares"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,16 +16,19 @@ import (
 type authService struct {
 	authGithub httpclients.IAuthGithub
 	UserRepo   repositories.IUsersRepository
+	Firebase   providers.IFirebaseProvider
 }
 
 type IAuthService interface {
 	AuthGithub(code string) (entities.TokenResponseGithub, error)
+	AuthGoogle(uid string) (entities.TokenResponseGoogle, error)
 }
 
 func NewAuthService(userRepo repositories.IUsersRepository) IAuthService {
 	return &authService{
 		UserRepo:   userRepo,
 		authGithub: httpclients.NewAuthGithub(),
+		Firebase:   providers.NewFirebaseProvider(),
 	}
 }
 
@@ -78,4 +83,50 @@ func (s *authService) AuthGithub(code string) (entities.TokenResponseGithub, err
 
 	}()
 	return data, nil
+}
+
+func (s *authService) AuthGoogle(uid string) (entities.TokenResponseGoogle, error) {
+	var userNew entities.UserDataFormat
+	userData, err := s.Firebase.GetUserFirebaseAuth(uid)
+	if err != nil {
+		return entities.TokenResponseGoogle{}, err
+	}
+
+	token, err := middlewares.GenerateJWTToken(userData.UID)
+	if err != nil {
+		return entities.TokenResponseGoogle{}, err
+	}
+	go func() {
+
+		userOld, err := s.UserRepo.GetUser(userData.UID)
+		if err == nil && mongo.ErrNoDocuments != err {
+			fmt.Println("User already exists")
+		}
+		username := strings.Split(userData.Email, "@")[0]
+		if userOld == nil || userData.UID == "" {
+			if userData.UID != "" {
+				userNew = entities.UserDataFormat{
+					UserID:    userData.UID,
+					Username:  username,
+					Email:     userData.Email,
+					ImageURL:  userData.PhotoURL,
+					JWT:       *token.Token,
+					CreatedAt: time.Now().UTC().Add(7 * time.Hour),
+					LastLogin: time.Now().UTC().Add(7 * time.Hour),
+				}
+			}
+
+			if err := s.UserRepo.InsertNewUser(&userNew); err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			userOld.LastLogin = time.Now().UTC().Add(7 * time.Hour)
+			userOld.JWT = *token.Token
+			if err := s.UserRepo.UpdateUser(userData.UID, userOld); err != nil {
+				fmt.Println(err)
+			}
+		}
+
+	}()
+	return entities.TokenResponseGoogle{JWT: *token.Token}, nil
 }

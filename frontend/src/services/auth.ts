@@ -1,4 +1,11 @@
+import { getAuth,  GoogleAuthProvider, signInWithPopup, type UserCredential } from "firebase/auth";
 import config from '../config';
+import { initializeApp } from "firebase/app";
+import { firebaseConfig } from './firebase';
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 const authLoginGithub = async () => {
     try {
         const url = new URL('https://github.com/login/oauth/authorize');
@@ -11,4 +18,17 @@ const authLoginGithub = async () => {
     }
 }
 
-export { authLoginGithub }
+const authLoginGoogle = async () => {
+  try {
+      // เริ่มกระบวนการ Sign In
+      const result : UserCredential = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const userID = user.uid;
+      console.log(userID);
+      // send api google/callback?uid=${userID}
+  } catch (error) {
+      console.log("Error during redirect login:", error);
+  }
+};
+
+export { authLoginGithub,authLoginGoogle }

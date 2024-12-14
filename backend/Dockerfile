@@ -13,6 +13,7 @@ FROM scratch
 WORKDIR /
 COPY --from=builder /main /main
 COPY --from=builder /app/src/docs /src/docs
+COPY --from=builder /app/src/serviceAccountKey.json /
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENTRYPOINT ["/main"]
 

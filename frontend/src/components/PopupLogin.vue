@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IconBrandGithub, IconBrandGoogleFilled } from '@tabler/icons-vue'
-import { authLoginGithub } from '@/services/auth'
+import { authLoginGithub,authLoginGoogle } from '@/services/auth'
 </script>
 
 <template>
@@ -13,7 +13,7 @@ import { authLoginGithub } from '@/services/auth'
             <p class="mr-2"><IconBrandGithub stoke="1.5" /></p>
             {{ $t('PopupLogin.signInVia') }} Github
           </button>
-          <button class="btn btn-outline" disabled>
+          <button class="btn btn-outline" @click="authLoginGoogle">
             <p class="mr-2"><IconBrandGoogleFilled stoke="1.5" /></p>
             {{ $t('PopupLogin.signInVia') }} Google
           </button>
