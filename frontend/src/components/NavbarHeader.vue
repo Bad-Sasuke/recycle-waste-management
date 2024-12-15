@@ -138,6 +138,11 @@ const handleLogout = () => {
           class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
           v-if="usersStore.isLogin"
         >
+          <span class="m-3">
+            <p class="text-lg truncate w-44 overflow-hidden text-ellipsis whitespace-nowrap">USERNAMEUSERNAMEUSERNAME</p>
+            <p class="text-xs hover:text-underline">USER_ID</p>
+          </span>
+          <hr/>
           <span v-if="usersStore.isLogin">
             <li class="disabled">
               <a class="justify-between">
