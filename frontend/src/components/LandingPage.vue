@@ -27,6 +27,14 @@ const handleGetStarted = () => {
     }
   }
 }
+
+const scrollToHowItWorks = () => {
+  // Scroll to the "How It Works" section
+  const howItWorksSection = document.getElementById('how-it-works');
+  if (howItWorksSection) {
+    howItWorksSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
 </script>
 
 <template>
@@ -55,10 +63,10 @@ const handleGetStarted = () => {
   </section>
 
   <!-- How It Works Section with DaisyUI Cards -->
-  <section class="py-20 bg-base-100">
+  <section id="how-it-works" class="py-20 bg-base-100">
     <div class="container mx-auto px-4">
       <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">{{ $t('LandingHome.how_it_works.title') }}</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <div class="card bg-base-100 shadow-xl border border-base-200">
           <figure class="px-8 pt-8">
             <div class="bg-green-100 p-4 rounded-full">
@@ -67,8 +75,12 @@ const handleGetStarted = () => {
           </figure>
           <div class="card-body items-center text-center">
             <h3 class="card-title text-green-600">{{ $t('LandingHome.how_it_works.steps.step1.title') }}</h3>
-            <p class="text-gray-600">{{ $t('LandingHome.how_it_works.steps.step1.description') }}</p>
-            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
+            <p class="text-gray-600 text-sm">{{ $t('LandingHome.how_it_works.steps.step1.description') }}</p>
+            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
           </div>
         </div>
         
@@ -80,8 +92,12 @@ const handleGetStarted = () => {
           </figure>
           <div class="card-body items-center text-center">
             <h3 class="card-title text-green-600">{{ $t('LandingHome.how_it_works.steps.step2.title') }}</h3>
-            <p class="text-gray-600">{{ $t('LandingHome.how_it_works.steps.step2.description') }}</p>
-            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
+            <p class="text-gray-600 text-sm">{{ $t('LandingHome.how_it_works.steps.step2.description') }}</p>
+            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
           </div>
         </div>
         
@@ -93,8 +109,29 @@ const handleGetStarted = () => {
           </figure>
           <div class="card-body items-center text-center">
             <h3 class="card-title text-green-600">{{ $t('LandingHome.how_it_works.steps.step3.title') }}</h3>
-            <p class="text-gray-600">{{ $t('LandingHome.how_it_works.steps.step3.description') }}</p>
-            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
+            <p class="text-gray-600 text-sm">{{ $t('LandingHome.how_it_works.steps.step3.description') }}</p>
+            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card bg-base-100 shadow-xl border border-base-200">
+          <figure class="px-8 pt-8">
+            <div class="bg-green-100 p-4 rounded-full">
+              <div class="text-3xl text-green-600">4</div>
+            </div>
+          </figure>
+          <div class="card-body items-center text-center">
+            <h3 class="card-title text-green-600">{{ $t('LandingHome.how_it_works.steps.step4.title') }}</h3>
+            <p class="text-gray-600 text-sm">{{ $t('LandingHome.how_it_works.steps.step4.description') }}</p>
+            <div class="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
