@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useUsersStore } from '../stores/users'
 import Card from './CardComponent.vue'
 import PopupWaste from './PopupWaste.vue'
 import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
 import type RecycleWaste from '../types/recycle_waste'
-import { IconFilter, IconTagPlus, IconTagMinus, IconCalendar, IconPlus } from '@tabler/icons-vue'
+import { IconFilter, IconTagPlus, IconTagMinus, IconCalendar, IconPlus, IconLock } from '@tabler/icons-vue'
 
 const searchQuery = ref('')
 const selectedCategory = ref<string[]>([])
 
 const items = ref<RecycleWaste[]>([])
 const isLoading = ref(true)
+const usersStore = useUsersStore()
 const wastesStore = useWastesStore()
 const categoryWasteStore = useCategoryWasteStore()
 
