@@ -139,11 +139,10 @@ const handleLogout = () => {
           v-if="usersStore.isLogin"
         >
           <span v-if="usersStore.isLogin">
-            <li class="disabled">
-              <a class="justify-between">
+            <li>
+              <RouterLink to="/profile" class="justify-between">
                 {{ $t('Navbar.profile.textProfile') }}
-                <span class="badge">{{ $t('Global.comingSoon') }}</span>
-              </a>
+              </RouterLink>
             </li>
 
             <li class="disabled">

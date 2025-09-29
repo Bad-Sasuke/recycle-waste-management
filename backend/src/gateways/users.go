@@ -2,6 +2,7 @@ package gateways
 
 import (
 	"recycle-waste-management-backend/src/domain/entities"
+	"recycle-waste-management-backend/src/middlewares"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -73,4 +74,35 @@ func (h *HTTPGateway) GetUser(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "cannot get user data"})
 	}
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success", Data: data})
+}
+
+func (h *HTTPGateway) GetCurrentUser(ctx *fiber.Ctx) error {
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+
+	data, err := h.UserService.GetUser(tokenDetails.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "cannot get user data"})
+	}
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success", Data: data})
+}
+
+func (h *HTTPGateway) UpdateCurrentUser(ctx *fiber.Ctx) error {
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+
+	bodyData := new(entities.NewUserBody)
+	if err := ctx.BodyParser(&bodyData); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid json body"})
+	}
+
+	err = h.UserService.UpdateUser(tokenDetails.UserID, bodyData)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "cannot update user data"})
+	}
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "updated successfully"})
 }

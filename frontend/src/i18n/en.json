@@ -86,5 +86,27 @@
     "PopupLogin": {
         "title": "Sign In",
         "signInVia": "Sign in via"
+    },
+    "Profile": {
+        "title": "Profile",
+        "subtitle": "Manage your account information",
+        "edit": "Edit",
+        "save": "Save",
+        "cancel": "Cancel",
+        "basicInfo": "Basic Information",
+        "accountInfo": "Account Information",
+        "additionalInfo": "Additional Information",
+        "username": "Username",
+        "usernamePlaceholder": "Enter your username",
+        "email": "Email",
+        "emailPlaceholder": "Enter your email",
+        "userId": "User ID",
+        "memberSince": "Member Since",
+        "lastLogin": "Last Login",
+        "profilePicture": "Profile Picture",
+        "profilePictureSet": "Profile picture is set",
+        "profilePictureNotSet": "No profile picture set",
+        "profileDescription": "Manage your personal information and account settings here. Your data is secure and private.",
+        "dataPrivacy": "We protect your privacy and will never share your personal information without your consent."
     }
 }
