@@ -146,3 +146,76 @@ func (h *HTTPGateway) UpdateProfileImage(ctx *fiber.Ctx) error {
 		Data: map[string]string{"image_url": imageURL},
 	})
 }
+
+func (h *HTTPGateway) UpdateUserRole(ctx *fiber.Ctx) error {
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+
+	// First, get the current user to check their role
+	currentUser, err := h.UserService.GetUser(tokenDetails.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "cannot get current user data"})
+	}
+
+	// Only allow admin users to update roles
+	if currentUser.Role != string(entities.UserRoleAdmin) {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "access denied - admin role required"})
+	}
+
+	// Get the target user ID and new role from the request
+	var req struct {
+		UserID string `json:"user_id"`
+		Role   string `json:"role"`
+	}
+	
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid json body"})
+	}
+
+	if req.UserID == "" || req.Role == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "user_id and role are required"})
+	}
+
+	// Validate the role
+	validRoles := map[string]bool{
+		string(entities.UserRoleUser): true,
+		string(entities.UserRoleAdmin): true,
+		string(entities.UserRoleModerator): true,
+	}
+
+	if !validRoles[req.Role] {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid role specified"})
+	}
+
+	// Update the target user's role
+	userRole := entities.UserRole(req.Role)
+	err = h.UserService.UpdateUserRole(req.UserID, userRole)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "cannot update user role"})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "user role updated successfully", Data: map[string]string{"user_id": req.UserID, "role": req.Role}})
+}
+
+func (h *HTTPGateway) GetCurrentUserRole(ctx *fiber.Ctx) error {
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+
+	currentUser, err := h.UserService.GetUser(tokenDetails.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "cannot get current user data"})
+	}
+
+	// Return only the role information
+	roleInfo := map[string]interface{}{
+		"user_id":  currentUser.UserID,
+		"username": currentUser.Username,
+		"role":     currentUser.Role,
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success", Data: roleInfo})
+}

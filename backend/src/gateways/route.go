@@ -18,6 +18,10 @@ func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 	api.Get("/profile", middlewares.SetJWtHeaderHandler(), gateway.GetCurrentUser)
 	api.Put("/profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateCurrentUser)
 	api.Post("/update-image-profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateProfileImage)
+	
+	// Role management (admin only)
+	api.Put("/update-role", middlewares.SetJWtHeaderHandler(), gateway.UpdateUserRole)
+	api.Get("/my-role", middlewares.SetJWtHeaderHandler(), gateway.GetCurrentUserRole)
 }
 
 func RouteRecycle(gateway HTTPGateway, app *fiber.App) {

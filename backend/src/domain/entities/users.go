@@ -13,6 +13,16 @@ type UserDataFormat struct {
 	Email     string    `json:"email,omitempty" bson:"email,omitempty"`
 	ImageURL  string    `json:"image_url,omitempty" bson:"image_url,omitempty"`
 	JWT       string    `json:"jwt,omitempty" bson:"jwt,omitempty"`
+	Role      string    `json:"role,omitempty" bson:"role,omitempty"` // User role: admin, user, moderator, etc.
 	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	LastLogin time.Time `json:"last_login,omitempty" bson:"last_login,omitempty"`
 }
+
+// UserRole represents the possible user roles in the system
+type UserRole string
+
+const (
+	UserRoleUser    UserRole = "user"
+	UserRoleAdmin   UserRole = "admin"
+	UserRoleModerator UserRole = "moderator"
+)
