@@ -15,6 +15,7 @@ type IUsersService interface {
 	GetAllUser() (*[]entities.UserDataFormat, error)
 	InsertNewAccount(data *entities.NewUserBody) error
 	UpdateUser(userID string, data *entities.NewUserBody) error
+	UpdateUserImage(userID string, imageURL string) error
 	DeleteUser(userID string) error
 	GetUser(userID string) (*entities.UserDataFormat, error)
 }
@@ -68,6 +69,17 @@ func (sv *usersService) UpdateUser(userID string, data *entities.NewUserBody) er
 
 func (sv *usersService) DeleteUser(userID string) error {
 	if err := sv.UsersRepository.DeleteUser(userID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (sv *usersService) UpdateUserImage(userID string, imageURL string) error {
+	updateData := &entities.UserDataFormat{
+		ImageURL: imageURL,
+	}
+	err := sv.UsersRepository.UpdateUser(userID, updateData)
+	if err != nil {
 		return err
 	}
 	return nil

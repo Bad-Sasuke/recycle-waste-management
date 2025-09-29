@@ -17,6 +17,7 @@ func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 	// Protected routes for current user profile
 	api.Get("/profile", middlewares.SetJWtHeaderHandler(), gateway.GetCurrentUser)
 	api.Put("/profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateCurrentUser)
+	api.Post("/update-image-profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateProfileImage)
 }
 
 func RouteRecycle(gateway HTTPGateway, app *fiber.App) {

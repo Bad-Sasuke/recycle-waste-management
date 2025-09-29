@@ -2,6 +2,13 @@ FROM golang:1.23-alpine3.20 as builder
 
 RUN apk update && apk add --no-cache ca-certificates
 
+# Install libwebp-tools for cwebp and dwebp binaries and ffmpeg for video processing
+RUN apk add --no-cache libwebp-tools libpng libjpeg-turbo giflib tiff ffmpeg
+
+# Create the .bin/webp directory and link cwebp binary for go-webpbin
+RUN mkdir -p /root/.bin/webp && \
+    ln -s /usr/bin/cwebp /root/.bin/webp/cwebp
+
 WORKDIR /app
 COPY . .
 

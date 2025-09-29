@@ -107,6 +107,16 @@
         "profilePictureSet": "Profile picture is set",
         "profilePictureNotSet": "No profile picture set",
         "profileDescription": "Manage your personal information and account settings here. Your data is secure and private.",
-        "dataPrivacy": "We protect your privacy and will never share your personal information without your consent."
+        "dataPrivacy": "We protect your privacy and will never share your personal information without your consent.",
+        "uploadImage": "Upload Image",
+        "changeImage": "Change Image",
+        "uploading": "Uploading...",
+        "dropImageHere": "Drop image here",
+        "clickOrDragToUpload": "Click or drag image to upload",
+        "supportedFormats": "Supported formats: JPG, PNG, GIF (max 10MB)",
+        "imageUploadError": "Failed to upload image",
+        "imageUploadSuccess": "Profile image updated successfully!",
+        "invalidFileType": "Please select a valid image file (JPG, PNG, GIF)",
+        "fileSizeError": "File size must be less than 10MB"
     }
 }
