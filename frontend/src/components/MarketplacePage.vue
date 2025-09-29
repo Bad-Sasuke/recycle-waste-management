@@ -120,9 +120,10 @@ watch(
 )
 
 const toggleCategory = (category: string) => {
-  const index = selectedCategory.value.indexOf(category)
+  const categoryLower = category.toLowerCase();
+  const index = selectedCategory.value.indexOf(categoryLower)
   if (index === -1) {
-    selectedCategory.value.push(category)
+    selectedCategory.value.push(categoryLower)
   } else {
     selectedCategory.value.splice(index, 1)
   }
@@ -192,7 +193,10 @@ const canAddProduct = computed(() => {
       <div class="overflow-y-auto max-h-[250px] md:max-h-[600px]">
         <label class="flex items-center space-x-2 mb-2" v-for="category in categoryWasteStore.category"
           :key="category.id">
-          <input type="checkbox" :value="category.name" @change="toggleCategory(category?.name ?? 'ไม่มี')" />
+          <input type="checkbox" 
+            :value="category.name" 
+            :checked="selectedCategory.includes((category.name ?? 'ไม่มี').toLowerCase())"
+            @change="toggleCategory(category?.name ?? 'ไม่มี')" />
           <span>{{ category?.name ?? 'ไม่มี' }}</span>
         </label>
       </div>
