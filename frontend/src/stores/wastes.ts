@@ -21,13 +21,19 @@ export const useWastesStore = defineStore('wastes', {
   state: () => ({
     wastes: [] as RecycleWaste[], // ใช้ interface ที่นำเข้า
     wasteToEdit: null as WasteToEdit | null,
+    pagination: {
+      page: 1,
+      limit: 12,
+      total_pages: 1,
+      total_items: 0
+    }
   }),
   actions: {
-    async fetchWastes() {
+    async fetchWastes(page: number = 1, limit: number = 12) {
       try {
-        const dataJson = await fetchData(webAPI + '/api/recycle-waste/get-wastes');
+        const dataJson = await fetchData(webAPI + `/api/recycle-waste/get-wastes?page=${page}&limit=${limit}`);
 
-        // Ensure dataJson.data is properly typed as RecycleWaste[]
+        // Handle paginated response
         if (dataJson.data && Array.isArray(dataJson.data)) {
           const wastes = dataJson.data as RecycleWaste[];
 
@@ -45,6 +51,12 @@ export const useWastesStore = defineStore('wastes', {
           });
 
           this.wastes = wastes;
+          
+          // Update pagination info if available in response
+          if (dataJson.page !== undefined) this.pagination.page = dataJson.page;
+          if (dataJson.limit !== undefined) this.pagination.limit = dataJson.limit;
+          if (dataJson.total_pages !== undefined) this.pagination.total_pages = dataJson.total_pages;
+          if (dataJson.total_items !== undefined) this.pagination.total_items = dataJson.total_items;
         } else {
           console.error('Data is not an array or is undefined');
           this.wastes = []; // Optionally set to an empty array
