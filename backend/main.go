@@ -44,7 +44,8 @@ func main() {
 	userSV := sv.NewUsersService(userMongo)
 	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes, categoryWasteRepo)
 	authSV := sv.NewAuthService(userMongo)
-	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV)
+	imageSV := sv.NewImageService()
+	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV, imageSV)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {

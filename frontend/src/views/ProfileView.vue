@@ -30,6 +30,9 @@ const editForm = ref({
 
 // Image handling
 const imageLoadError = ref(false)
+const isUploadingImage = ref(false)
+const uploadProgress = ref(0)
+const imageFile = ref(null)
 
 // API URL for profile endpoints
 const apiUrl = import.meta.env.VITE_WEB_API
@@ -54,6 +57,139 @@ const handleImageLoad = (event) => {
     naturalHeight: event.target.naturalHeight
   })
   imageLoadError.value = false
+}
+
+// Image upload functions
+const handleFileSelect = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    validateAndUploadFile(file)
+  }
+}
+
+const validateAndUploadFile = (file) => {
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+  if (!allowedTypes.includes(file.type)) {
+    error.value = 'Please select a valid image file (JPG, PNG, GIF)'
+    return
+  }
+
+  // Validate file size (max 10MB)
+  const maxSize = 10 * 1024 * 1024 // 10MB
+  if (file.size > maxSize) {
+    error.value = 'File size must be less than 10MB'
+    return
+  }
+
+  imageFile.value = file
+  uploadImage()
+}
+
+const uploadImage = async () => {
+  if (!imageFile.value) return
+
+  isUploadingImage.value = true
+  uploadProgress.value = 0
+  error.value = ''
+  success.value = ''
+
+  try {
+    const token = getCookie('token')
+    if (!token) {
+      error.value = 'Please login to update profile image'
+      return
+    }
+
+    if (!apiUrl) {
+      error.value = 'API configuration error'
+      return
+    }
+
+    // Create FormData for file upload
+    const formData = new FormData()
+    formData.append('image', imageFile.value)
+
+    // Upload with progress tracking
+    const xhr = new XMLHttpRequest()
+
+    // Track upload progress
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        uploadProgress.value = Math.round((event.loaded / event.total) * 100)
+      }
+    })
+
+    // Handle response
+    const uploadPromise = new Promise((resolve, reject) => {
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          resolve(JSON.parse(xhr.responseText))
+        } else {
+          reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`))
+        }
+      }
+      xhr.onerror = () => reject(new Error('Network error'))
+    })
+
+    // Configure and send request
+    xhr.open('POST', `${apiUrl}/api/user/update-image-profile`)
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    xhr.send(formData)
+
+    // Wait for upload to complete
+    const result = await uploadPromise
+
+    // Update user data with new image URL
+    userData.value.image_url = result.data.image_url
+    success.value = 'Profile image updated successfully!'
+
+    // Reset image error state
+    imageLoadError.value = false
+
+  } catch (err) {
+    console.error('Image upload error:', err)
+    error.value = `Failed to upload image: ${err.message}`
+  } finally {
+    isUploadingImage.value = false
+    uploadProgress.value = 0
+    imageFile.value = null
+
+    // Reset file input
+    const fileInput = document.getElementById('imageUpload')
+    if (fileInput) fileInput.value = ''
+  }
+}
+
+const triggerFileUpload = () => {
+  const fileInput = document.getElementById('imageUpload')
+  if (fileInput) {
+    fileInput.click()
+  }
+}
+
+// Drag and drop functionality
+const isDragging = ref(false)
+
+const handleDragOver = (event) => {
+  event.preventDefault()
+  isDragging.value = true
+}
+
+const handleDragLeave = (event) => {
+  event.preventDefault()
+  isDragging.value = false
+}
+
+const handleDrop = (event) => {
+  event.preventDefault()
+  isDragging.value = false
+
+  const files = event.dataTransfer.files
+  if (files.length > 0) {
+    const file = files[0]
+    validateAndUploadFile(file)
+  }
 }
 
 // Fetch user profile data
@@ -176,8 +312,14 @@ onMounted(() => {
       <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
-            <div class="avatar">
-              <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+            <div class="avatar relative group">
+              <div
+                class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative transition-all duration-200"
+                :class="{ 'ring-2 ring-blue-500 ring-offset-2': isDragging }"
+                @dragover="handleDragOver"
+                @dragleave="handleDragLeave"
+                @drop="handleDrop"
+              >
                 <img
                   v-if="userData.image_url && userData.image_url.trim() !== '' && !imageLoadError"
                   :src="userData.image_url"
@@ -191,11 +333,38 @@ onMounted(() => {
                   size="64"
                   class="text-gray-400"
                 />
+
+                <!-- Upload overlay -->
+                <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer rounded-full"
+                     @click="triggerFileUpload"
+                     v-if="!isUploadingImage">
+                  <IconEdit size="24" class="text-white" />
+                </div>
+
+                <!-- Upload progress -->
+                <div v-if="isUploadingImage" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
+                  <div class="text-white text-xs font-semibold">{{ uploadProgress }}%</div>
+                </div>
+
+                <!-- Drag overlay -->
+                <div v-if="isDragging" class="absolute inset-0 bg-blue-500 bg-opacity-75 flex items-center justify-center rounded-full">
+                  <div class="text-white text-xs font-semibold">Drop here</div>
+                </div>
               </div>
+
+              <!-- Hidden file input -->
+              <input
+                id="imageUpload"
+                type="file"
+                accept="image/*"
+                @change="handleFileSelect"
+                class="hidden"
+              />
             </div>
             <div>
               <h1 class="text-3xl font-bold text-gray-800">{{ $t('Profile.title') }}</h1>
               <p class="text-gray-600">{{ $t('Profile.subtitle') }}</p>
+              <p class="text-sm text-gray-500 mt-1">{{ $t('Profile.clickOrDragToUpload') }}</p>
             </div>
           </div>
 

@@ -106,3 +106,43 @@ func (h *HTTPGateway) UpdateCurrentUser(ctx *fiber.Ctx) error {
 	}
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "updated successfully"})
 }
+
+func (h *HTTPGateway) UpdateProfileImage(ctx *fiber.Ctx) error {
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+
+	// Get uploaded file
+	file, err := ctx.FormFile("image")
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "no image file uploaded"})
+	}
+
+	// Process and upload image
+	imageURL, err := h.ImageService.ProcessAndUploadProfileImage(file, tokenDetails.UserID)
+	if err != nil {
+		log.Error("Failed to process and upload image:", err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+
+	// Get current user data to delete old image
+	currentUser, err := h.UserService.GetUser(tokenDetails.UserID)
+	if err == nil && currentUser != nil && currentUser.ImageURL != "" {
+		// Delete old profile image (ignore errors)
+		_ = h.ImageService.DeleteProfileImage(currentUser.ImageURL)
+	}
+
+	// Update user's image URL in database
+	err = h.UserService.UpdateUserImage(tokenDetails.UserID, imageURL)
+	if err != nil {
+		// If database update fails, try to clean up uploaded image
+		_ = h.ImageService.DeleteProfileImage(imageURL)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: "failed to update user image"})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{
+		Message: "profile image updated successfully",
+		Data: map[string]string{"image_url": imageURL},
+	})
+}

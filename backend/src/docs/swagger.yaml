@@ -134,6 +134,53 @@ paths:
               example:
                 message: "created successfully"
 
+  /update-image-profile:
+    post:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      summary: Update user profile image
+      description: Upload and update user profile image (converts to WebP and uploads to S3)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Image file to upload (JPG, JPEG, PNG, GIF)
+      responses:
+        "200":
+          description: Profile image updated successfully
+          content:
+            application/json:
+              example:
+                message: profile image updated successfully
+                data:
+                  image_url: https://bucketnaja2.s3.ap-southeast-1.amazonaws.com/profile-images/2024/01/01/user123/uuid.webp
+        "400":
+          description: Bad request - no image file uploaded or invalid format
+          content:
+            application/json:
+              example:
+                message: no image file uploaded
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                message: unauthorized
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              example:
+                message: failed to process image
+
   /check_ip:
     get:
       tags:
