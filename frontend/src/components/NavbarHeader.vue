@@ -67,7 +67,7 @@ const handleLogout = () => {
       <!-- เมนูหลัก -->
       <div class="hidden md:flex">
         <ul class="menu menu-horizontal px-1">
-          <li>
+          <li v-if="usersStore.isLogin">
             <RouterLink to="/marketplace" class="font-semibold hover:text-green-600">{{
               $t('Navbar.menu.marketplace')
             }}</RouterLink>
@@ -170,7 +170,7 @@ const handleLogout = () => {
         <li>
           <RouterLink to="/" @click="closeDrawer">{{ $t('Navbar.menu.home') }}</RouterLink>
         </li>
-        <li>
+        <li v-if="usersStore.isLogin">
           <RouterLink to="/marketplace" @click="closeDrawer">{{
             $t('Navbar.menu.marketplace')
           }}</RouterLink>

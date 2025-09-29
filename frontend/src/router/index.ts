@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import { useUsersStore } from '@/stores/users'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,6 +22,7 @@ const router = createRouter({
       path: '/marketplace',
       name: 'marketplace',
       component: () => import('../views/MarketplaceView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/auth',
@@ -31,8 +33,30 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: () => import('../views/ProfileView.vue'),
+      meta: { requiresAuth: true }
     }
   ],
+})
+
+// Global navigation guard to handle authentication
+router.beforeEach((to, from, next) => {
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // This route requires auth, check if logged in
+    // If not, redirect to login page
+    const usersStore = useUsersStore();
+    usersStore.checkLogin(); // Refresh authentication state
+    
+    if (!usersStore.isLogin) {
+      next({
+        path: '/auth',
+        query: { redirect: to.fullPath }
+      })
+    } else {
+      next()
+    }
+  } else {
+    next() // Make sure to always call next()!
+  }
 })
 
 export default router
