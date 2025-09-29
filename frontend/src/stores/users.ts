@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia';
 import { getCookie, deleteCookie } from '../stores/cookie'
 
+/**
+ * User interface - Expected to be returned by the /api/user/profile endpoint
+ * The backend should include the 'role' field with values like 'admin', 'moderator', or 'user'
+ */
 interface User {
   user_id: string;
   username: string;
@@ -8,6 +12,7 @@ interface User {
   image_url: string;
   created_at: string;
   last_login: string;
+  role?: string; // Expected values: 'admin', 'moderator', 'user', etc.
 }
 
 export const useUsersStore = defineStore('users', {
@@ -27,7 +32,7 @@ export const useUsersStore = defineStore('users', {
             this.jwt = token || '';
             
             // If logged in, fetch user profile
-            if (this.isLogin && !this.user) {
+            if (this.isLogin) {
                 await this.fetchUserProfile();
             }
         },
@@ -54,9 +59,12 @@ export const useUsersStore = defineStore('users', {
                     this.user = result.data;
                 } else {
                     console.error(`Failed to fetch profile data: ${response.status} ${response.statusText}`);
+                    // If profile fetch fails, set user to null to avoid stale data
+                    this.user = null;
                 }
             } catch (error) {
                 console.error('Error fetching user profile:', error);
+                this.user = null;
             }
         },
         

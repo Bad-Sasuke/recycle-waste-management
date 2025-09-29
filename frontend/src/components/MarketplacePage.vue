@@ -89,6 +89,14 @@ const openModalWaste = () => {
   const modal = document.getElementById('modal-waste') as HTMLDialogElement
   modal.showModal()
 }
+
+/**
+ * Check if current user has permission to add products
+ * Only users with role 'admin' or 'moderator' can add products
+ */
+const canAddProduct = computed(() => {
+  return usersStore.isLogin && (usersStore.user?.role === 'admin' || usersStore.user?.role === 'moderator')
+})
 </script>
 
 <template>
@@ -144,7 +152,7 @@ const openModalWaste = () => {
             :placeholder="$t('Marketplace.search')"
           />
         </div>
-        <div>
+        <div v-if="canAddProduct">
           <button class="btn bg-green-700 hover:bg-green-600 text-white" @click="openModalWaste">
             <IconPlus stroke="2" />
           </button>
