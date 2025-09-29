@@ -188,13 +188,12 @@ const canAddProduct = computed(() => {
 
   <div class="container px-4 py-6 grid grid-cols-1 lg:grid-cols-6 gap-4 max-w-full" v-if="!isLoading">
     <!-- ส่วนซ้าย : หมวดหมู่ -->
-    <div class="bg-white shadow-md p-4 rounded lg:h-screen">
+    <div class="bg-green-50 border border-green-200 p-4 rounded lg:min-h-screen">
       <h2 class="text-2xl font-bold text-green-700 mb-4">{{ $t('Marketplace.category') }}</h2>
       <div class="overflow-y-auto max-h-[250px] md:max-h-[600px]">
         <label class="flex items-center space-x-2 mb-2" v-for="category in categoryWasteStore.category"
           :key="category.id">
-          <input type="checkbox" 
-            :value="category.name" 
+          <input type="checkbox" :value="category.name"
             :checked="selectedCategory.includes((category.name ?? 'ไม่มี').toLowerCase())"
             @change="toggleCategory(category?.name ?? 'ไม่มี')" />
           <span>{{ category?.name ?? 'ไม่มี' }}</span>

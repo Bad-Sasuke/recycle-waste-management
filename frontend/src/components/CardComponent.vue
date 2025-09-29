@@ -61,13 +61,13 @@ const openEditModal = () => {
 </script>
 
 <template>
-  <div class="flex card w-full md:w-64 shadow-2xl border-neutral/30 rounded-lg h-96 flex-col gap-4" v-if="isDelete">
-    <div class="skeleton h-60 w-full object-cover bg-[#f2f2f2] rounded-lg"></div>
+  <div class="flex card w-full md:w-64 border-green-700  rounded-xl h-96 flex-col gap-4" v-if="isDelete">
+    <div class="skeleton h-60 w-full object-cover bg-[#f2f2f2] rounded-xl"></div>
     <div class="mx-4 skeleton h-4 w-28"></div>
     <div class="mx-4 skeleton h-4"></div>
     <div class="mx-4 skeleton h-4 w-16"></div>
   </div>
-  <div class="card w-full md:w-64 shadow-2xl border-neutral/30 rounded-lg border-[0.25px] cursor-pointer h-96" v-else>
+  <div class="card w-full md:w-64 border-green-700 rounded-xl border-[2px] cursor-pointer h-96" v-else>
     <figure>
       <img class="h-64 w-full object-cover bg-[#f2f2f2]" :src="props.url" />
     </figure>
