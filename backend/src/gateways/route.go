@@ -1,6 +1,9 @@
 package gateways
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"recycle-waste-management-backend/src/middlewares"
+	"github.com/gofiber/fiber/v2"
+)
 
 func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 	api := app.Group("/api/user")
@@ -10,6 +13,10 @@ func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 	api.Put("/update_user", gateway.UpdateUserData)
 	api.Delete("/delete_user/:user_id", gateway.DeleteUser)
 	api.Get("/get_user", gateway.GetUser)
+
+	// Protected routes for current user profile
+	api.Get("/profile", middlewares.SetJWtHeaderHandler(), gateway.GetCurrentUser)
+	api.Put("/profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateCurrentUser)
 }
 
 func RouteRecycle(gateway HTTPGateway, app *fiber.App) {
