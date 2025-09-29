@@ -1,10 +1,6 @@
 import { defineStore } from 'pinia';
 import { getCookie, deleteCookie } from '../stores/cookie'
 
-/**
- * User interface - Expected to be returned by the /api/user/profile endpoint
- * The backend should include the 'role' field with values like 'admin', 'moderator', or 'user'
- */
 interface User {
   user_id: string;
   username: string;
@@ -12,7 +8,17 @@ interface User {
   image_url: string;
   created_at: string;
   last_login: string;
-  role?: string; // Expected values: 'admin', 'moderator', 'user', etc.
+  role?: string;
+}
+
+// Interface for waste data to edit
+export interface WasteToEdit {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  url: string;
+  lastUpdate: string;
 }
 
 export const useUsersStore = defineStore('users', {

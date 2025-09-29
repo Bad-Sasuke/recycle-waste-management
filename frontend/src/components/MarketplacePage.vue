@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useUsersStore } from '../stores/users'
 import Card from './CardComponent.vue'
 import PopupWaste from './PopupWaste.vue'
+import EditWasteModal from './EditWasteModal.vue'
 import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
 import type RecycleWaste from '../types/recycle_waste'
@@ -112,6 +113,7 @@ const canAddProduct = computed(() => {
   </div>
 
   <PopupWaste />
+  <EditWasteModal />
 
   <div
     class="container px-4 py-6 grid grid-cols-1 lg:grid-cols-6 gap-4 max-w-full"

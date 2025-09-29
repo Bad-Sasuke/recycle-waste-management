@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useWastesStore } from '../stores/wastes'
-import { ref } from 'vue'
+import { useUsersStore } from '../stores/users'
+import { ref, computed } from 'vue'
 
 const wastesStore = useWastesStore()
+const usersStore = useUsersStore()
 const isDelete = ref(false)
 const props = defineProps({
   id: { type: String },
@@ -18,6 +20,29 @@ const deleteItem = async (id: string) => {
   await new Promise((resolve) => setTimeout(resolve, 1000))
   await wastesStore.deleteWaste(id)
   isDelete.value = false
+}
+
+// Check if current user can edit (admin or moderator)
+const canEdit = computed(() => {
+  return usersStore.isLogin && (usersStore.user?.role === 'admin' || usersStore.user?.role === 'moderator')
+})
+
+// Function to open the edit modal
+const openEditModal = () => {
+  // Set the waste to edit in the store
+  wastesStore.setWasteToEdit(props.id ?? '', {
+    name: props.name ?? '',
+    price: props.price ?? 0,
+    category: props.category ?? '',
+    url: props.url ?? '',
+    lastUpdate: props.lastUpdate ?? ''
+  });
+  
+  // Show the modal
+  const modal = document.getElementById('modal-edit-waste') as HTMLDialogElement
+  if (modal) {
+    modal.showModal()
+  }
 }
 </script>
 
@@ -39,6 +64,16 @@ const deleteItem = async (id: string) => {
       <img class="h-64 w-full object-cover bg-[#f2f2f2]" :src="props.url" />
     </figure>
     <div class="flex items-end justify-end absolute top-0 right-0">
+      <!-- Edit button for authorized users -->
+      <button
+        v-if="canEdit"
+        class="btn btn-sm btn-ghost mr-1 mt-2 hover:bg-yellow-500 hover:text-white"
+        @click="openEditModal"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      </button>
       <button
         class="btn btn-sm btn-ghost mr-2 mt-2 hover:bg-base-600/50 hover:text-white/50"
         @click="deleteItem(props?.id ?? '')"
