@@ -169,6 +169,14 @@
             "title": "ราคา",
             "asc": "น้อยไปมาก",
             "desc": "มากไปน้อย"
+        },
+        "pagination": {
+            "page_info": "หน้า {{current}} จาก {{total}} ({{items}} รายการ)",
+            "first": "หน้าแรก",
+            "last": "หน้าสุดท้าย",
+            "prev": "ก่อนหน้า",
+            "next": "ถัดไป",
+            "of": "จาก"
         }
     },
     "PopupLogin": {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	ds "recycle-waste-management-backend/src/domain/datasources"
 	"recycle-waste-management-backend/src/domain/entities"
 
@@ -17,6 +18,7 @@ type IRecyclableItemsRepository interface {
 	Create(data *entities.RecyclableItemsModel) error
 	Delete(wasteID string) error
 	Update(wasteID string, data *entities.RecyclableItemsModel) error
+	FindAllPaginated(page, limit int) (*[]entities.RecyclableItemsModel, int64, error)
 }
 
 type recyclableItemsRepository struct {
@@ -87,4 +89,43 @@ func (repo *recyclableItemsRepository) Update(wasteID string, data *entities.Rec
 		return fmt.Errorf("error updating recyclable item: %v", err)
 	}
 	return nil
+}
+
+func (repo *recyclableItemsRepository) FindAllPaginated(page, limit int) (*[]entities.RecyclableItemsModel, int64, error) {
+	skip := int64((page - 1) * limit)
+	limit64 := int64(limit)
+
+	cursor, err := repo.Collection.Find(
+		repo.Context,
+		bson.M{},
+		&options.FindOptions{
+			Skip:  &skip,
+			Limit: &limit64,
+		},
+	)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error finding recyclable items: %v", err)
+	}
+	defer cursor.Close(repo.Context)
+
+	var recyclableItems []entities.RecyclableItemsModel
+	for cursor.Next(repo.Context) {
+		var recyclableItem entities.RecyclableItemsModel
+		if err := cursor.Decode(&recyclableItem); err != nil {
+			return nil, 0, fmt.Errorf("error decoding recyclable item: %v", err)
+		}
+		recyclableItems = append(recyclableItems, recyclableItem)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, 0, fmt.Errorf("cursor error: %v", err)
+	}
+
+	// Get total count
+	totalCount, err := repo.Collection.CountDocuments(repo.Context, bson.M{})
+	if err != nil {
+		return nil, 0, fmt.Errorf("error counting recyclable items: %v", err)
+	}
+
+	return &recyclableItems, totalCount, nil
 }

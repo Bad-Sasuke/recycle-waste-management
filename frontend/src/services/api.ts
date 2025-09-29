@@ -1,6 +1,10 @@
 interface ResponseAPI {
     message: string;
-    data?: string[] | { [key: string]: unknown };
+    data?: any;
+    page?: number;
+    limit?: number;
+    total_pages?: number;
+    total_items?: number;
 }
 
 const fetchData = async (url: string): Promise<ResponseAPI> => {

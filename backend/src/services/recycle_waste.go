@@ -14,6 +14,7 @@ import (
 
 type IRecycleWasteService interface {
 	GetRecyclableItems() (*[]entities.RecyclableItemsModel, error)
+	GetRecyclableItemsPaginated(page, limit int) (*[]entities.RecyclableItemsModel, int64, error)
 	AddRecycleWaste(data entities.RecyclableItemsModel, image []byte) error
 	DeleteWasteItem(wasteID string) error
 	GetCategoryWaste() (*[]entities.CategoryWasteModel, error)
@@ -40,6 +41,17 @@ func (s *RecycleWasteService) GetRecyclableItems() (*[]entities.RecyclableItemsM
 		return nil, fmt.Errorf("no data found")
 	}
 	return data, nil
+}
+
+func (s *RecycleWasteService) GetRecyclableItemsPaginated(page, limit int) (*[]entities.RecyclableItemsModel, int64, error) {
+	data, totalCount, err := s.RecyclableItemsRepo.FindAllPaginated(page, limit)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return nil, 0, err
+	}
+	if data == nil {
+		return &[]entities.RecyclableItemsModel{}, 0, nil
+	}
+	return data, totalCount, nil
 }
 
 func (s *RecycleWasteService) AddRecycleWaste(data entities.RecyclableItemsModel, image []byte) error {

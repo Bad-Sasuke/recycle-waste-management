@@ -10,11 +10,41 @@ import (
 )
 
 func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
-	data, err := h.RecycleService.GetRecyclableItems()
+	page := 1
+	limit := 12
+
+	pageQuery := ctx.Query("page")
+	limitQuery := ctx.Query("limit")
+
+	if pageQuery != "" {
+		if p, err := strconv.Atoi(pageQuery); err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	if limitQuery != "" {
+		if l, err := strconv.Atoi(limitQuery); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	data, totalCount, err := h.RecycleService.GetRecyclableItemsPaginated(page, limit)
 	if err != nil {
 		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseModel{Message: err.Error()})
 	}
-	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "success", Data: data})
+
+	totalPages := int((totalCount + int64(limit) - 1) / int64(limit)) // Ceiling division
+
+	response := entities.ResponsePaginationModel{
+		Message:    "success",
+		Data:       data,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+		TotalItems: totalCount,
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
 func (h *HTTPGateway) AddRecycleWaste(ctx *fiber.Ctx) error {
