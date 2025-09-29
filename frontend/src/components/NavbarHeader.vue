@@ -29,8 +29,8 @@ watch(cookies, (newCookie, oldCookie) => {
   }
 })
 
-onMounted(() => {
-  usersStore.checkLogin()
+onMounted(async () => {
+  await usersStore.checkLogin()
   setInterval(() => {
     const currentCookies = document.cookie
     if (cookies.value !== currentCookies) {
@@ -131,7 +131,17 @@ const handleLogout = () => {
       <!-- โปรไฟล์ผู้ใช้งาน -->
       <div class="dropdown dropdown-end" @click="usersStore.isLogin !== true ? handleLogin() : ''">
         <div tabindex="0" role="button" class="">
-          <IconUserCircle stroke="1.3" size="32" class="bg-neutral rounded-full text-base-100" />
+          <div v-if="usersStore.isLogin && usersStore.profileImage" class="avatar placeholder">
+            <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
+              <img :src="usersStore.profileImage" alt="Profile" class="rounded-full" />
+            </div>
+          </div>
+          <IconUserCircle 
+            v-else
+            stroke="1.3" 
+            size="32" 
+            class="bg-neutral rounded-full text-base-100" 
+          />
         </div>
         <ul
           tabindex="0"
@@ -176,6 +186,22 @@ const handleLogout = () => {
           }}</RouterLink>
         </li>
         <SwitchLangMobile />
+        <li v-if="usersStore.isLogin" class="mt-auto pt-4 border-t border-gray-400">
+          <div class="flex items-center gap-3 p-2">
+            <div v-if="usersStore.profileImage" class="avatar">
+              <div class="bg-neutral-focus text-neutral-content rounded-full w-10">
+                <img :src="usersStore.profileImage" alt="Profile" class="rounded-full" />
+              </div>
+            </div>
+            <div v-else class="p-1">
+              <IconUserCircle stroke="1.3" size="24" class="bg-neutral rounded-full text-base-100" />
+            </div>
+            <div class="flex-1">
+              <p class="font-medium">{{ usersStore.username }}</p>
+              <p class="text-xs opacity-50">Logged in</p>
+            </div>
+          </div>
+        </li>
       </ul>
     </div>
   </div>

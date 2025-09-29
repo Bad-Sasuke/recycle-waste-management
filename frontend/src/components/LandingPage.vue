@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import { useUsersStore } from '@/stores/users'
+import PopupLogin from './PopupLogin.vue'
 
 const { t } = useI18n()
+const router = useRouter()
+const usersStore = useUsersStore()
 
 // Testimonial data
 const testimonials = [
@@ -9,19 +14,40 @@ const testimonials = [
   { id: 2, name: 'Jane Smith', role: 'Community Leader', content: t('LandingHome.testimonials.item2.content'), avatar: 'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=2' },
   { id: 3, name: 'Mike Johnson', role: 'Environmental Advocate', content: t('LandingHome.testimonials.item3.content'), avatar: 'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=3' },
 ]
+
+const handleGetStarted = () => {
+  if (usersStore.isLogin) {
+    // If user is logged in, redirect to marketplace
+    router.push('/marketplace')
+  } else {
+    // If user is not logged in, show login modal
+    const modal = document.getElementById('popup-login') as HTMLDialogElement
+    if (modal) {
+      modal.showModal()
+    }
+  }
+}
 </script>
 
 <template>
+  <PopupLogin />
+  
   <!-- Hero Section with DaisyUI -->
   <section class="bg-gradient-to-r from-green-400 to-emerald-500 text-white py-20">
     <div class="container mx-auto px-4 text-center">
       <h1 class="text-4xl md:text-6xl font-bold mb-6">{{ $t('LandingHome.hero.title') }}</h1>
       <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">{{ $t('LandingHome.hero.description') }}</p>
       <div class="flex flex-col sm:flex-row justify-center gap-4">
-        <button class="btn btn-primary btn-wide bg-white text-green-600 hover:bg-gray-100 border-0">
+        <button 
+          class="btn btn-primary btn-wide bg-white text-green-600 hover:bg-gray-100 border-0"
+          @click="handleGetStarted"
+        >
           {{ $t('LandingHome.hero.button') }}
         </button>
-        <button class="btn btn-outline btn-wide text-white border-white hover:bg-white hover:text-green-600">
+        <button 
+          class="btn btn-outline btn-wide text-white border-white hover:bg-white hover:text-green-600"
+          @click="scrollToHowItWorks"
+        >
           {{ $t('LandingHome.hero.secondary_button') }}
         </button>
       </div>
@@ -159,7 +185,10 @@ const testimonials = [
     <div class="container mx-auto px-4 text-center">
       <h2 class="text-3xl md:text-4xl font-bold mb-6">{{ $t('LandingHome.cta.title') }}</h2>
       <p class="text-xl mb-8 max-w-2xl mx-auto">{{ $t('LandingHome.cta.description') }}</p>
-      <button class="btn btn-primary btn-wide bg-white text-green-600 hover:bg-gray-100 border-0">
+      <button 
+        class="btn btn-primary btn-wide bg-white text-green-600 hover:bg-gray-100 border-0"
+        @click="handleGetStarted"
+      >
         {{ $t('LandingHome.cta.button') }}
       </button>
     </div>
