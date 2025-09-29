@@ -3,10 +3,11 @@
         "hero": {
             "title": "Join recycling and earn money together!",
             "description": "Sell your recyclables or buy recyclable materials here!",
-            "button": "Get Started"
+            "button": "Get Started",
+            "secondary_button": "Learn More"
         },
         "how_it_works": {
-            "title": "Why choose us?",
+            "title": "How It Works",
             "steps": {
                 "step1": {
                     "title": "1. Find waste",
@@ -38,6 +39,23 @@
                     "description": "Receive payments securely and easily"
                 }
             }
+        },
+        "testimonials": {
+            "title": "What Our Users Say",
+            "item1": {
+                "content": "This platform has made it so easy for me to sell my recyclables. The pricing is fair and the pickup service is convenient."
+            },
+            "item2": {
+                "content": "As a community leader, I appreciate how this platform connects people who want to make a positive environmental impact."
+            },
+            "item3": {
+                "content": "The secure payment system gives me confidence. I've earned extra income while contributing to environmental sustainability."
+            }
+        },
+        "cta": {
+            "title": "Ready to Start Your Recycling Journey?",
+            "description": "Join our community today and start earning money while helping the environment.",
+            "button": "Get Started Now"
         }
     },
     "Navbar": {
