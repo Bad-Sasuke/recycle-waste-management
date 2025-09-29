@@ -32,42 +32,45 @@ const editForm = ref({
 const imageLoadError = ref(false)
 const isUploadingImage = ref(false)
 const uploadProgress = ref(0)
-const imageFile = ref(null)
+const imageFile = ref<File | null>(null)
 
 // API URL for profile endpoints
 const apiUrl = import.meta.env.VITE_WEB_API
 
 
-const handleImageError = (event) => {
+const handleImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement
   console.error('Image load error:', {
-    src: event.target.src,
+    src: target.src,
     error: event,
-    naturalWidth: event.target.naturalWidth,
-    naturalHeight: event.target.naturalHeight
+    naturalWidth: target.naturalWidth,
+    naturalHeight: target.naturalHeight
   })
   imageLoadError.value = true
   // Hide the broken image
-  event.target.style.display = 'none'
+  target.style.display = 'none'
 }
 
-const handleImageLoad = (event) => {
+const handleImageLoad = (event: Event) => {
+  const target = event.target as HTMLImageElement
   console.log('Image loaded successfully:', {
-    src: event.target.src,
-    naturalWidth: event.target.naturalWidth,
-    naturalHeight: event.target.naturalHeight
+    src: target.src,
+    naturalWidth: target.naturalWidth,
+    naturalHeight: target.naturalHeight
   })
   imageLoadError.value = false
 }
 
 // Image upload functions
-const handleFileSelect = (event) => {
-  const file = event.target.files[0]
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
   if (file) {
     validateAndUploadFile(file)
   }
 }
 
-const validateAndUploadFile = (file) => {
+const validateAndUploadFile = (file: File) => {
   // Validate file type
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
   if (!allowedTypes.includes(file.type)) {
@@ -138,7 +141,7 @@ const uploadImage = async () => {
     xhr.send(formData)
 
     // Wait for upload to complete
-    const result = await uploadPromise
+    const result: any = await uploadPromise
 
     // Update user data with new image URL
     userData.value.image_url = result.data.image_url
@@ -147,7 +150,7 @@ const uploadImage = async () => {
     // Reset image error state
     imageLoadError.value = false
 
-  } catch (err) {
+  } catch (err: any) {
     console.error('Image upload error:', err)
     error.value = `Failed to upload image: ${err.message}`
   } finally {
@@ -157,7 +160,7 @@ const uploadImage = async () => {
 
     // Reset file input
     const fileInput = document.getElementById('imageUpload')
-    if (fileInput) fileInput.value = ''
+    if (fileInput) (fileInput as HTMLInputElement).value = ''
   }
 }
 
@@ -171,22 +174,22 @@ const triggerFileUpload = () => {
 // Drag and drop functionality
 const isDragging = ref(false)
 
-const handleDragOver = (event) => {
+const handleDragOver = (event: DragEvent) => {
   event.preventDefault()
   isDragging.value = true
 }
 
-const handleDragLeave = (event) => {
+const handleDragLeave = (event: DragEvent) => {
   event.preventDefault()
   isDragging.value = false
 }
 
-const handleDrop = (event) => {
+const handleDrop = (event: DragEvent) => {
   event.preventDefault()
   isDragging.value = false
 
-  const files = event.dataTransfer.files
-  if (files.length > 0) {
+  const files = event.dataTransfer?.files
+  if (files && files.length > 0) {
     const file = files[0]
     validateAndUploadFile(file)
   }
@@ -228,7 +231,7 @@ const fetchUserProfile = async () => {
     } else {
       error.value = `Failed to fetch profile data: ${response.status} ${response.statusText}`
     }
-  } catch (err) {
+  } catch (err: any) {
     error.value = `Network error: ${err.message || 'Cannot connect to server'}`
   } finally {
     isLoading.value = false
@@ -266,7 +269,7 @@ const updateProfile = async () => {
     } else {
       error.value = `Failed to update profile: ${response.status} ${response.statusText}`
     }
-  } catch (err) {
+  } catch (err: any) {
     error.value = `Network error: ${err.message || 'Cannot connect to server'}`
   } finally {
     isLoading.value = false
