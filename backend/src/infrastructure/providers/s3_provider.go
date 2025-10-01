@@ -48,7 +48,7 @@ func NewS3Provider() IS3Provider {
 
 	// Create AWS session with credentials
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
+		Region:      aws.String(region),
 		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
 	})
 
@@ -75,7 +75,7 @@ func (s *S3Provider) UploadImage(imageData []byte, filename string, contentType 
 		Body:          bytes.NewReader(imageData),
 		ContentType:   aws.String(contentType),
 		ContentLength: aws.Int64(int64(len(imageData))),
-		ACL:           aws.String("public-read"), // Make image publicly accessible
+		ACL:           aws.String("public-read"),      // Make image publicly accessible
 		CacheControl:  aws.String("max-age=31536000"), // Cache for 1 year
 	})
 

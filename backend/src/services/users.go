@@ -141,13 +141,13 @@ func (sv *usersService) UpdateUserRole(userID string, role entities.UserRole) er
 	if err != nil {
 		return err
 	}
-	
+
 	updateData := &entities.UserDataFormat{
-		UserID:   userData.UserID,
-		Username: userData.Username,
-		Email:    userData.Email,
-		ImageURL: userData.ImageURL,
-		Role:     string(role),
+		UserID:    userData.UserID,
+		Username:  userData.Username,
+		Email:     userData.Email,
+		ImageURL:  userData.ImageURL,
+		Role:      string(role),
 		CreatedAt: userData.CreatedAt,
 		LastLogin: userData.LastLogin,
 	}

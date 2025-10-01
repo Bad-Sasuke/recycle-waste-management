@@ -1,8 +1,8 @@
 package gateways
 
 import (
-	"recycle-waste-management-backend/src/middlewares"
 	"github.com/gofiber/fiber/v2"
+	"recycle-waste-management-backend/src/middlewares"
 )
 
 func RouteUsers(gateway HTTPGateway, app *fiber.App) {
@@ -18,7 +18,7 @@ func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 	api.Get("/profile", middlewares.SetJWtHeaderHandler(), gateway.GetCurrentUser)
 	api.Put("/profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateCurrentUser)
 	api.Post("/update-image-profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateProfileImage)
-	
+
 	// Role management (admin only)
 	api.Put("/update-role", middlewares.SetJWtHeaderHandler(), gateway.UpdateUserRole)
 	api.Get("/my-role", middlewares.SetJWtHeaderHandler(), gateway.GetCurrentUserRole)
@@ -27,9 +27,12 @@ func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 func RouteRecycle(gateway HTTPGateway, app *fiber.App) {
 	api := app.Group("/api/recycle-waste")
 	api.Get("/get-wastes", gateway.GetRecycleWaste)
-	api.Post("/add-waste", gateway.AddRecycleWaste)
-	api.Delete("/delete-waste/:waste_id", gateway.DeleteRecycleWaste)
-	api.Put("/edit-waste/:waste_id", gateway.EditRecycleWaste)
+
+	// Protected routes requiring JWT authentication
+	protected := api.Group("", middlewares.SetJWtHeaderHandler())
+	protected.Post("/add-waste", gateway.AddRecycleWaste)
+	protected.Delete("/delete-waste/:waste_id", gateway.DeleteRecycleWaste)
+	protected.Put("/edit-waste/:waste_id", gateway.EditRecycleWaste)
 }
 
 func RouteCategoryWaste(gateway HTTPGateway, app *fiber.App) {

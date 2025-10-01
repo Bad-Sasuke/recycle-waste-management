@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"recycle-waste-management-backend/src/domain/entities"
+	"recycle-waste-management-backend/src/middlewares"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -48,6 +49,23 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 }
 
 func (h *HTTPGateway) AddRecycleWaste(ctx *fiber.Ctx) error {
+	// Decode JWT token to get user ID
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "Unauthorized access"})
+	}
+
+	// Get user data to check role
+	userData, err := h.UserService.GetUser(tokenDetails.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "User not found"})
+	}
+
+	// Check if user has admin or moderator role
+	if userData.Role != string(entities.UserRoleAdmin) && userData.Role != string(entities.UserRoleModerator) {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "Access denied: Insufficient permissions"})
+	}
+
 	name := ctx.FormValue("name")
 	price := ctx.FormValue("price")
 	category := ctx.FormValue("category")
@@ -85,11 +103,28 @@ func (h *HTTPGateway) AddRecycleWaste(ctx *fiber.Ctx) error {
 }
 
 func (h *HTTPGateway) DeleteRecycleWaste(ctx *fiber.Ctx) error {
+	// Decode JWT token to get user ID
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "Unauthorized access"})
+	}
+
+	// Get user data to check role
+	userData, err := h.UserService.GetUser(tokenDetails.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "User not found"})
+	}
+
+	// Check if user has admin or moderator role
+	if userData.Role != string(entities.UserRoleAdmin) && userData.Role != string(entities.UserRoleModerator) {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "Access denied: Insufficient permissions"})
+	}
+
 	id := ctx.Params("waste_id")
 	if id == "" {
 		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid query params"})
 	}
-	err := h.RecycleService.DeleteWasteItem(id)
+	err = h.RecycleService.DeleteWasteItem(id)
 	if err != nil {
 		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: err.Error()})
 	}
@@ -105,6 +140,23 @@ func (h *HTTPGateway) GetCategoryWaste(ctx *fiber.Ctx) error {
 }
 
 func (h *HTTPGateway) EditRecycleWaste(ctx *fiber.Ctx) error {
+	// Decode JWT token to get user ID
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "Unauthorized access"})
+	}
+
+	// Get user data to check role
+	userData, err := h.UserService.GetUser(tokenDetails.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "User not found"})
+	}
+
+	// Check if user has admin or moderator role
+	if userData.Role != string(entities.UserRoleAdmin) && userData.Role != string(entities.UserRoleModerator) {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "Access denied: Insufficient permissions"})
+	}
+
 	wasteID := ctx.Params("waste_id")
 	name := ctx.FormValue("name")
 	price := ctx.FormValue("price")
