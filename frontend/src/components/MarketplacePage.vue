@@ -7,7 +7,7 @@ import EditWasteModal from './EditWasteModal.vue'
 import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
 import type RecycleWaste from '../types/recycle_waste'
-import { IconFilter, IconTagPlus, IconTagMinus, IconCalendar, IconPlus } from '@tabler/icons-vue'
+import { IconFilter, IconTagPlus, IconTagMinus, IconCalendar, IconPlus, IconSearch, IconCategory, IconSortAscending, IconSortDescending, IconArrowsSort, IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight } from '@tabler/icons-vue'
 
 
 const searchQuery = ref('')
@@ -175,9 +175,11 @@ const canAddProduct = computed(() => {
   <div class="hero min-h-screen" v-if="isLoading">
     <div class="hero-content text-center">
       <div class="max-w-md">
-        <div class="flex flex-col justify-center w-full items-center h gap-4">
-          <span class="loading loading-spinner loading-lg text-green-700"></span>
-          <h1 class="text-xl font-bold text-green-700">{{ $t('Global.loading') }}</h1>
+        <div class="flex flex-col justify-center w-full items-center h gap-6">
+          <div class="flex items-center gap-2">
+            <span class="loading loading-spinner loading-lg text-green-700"></span>
+            <h1 class="text-xl md:text-2xl font-bold text-green-700">{{ $t('Global.loading') }}</h1>
+          </div>
         </div>
       </div>
     </div>
@@ -189,67 +191,79 @@ const canAddProduct = computed(() => {
   <div class="container px-4 py-6 grid grid-cols-1 lg:grid-cols-6 gap-4 max-w-full" v-if="!isLoading">
     <!-- ส่วนซ้าย : หมวดหมู่ -->
     <div class="bg-green-50 border border-green-200 p-4 rounded lg:min-h-screen">
-      <h2 class="text-2xl font-bold text-green-700 mb-4">{{ $t('Marketplace.category') }}</h2>
+      <div class="flex items-center gap-2 mb-4">
+        <IconCategory stroke="2" size="24" class="text-green-700" />
+        <h2 class="text-xl md:text-2xl font-bold text-green-700">{{ $t('Marketplace.category') }}</h2>
+      </div>
       <div class="overflow-y-auto max-h-[250px] md:max-h-[600px]">
-        <label class="flex items-center space-x-2 mb-2" v-for="category in categoryWasteStore.category"
+        <label class="flex items-center gap-2 mb-2 p-2 hover:bg-green-100 rounded cursor-pointer transition-all" v-for="category in categoryWasteStore.category"
           :key="category.id">
           <input type="checkbox" :value="category.name"
             :checked="selectedCategory.includes((category.name ?? 'ไม่มี').toLowerCase())"
-            @change="toggleCategory(category?.name ?? 'ไม่มี')" />
-          <span>{{ category?.name ?? 'ไม่มี' }}</span>
+            @change="toggleCategory(category?.name ?? 'ไม่มี')" 
+            class="checkbox checkbox-primary checkbox-sm" />
+          <span class="text-sm md:text-base">{{ category?.name ?? 'ไม่มี' }}</span>
         </label>
       </div>
     </div>
     <!-- ส่วนขวา: รายการขยะ -->
 
     <div class="lg:col-span-5">
-      <h1 class="text-3xl font-bold text-green-700 mb-4 text-center">
+      <h1 class="text-2xl md:text-3xl font-bold text-green-700 mb-4 text-center">
         {{ $t('Marketplace.title') }}
       </h1>
 
-      <div class="flex justify-center items-center gap-2 mb-2">
+      <div class="flex flex-col md:flex-row justify-center items-center gap-2 mb-4">
         <!-- ฟอร์มค้นหาขยะ -->
-        <div class="w-full">
-          <input type="text" v-model="searchQuery" class="input input-bordered w-full"
-            :placeholder="$t('Marketplace.search')" />
+        <div class="w-full md:w-auto">
+          <div class="flex items-center gap-2">
+            <IconSearch stroke="2" size="20" class="text-green-600 ml-2" />
+            <input type="text" v-model="searchQuery" class="input input-bordered w-full md:w-80"
+              :placeholder="$t('Marketplace.search')" />
+          </div>
         </div>
         <div v-if="canAddProduct">
-          <button class="btn bg-green-700 hover:bg-green-600 text-white" @click="openModalWaste">
+          <button class="btn bg-green-700 hover:bg-green-600 text-white flex items-center gap-2" @click="openModalWaste">
             <IconPlus stroke="2" />
+            <span>{{ $t('Marketplace.add_product') }}</span>
           </button>
         </div>
       </div>
-      <div class="flex gap-2">
-        <div class="dropdown mb-2">
-          <div tabindex="0" role="button" class="btn btn-outline btn-sm">
+      <div class="flex flex-wrap gap-2 mb-4">
+        <div class="dropdown">
+          <div tabindex="0" role="button" class="btn btn-outline btn-sm flex items-center gap-2">
             <IconCalendar stroke="2" /> {{ $t('Marketplace.filter_date.title') }}
           </div>
           <ul tabindex="0"
             class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow border border-neutral/50">
             <li>
-              <button @click="sortByLastUpdate">{{ $t('Marketplace.filter_date.lastest') }}</button>
+              <button @click="sortByLastUpdate" class="flex items-center gap-2">
+                <IconSortAscending stroke="2" />
+                {{ $t('Marketplace.filter_date.lastest') }}
+              </button>
             </li>
             <li>
-              <button @click="sortByLastUpdateDesc">
+              <button @click="sortByLastUpdateDesc" class="flex items-center gap-2">
+                <IconSortDescending stroke="2" />
                 {{ $t('Marketplace.filter_date.oldest') }}
               </button>
             </li>
           </ul>
         </div>
 
-        <div class="dropdown mb-2">
-          <div tabindex="0" role="button" class="btn btn-outline btn-sm">
-            <IconFilter stroke="2" /> {{ $t('Marketplace.filter_price.title') }}
+        <div class="dropdown">
+          <div tabindex="0" role="button" class="btn btn-outline btn-sm flex items-center gap-2">
+            <IconArrowsSort stroke="2" /> {{ $t('Marketplace.filter_price.title') }}
           </div>
           <ul tabindex="0"
             class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow border border-neutral/50">
             <li>
-              <button @click="sortByPrice">
+              <button @click="sortByPrice" class="flex items-center gap-2">
                 <IconTagMinus stroke="2" /> {{ $t('Marketplace.filter_price.asc') }}
               </button>
             </li>
             <li>
-              <button @click="sortByPriceDesc">
+              <button @click="sortByPriceDesc" class="flex items-center gap-2">
                 <IconTagPlus stroke="2" />{{ $t('Marketplace.filter_price.desc') }}
               </button>
             </li>
@@ -273,11 +287,11 @@ const canAddProduct = computed(() => {
         <div class="join">
           <button class="join-item btn" :disabled="currentPage <= 1" @click="goToPage(1)"
             :title="$t('Marketplace.pagination.first')">
-            &laquo;&laquo;
+            <IconChevronsLeft stroke="2" />
           </button>
           <button class="join-item btn" :disabled="currentPage <= 1" @click="goToPrevPage"
             :title="$t('Marketplace.pagination.prev')">
-            «
+            <IconChevronLeft stroke="2" />
           </button>
           <button v-for="page in getVisiblePages()" :key="page" class="join-item btn"
             :class="{ 'btn-active': page === currentPage }" @click="goToPage(page)">
@@ -285,14 +299,17 @@ const canAddProduct = computed(() => {
           </button>
           <button class="join-item btn" :disabled="currentPage >= wastesStore.pagination.total_pages"
             @click="goToNextPage" :title="$t('Marketplace.pagination.next')">
-            »
+            <IconChevronRight stroke="2" />
           </button>
           <button class="join-item btn" :disabled="currentPage >= wastesStore.pagination.total_pages"
             @click="goToPage(wastesStore.pagination.total_pages)" :title="$t('Marketplace.pagination.last')">
-            &raquo;&raquo;
+            <IconChevronsRight stroke="2" />
           </button>
         </div>
 
+        <div class="mt-3 text-sm text-gray-600">
+          {{ $t('Marketplace.pagination.page') }} {{ currentPage }} {{ $t('Marketplace.pagination.of') }} {{ wastesStore.pagination.total_pages }}
+        </div>
       </div>
     </div>
   </div>

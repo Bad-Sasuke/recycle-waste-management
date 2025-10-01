@@ -6,6 +6,7 @@ servers:
   - url: /api/user
   - url: /api/ip
   - url: /api/shops
+  - url: /api/settings
 paths:
   /users:
     get:
@@ -546,6 +547,207 @@ paths:
               example:
                 message: Shop not found
 
+  /settings:
+    get:
+      tags:
+        - settings
+      security:
+        - bearerAuth: []
+      description: Get current user's settings
+      summary: Get user settings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                        example: ABC123
+                      email_notifications:
+                        type: boolean
+                        example: true
+                      push_notifications:
+                        type: boolean
+                        example: false
+                      marketplace_updates:
+                        type: boolean
+                        example: true
+                      shop_updates:
+                        type: boolean
+                        example: true
+                      profile_visibility:
+                        type: string
+                        example: public
+                      show_email:
+                        type: boolean
+                        example: false
+                      show_phone:
+                        type: boolean
+                        example: false
+                      theme:
+                        type: string
+                        example: light
+                      language:
+                        type: string
+                        example: th
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                message: unauthorized
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              example:
+                message: cannot get settings
+
+    put:
+      tags:
+        - settings
+      security:
+        - bearerAuth: []
+      description: Update current user's settings
+      summary: Update user settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_notifications:
+                  type: boolean
+                  example: true
+                push_notifications:
+                  type: boolean
+                  example: false
+                marketplace_updates:
+                  type: boolean
+                  example: true
+                shop_updates:
+                  type: boolean
+                  example: true
+                profile_visibility:
+                  type: string
+                  enum: [public, private, friends]
+                  example: public
+                show_email:
+                  type: boolean
+                  example: false
+                show_phone:
+                  type: boolean
+                  example: false
+                theme:
+                  type: string
+                  enum: [light, dark, auto]
+                  example: light
+                language:
+                  type: string
+                  enum: [th, en]
+                  example: th
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: settings updated successfully
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      email_notifications:
+                        type: boolean
+                      push_notifications:
+                        type: boolean
+                      marketplace_updates:
+                        type: boolean
+                      shop_updates:
+                        type: boolean
+                      profile_visibility:
+                        type: string
+                      show_email:
+                        type: boolean
+                      show_phone:
+                        type: boolean
+                      theme:
+                        type: string
+                      language:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                message: invalid json body
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                message: unauthorized
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              example:
+                message: invalid theme: dark_mode
+
+    delete:
+      tags:
+        - settings
+      security:
+        - bearerAuth: []
+      description: Delete current user's settings (resets to default)
+      summary: Delete user settings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                message: settings deleted successfully
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                message: unauthorized
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              example:
+                message: cannot delete settings
+
 components:
   securitySchemes:
     bearerAuth:
@@ -562,3 +764,5 @@ tags:
   - name: ip
   - name: shops
     description: Recycling shops management endpoints
+  - name: settings
+    description: User settings management endpoints

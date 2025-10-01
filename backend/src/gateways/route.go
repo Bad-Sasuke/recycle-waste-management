@@ -59,3 +59,13 @@ func RouteShop(gateway HTTPGateway, app *fiber.App) {
 	protected.Put("/update-shop/:shop_id", gateway.UpdateShop)
 	protected.Delete("/delete-shop/:shop_id", gateway.DeleteShop)
 }
+
+func RouteSettings(gateway HTTPGateway, app *fiber.App) {
+	api := app.Group("/api/settings")
+
+	// Protected routes requiring JWT authentication
+	protected := api.Group("", middlewares.SetJWtHeaderHandler())
+	protected.Get("/", gateway.GetUserSettings)
+	protected.Put("/", gateway.UpdateUserSettings)
+	protected.Delete("/", gateway.DeleteUserSettings)
+}
