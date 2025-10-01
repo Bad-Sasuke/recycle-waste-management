@@ -143,7 +143,7 @@ func (h *HTTPGateway) UpdateProfileImage(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{
 		Message: "profile image updated successfully",
-		Data: map[string]string{"image_url": imageURL},
+		Data:    map[string]string{"image_url": imageURL},
 	})
 }
 
@@ -169,7 +169,6 @@ func (h *HTTPGateway) UpdateUserRole(ctx *fiber.Ctx) error {
 		UserID string `json:"user_id"`
 		Role   string `json:"role"`
 	}
-	
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid json body"})
 	}
@@ -180,8 +179,8 @@ func (h *HTTPGateway) UpdateUserRole(ctx *fiber.Ctx) error {
 
 	// Validate the role
 	validRoles := map[string]bool{
-		string(entities.UserRoleUser): true,
-		string(entities.UserRoleAdmin): true,
+		string(entities.UserRoleUser):      true,
+		string(entities.UserRoleAdmin):     true,
 		string(entities.UserRoleModerator): true,
 	}
 

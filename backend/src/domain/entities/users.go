@@ -22,7 +22,7 @@ type UserDataFormat struct {
 type UserRole string
 
 const (
-	UserRoleUser    UserRole = "user"
-	UserRoleAdmin   UserRole = "admin"
+	UserRoleUser      UserRole = "user"
+	UserRoleAdmin     UserRole = "admin"
 	UserRoleModerator UserRole = "moderator"
 )
