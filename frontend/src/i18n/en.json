@@ -77,7 +77,8 @@
             "textLogin": "Login",
             "textLogout": "Logout",
             "textProfile": "Profile",
-            "textSettings": "Settings"
+            "textSettings": "Settings",
+            "manageShop": "Manage Shop"
         }
     },
     "Footer": {
@@ -154,7 +155,10 @@
     },
     "Global": {
         "loading": "Loading data",
-        "comingSoon": "Coming soon"
+        "comingSoon": "Coming soon",
+        "success": "Success",
+        "error": "Error",
+        "close": "Close"
     },
     "Marketplace": {
         "title": "Recycling Waste Price",
@@ -246,11 +250,14 @@
             "createShop": "Create Shop",
             "cancel": "Cancel",
             "creating": "Creating Shop...",
-            "required": "* Required"
+            "required": "* Required",
+            "createError": "An error occurred while creating your shop. Please try again."
         },
         "manage": {
             "title": "Manage Shop",
             "subtitle": "View and manage your shop information",
+            "noShop": "No Shop Found",
+            "noShopDescription": "You haven't created a recycling shop yet. Create one to start accepting recyclable materials!",
             "editMode": "Edit Shop",
             "cancelEdit": "Cancel",
             "updateShop": "Update Shop",
@@ -270,7 +277,10 @@
             "description": "Description",
             "location": "Location",
             "latitude": "Latitude",
-            "longitude": "Longitude"
+            "longitude": "Longitude",
+            "updateSuccess": "Shop updated successfully!",
+            "updateError": "An error occurred while updating your shop. Please try again.",
+            "deleteError": "An error occurred while deleting your shop. Please try again."
         },
         "notification": {
             "noShopTitle": "You haven't created your recycling shop yet!",

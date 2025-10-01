@@ -214,6 +214,32 @@
         </div>
       </div>
     </div>
+
+    <!-- Success/Error Modal -->
+    <dialog id="create-result-modal" class="modal modal-bottom sm:modal-middle">
+      <div class="modal-box">
+        <div class="flex flex-col items-center gap-4 py-4">
+          <!-- Success Icon -->
+          <svg v-if="modalType === 'success'" xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <!-- Error Icon -->
+          <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+
+          <h3 class="font-bold text-xl">
+            {{ modalType === 'success' ? t('Global.success') : t('Global.error') }}
+          </h3>
+          <p class="text-center">{{ modalMessage }}</p>
+        </div>
+        <div class="modal-action">
+          <form method="dialog">
+            <button class="btn btn-primary">{{ t('Global.close') }}</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
   </div>
 </template>
 
@@ -232,6 +258,16 @@ const shopStore = useShopStore();
 
 // Loading states
 const isSubmitting = ref(false);
+const modalType = ref<'success' | 'error'>('success');
+const modalMessage = ref('');
+
+// Show modal function
+const showModal = (type: 'success' | 'error', message: string) => {
+  modalType.value = type;
+  modalMessage.value = message;
+  const modal = document.getElementById('create-result-modal') as HTMLDialogElement;
+  modal?.showModal();
+};
 
 // Shop data
 const shopData = reactive<CreateShopRequest>({
@@ -352,11 +388,11 @@ const submitShop = async () => {
         await router.push({ name: 'manage-shop' });
       }
     } else {
-      alert(`Error: ${result.message}`);
+      showModal('error', result.message);
     }
   } catch (error) {
     console.error('Error creating shop:', error);
-    alert('An error occurred while creating your shop. Please try again.');
+    showModal('error', t('Shop.create.createError'));
   } finally {
     isSubmitting.value = false;
   }
