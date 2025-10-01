@@ -46,6 +46,9 @@ func (repo *shopRepository) GetByShopID(shopID string) (*entities.ShopModel, err
 	var shop entities.ShopModel
 	filter := bson.M{"shop_id": shopID}
 	if err := repo.Collection.FindOne(repo.Context, filter).Decode(&shop); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, mongo.ErrNoDocuments
+		}
 		return nil, fmt.Errorf("error finding shop: %v", err)
 	}
 	return &shop, nil
@@ -55,6 +58,9 @@ func (repo *shopRepository) GetByUserID(userID string) (*entities.ShopModel, err
 	var shop entities.ShopModel
 	filter := bson.M{"user_id": userID}
 	if err := repo.Collection.FindOne(repo.Context, filter).Decode(&shop); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, mongo.ErrNoDocuments
+		}
 		return nil, fmt.Errorf("error finding shop by user ID: %v", err)
 	}
 	return &shop, nil

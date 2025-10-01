@@ -77,7 +77,8 @@
             "textLogin": "เข้าสู่ระบบ",
             "textLogout": "ออกจากระบบ",
             "textProfile": "โปรไฟล์",
-            "textSettings": "การตั้งค่า"
+            "textSettings": "การตั้งค่า",
+            "manageShop": "จัดการร้าน"
         }
     },
     "Footer": {
@@ -154,7 +155,10 @@
     },
     "Global": {
         "loading": "กําลังโหลดข้อมูล",
-        "comingSoon": "เร็วๆนี้"
+        "comingSoon": "เร็วๆนี้",
+        "success": "สำเร็จ",
+        "error": "เกิดข้อผิดพลาด",
+        "close": "ปิด"
     },
     "Marketplace": {
         "title": "ราคาขยะรีไซเคิล",
@@ -214,5 +218,76 @@
         "imageUploadSuccess": "อัปเดตรูปโปรไฟล์สำเร็จ!",
         "invalidFileType": "กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง (JPG, PNG, GIF)",
         "fileSizeError": "ขนาดไฟล์ต้องน้อยกว่า 10MB"
+    },
+    "Shop": {
+        "create": {
+            "title": "สร้างร้านรับรีไซเคิล",
+            "subtitle": "กรอกรายละเอียดร้านของคุณเพื่อเริ่มรับวัสดุรีไซเคิล",
+            "shopImage": "รูปภาพร้าน",
+            "changeImage": "เปลี่ยนรูปภาพ",
+            "uploadImage": "อัปโหลดรูปภาพร้าน",
+            "uploadImagePlaceholder": "คลิกหรือลากรูปภาพเพื่ออัปโหลด",
+            "shopName": "ชื่อร้าน",
+            "shopNamePlaceholder": "กรอกชื่อร้านของคุณ",
+            "description": "คำอธิบาย",
+            "descriptionPlaceholder": "อธิบายเกี่ยวกับร้านและวัสดุที่คุณรับ",
+            "address": "ที่อยู่",
+            "addressPlaceholder": "กรอกที่อยู่ร้านของคุณ",
+            "phone": "เบอร์โทรศัพท์",
+            "phonePlaceholder": "กรอกเบอร์โทรศัพท์ของคุณ",
+            "email": "อีเมล",
+            "emailPlaceholder": "กรอกอีเมลของคุณ",
+            "openingTime": "เวลาเปิด",
+            "closingTime": "เวลาปิด",
+            "location": "ที่ตั้งร้าน",
+            "locationHelp": "คลิกบนแผนที่เพื่อเลือกตำแหน่งร้านของคุณ",
+            "latitude": "ละติจูด",
+            "longitude": "ลองจิจูด",
+            "latitudePlaceholder": "กรอกพิกัดละติจูด",
+            "longitudePlaceholder": "กรอกพิกัดลองจิจูด",
+            "selectedLocation": "ตำแหน่งที่เลือก",
+            "yourLocation": "ตำแหน่งปัจจุบันของคุณ",
+            "createShop": "สร้างร้าน",
+            "cancel": "ยกเลิก",
+            "creating": "กำลังสร้างร้าน...",
+            "required": "* จำเป็นต้องกรอก",
+            "createError": "เกิดข้อผิดพลาดขณะสร้างร้าน กรุณาลองใหม่อีกครั้ง"
+        },
+        "manage": {
+            "title": "จัดการร้าน",
+            "subtitle": "ดูและจัดการข้อมูลร้านของคุณ",
+            "noShop": "ไม่พบร้านค้า",
+            "noShopDescription": "คุณยังไม่ได้สร้างร้านรีไซเคิล สร้างร้านเพื่อเริ่มรับวัสดุรีไซเคิล!",
+            "editMode": "แก้ไขร้าน",
+            "cancelEdit": "ยกเลิก",
+            "updateShop": "อัปเดตร้าน",
+            "updating": "กำลังอัปเดตร้าน...",
+            "deleteShop": "ลบร้าน",
+            "confirmDelete": "ยืนยันการลบ",
+            "deleteConfirmation": "คุณแน่ใจหรือไม่ว่าต้องการลบร้าน? การกระทำนี้ไม่สามารถย้อนกลับได้",
+            "cancelDelete": "ยกเลิก",
+            "shopDetails": "รายละเอียดร้าน",
+            "shopName": "ชื่อร้าน",
+            "email": "อีเมล",
+            "phone": "เบอร์โทรศัพท์",
+            "address": "ที่อยู่",
+            "businessHours": "เวลาทำการ",
+            "openingTime": "เวลาเปิด",
+            "closingTime": "เวลาปิด",
+            "description": "คำอธิบาย",
+            "location": "ที่ตั้ง",
+            "latitude": "ละติจูด",
+            "longitude": "ลองจิจูด",
+            "updateSuccess": "อัปเดตข้อมูลร้านสำเร็จ!",
+            "updateError": "เกิดข้อผิดพลาดขณะอัปเดตร้าน กรุณาลองใหม่อีกครั้ง",
+            "deleteError": "เกิดข้อผิดพลาดขณะลบร้าน กรุณาลองใหม่อีกครั้ง"
+        },
+        "notification": {
+            "noShopTitle": "คุณยังไม่ได้สร้างร้านรีไซเคิล!",
+            "noShopMessage": "สร้างร้านของคุณเพื่อเริ่มรับซื้อวัสดุรีไซเคิล",
+            "createNow": "สร้างตอนนี้",
+            "dismiss": "ปิดข้อความ",
+            "dismissed": "ปิดการแจ้งเตือนแล้ว"
+        }
     }
 }

@@ -25,6 +25,16 @@ export default {
   },
   plugins: [daisyui],
   daisyui: {
-    themes: ['light'],
+    themes: [
+      {
+        light: {
+          ...require("daisyui/src/theming/themes")["light"],
+          "primary": "#22c55e", // green-500
+          "primary-content": "#ffffff",
+          "secondary": "#10b981", // emerald-500
+          "accent": "#059669", // emerald-600
+        },
+      },
+    ],
   }
 }

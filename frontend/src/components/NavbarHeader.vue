@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff } from '@tabler/icons-vue'
+import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore } from '@tabler/icons-vue'
 import { RouterLink } from 'vue-router'
 import { ref, onBeforeMount, onMounted, watch } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { useUsersStore } from '@/stores/users'
+import { useShopStore } from '@/stores/shop'
 import PopupLogin from './PopupLogin.vue'
 import SwitchLangDesktop from './switchLang/SwitchLangDesktop.vue'
 import SwitchLangMobile from './switchLang/SwitchLangMobile.vue'
@@ -12,6 +13,7 @@ const isDrawerOpen = ref(false)
 
 const i18nStore = useI18nStore()
 const usersStore = useUsersStore()
+const shopStore = useShopStore()
 
 const closeDrawer = () => {
   isDrawerOpen.value = !isDrawerOpen.value
@@ -31,6 +33,9 @@ watch(cookies, (newCookie, oldCookie) => {
 
 onMounted(async () => {
   await usersStore.checkLogin()
+  if (usersStore.isLogin) {
+    await shopStore.checkUserShop()
+  }
   setInterval(() => {
     const currentCookies = document.cookie
     if (cookies.value !== currentCookies) {
@@ -155,6 +160,15 @@ const handleLogout = () => {
               </RouterLink>
             </li>
 
+            <li v-if="shopStore.hasShop">
+              <RouterLink to="/manage-shop" class="justify-between">
+                <div class="flex items-center gap-2">
+                  <IconBuildingStore stroke="1.5" size="18" />
+                  <span>{{ $t('Navbar.profile.manageShop') }}</span>
+                </div>
+              </RouterLink>
+            </li>
+
             <li class="disabled">
               <a>
                 {{ $t('Navbar.profile.textSettings') }}
@@ -184,6 +198,14 @@ const handleLogout = () => {
           <RouterLink to="/marketplace" @click="closeDrawer">{{
             $t('Navbar.menu.marketplace')
           }}</RouterLink>
+        </li>
+        <li v-if="usersStore.isLogin && shopStore.hasShop">
+          <RouterLink to="/manage-shop" @click="closeDrawer">
+            <div class="flex items-center gap-2">
+              <IconBuildingStore stroke="1.5" size="18" />
+              <span>{{ $t('Navbar.profile.manageShop') }}</span>
+            </div>
+          </RouterLink>
         </li>
         <SwitchLangMobile />
         <li v-if="usersStore.isLogin" class="mt-auto pt-4 border-t border-gray-400">
