@@ -169,7 +169,6 @@ func (h *HTTPGateway) UpdateUserRole(ctx *fiber.Ctx) error {
 		UserID string `json:"user_id"`
 		Role   string `json:"role"`
 	}
-
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid json body"})
 	}
