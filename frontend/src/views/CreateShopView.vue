@@ -12,9 +12,9 @@
                <path d="M5 21v-14a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v14"></path>
                <path d="M4 11h7m-7 4h7m-7 4h16"></path>
             </svg>
-            Create Your Recycling Shop
+            {{ t('Shop.create.title') }}
           </h1>
-          <p class="mt-2 opacity-90">Fill in your shop details to start accepting recyclable materials</p>
+          <p class="mt-2 opacity-90">{{ t('Shop.create.subtitle') }}</p>
         </div>
 
         <!-- Form Section -->
@@ -23,7 +23,7 @@
             <!-- Shop Image Upload -->
             <div class="form-control w-full">
               <label class="label">
-                <span class="label-text font-semibold text-gray-700">Shop Image</span>
+                <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.shopImage') }}</span>
               </label>
               <div class="flex flex-col items-center">
                 <div v-if="previewImage" class="mb-4">
@@ -37,7 +37,7 @@
                       <path d="M7 9l5 -5l5 5"></path>
                       <path d="M12 4v12"></path>
                     </svg>
-                    {{ shopImage ? 'Change Image' : 'Upload Shop Image' }}
+                    {{ shopImage ? t('Shop.create.changeImage') : t('Shop.create.uploadImage') }}
                   </span>
                   <input 
                     type="file" 
@@ -46,19 +46,19 @@
                     @change="handleImageChange"
                   />
                 </label>
-                <p class="text-sm text-gray-500 mt-2">Upload a JPG, PNG, or WebP image (max 5MB)</p>
+                <p class="text-sm text-gray-500 mt-2">{{ t('Shop.create.uploadImagePlaceholder') }}</p>
               </div>
             </div>
 
             <!-- Shop Name -->
             <div class="form-control w-full">
               <label class="label">
-                <span class="label-text font-semibold text-gray-700">Shop Name *</span>
+                <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.shopName') }} *</span>
               </label>
               <input
                 v-model="shopData.name"
                 type="text"
-                placeholder="Enter your shop name"
+                :placeholder="t('Shop.create.shopNamePlaceholder')"
                 class="input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500"
                 required
               />
@@ -67,11 +67,11 @@
             <!-- Description -->
             <div class="form-control w-full">
               <label class="label">
-                <span class="label-text font-semibold text-gray-700">Description</span>
+                <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.description') }}</span>
               </label>
               <textarea
                 v-model="shopData.description"
-                placeholder="Describe your shop and what materials you accept"
+                :placeholder="t('Shop.create.descriptionPlaceholder')"
                 class="textarea textarea-bordered w-full max-w-md focus:ring-2 focus:ring-green-500"
                 rows="3"
               ></textarea>
@@ -80,12 +80,12 @@
             <!-- Address -->
             <div class="form-control w-full">
               <label class="label">
-                <span class="label-text font-semibold text-gray-700">Address *</span>
+                <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.address') }} *</span>
               </label>
               <input
                 v-model="shopData.address"
                 type="text"
-                placeholder="Enter your shop address"
+                :placeholder="t('Shop.create.addressPlaceholder')"
                 class="input input-bordered w-full max-w-md focus:ring-2 focus:ring-green-500"
                 required
               />
@@ -95,24 +95,24 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Phone Number</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.phone') }}</span>
                 </label>
                 <input
                   v-model="shopData.phone"
                   type="tel"
-                  placeholder="Enter your phone number"
+                  :placeholder="t('Shop.create.phonePlaceholder')"
                   class="input input-bordered w-full focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Email</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.email') }}</span>
               </label>
                 <input
                   v-model="shopData.email"
                   type="email"
-                  placeholder="Enter your email address"
+                  :placeholder="t('Shop.create.emailPlaceholder')"
                   class="input input-bordered w-full focus:ring-2 focus:ring-green-500"
                 />
               </div>
@@ -122,7 +122,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Opening Time</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.openingTime') }}</span>
                 </label>
                 <input
                   v-model="shopData.opening_time"
@@ -133,7 +133,7 @@
 
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Closing Time</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.closingTime') }}</span>
                 </label>
                 <input
                   v-model="shopData.closing_time"
@@ -147,26 +147,26 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Latitude</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.latitude') }}</span>
                 </label>
                 <input
                   v-model="shopData.latitude"
                   type="number"
                   step="any"
-                  placeholder="Enter latitude coordinates"
+                  :placeholder="t('Shop.create.latitudePlaceholder')"
                   class="input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Longitude</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.longitude') }}</span>
                 </label>
                 <input
                   v-model="shopData.longitude"
                   type="number"
                   step="any"
-                  placeholder="Enter longitude coordinates"
+                  :placeholder="t('Shop.create.longitudePlaceholder')"
                   class="input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500"
                 />
               </div>
@@ -184,7 +184,7 @@
                   <path d="M5 12l5 5l10 -10"></path>
                 </svg>
                 <span class="loading loading-spinner" v-else></span>
-                {{ isSubmitting ? 'Creating Shop...' : 'Create Shop' }}
+                {{ isSubmitting ? t('Shop.create.creating') : t('Shop.create.createShop') }}
               </button>
 
               <button
@@ -197,7 +197,7 @@
                   <path d="M18 6l-12 12"></path>
                   <path d="M6 6l12 12"></path>
                 </svg>
-                Cancel
+                {{ t('Shop.create.cancel') }}
               </button>
             </div>
           </form>
@@ -212,7 +212,9 @@ import { ref, reactive, onMounted } from 'vue';
 import { useShopStore } from '@/stores/shop';
 import { useRouter } from 'vue-router';
 import type { CreateShopRequest } from '@/types/shop';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const router = useRouter();
 const shopStore = useShopStore();
 

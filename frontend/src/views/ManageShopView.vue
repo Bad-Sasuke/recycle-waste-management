@@ -16,8 +16,8 @@
                 </svg>
               </div>
               <div>
-                <h1 class="text-2xl font-bold">{{ shopStore.shopName || 'Your Shop' }}</h1>
-                <p class="opacity-90">{{ shopStore.shopAddress || 'Shop address' }}</p>
+                <h1 class="text-2xl font-bold">{{ shopStore.shopName || t('Shop.manage.title') }}</h1>
+                <p class="opacity-90">{{ shopStore.shopAddress || t('Shop.manage.shopDetails') }}</p>
               </div>
             </div>
             <button @click="editMode = !editMode" class="btn btn-outline btn-primary">
@@ -27,7 +27,7 @@
                 <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
                 <path d="M16 5l3 3"></path>
               </svg>
-              {{ editMode ? 'Cancel' : 'Edit Shop' }}
+              {{ editMode ? t('Shop.manage.cancelEdit') : t('Shop.manage.editMode') }}
             </button>
           </div>
         </div>
@@ -50,52 +50,52 @@
             <div class="space-y-6">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Shop Name</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.name || 'Not set' }}</p>
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.shopName') }}</h3>
+                  <p class="text-gray-900">{{ shopStore.shop?.name || t('Global.comingSoon') }}</p>
                 </div>
                 
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Email</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.email || 'Not provided' }}</p>
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.email') }}</h3>
+                  <p class="text-gray-900">{{ shopStore.shop?.email || t('Global.comingSoon') }}</p>
                 </div>
                 
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Phone</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.phone || 'Not provided' }}</p>
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.phone') }}</h3>
+                  <p class="text-gray-900">{{ shopStore.shop?.phone || t('Global.comingSoon') }}</p>
                 </div>
                 
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Address</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.address || 'Not provided' }}</p>
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.address') }}</h3>
+                  <p class="text-gray-900">{{ shopStore.shop?.address || t('Global.comingSoon') }}</p>
                 </div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Opening Time</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.opening_time || 'Not set' }}</p>
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.openingTime') }}</h3>
+                  <p class="text-gray-900">{{ shopStore.shop?.opening_time || t('Global.comingSoon') }}</p>
                 </div>
                 
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Closing Time</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.closing_time || 'Not set' }}</p>
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.closingTime') }}</h3>
+                  <p class="text-gray-900">{{ shopStore.shop?.closing_time || t('Global.comingSoon') }}</p>
                 </div>
               </div>
 
               <div>
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">Description</h3>
-                <p class="text-gray-900">{{ shopStore.shop?.description || 'No description provided' }}</p>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.description') }}</h3>
+                <p class="text-gray-900">{{ shopStore.shop?.description || t('Global.comingSoon') }}</p>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Latitude</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.latitude || 'Not set' }}</p>
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.latitude') }}</h3>
+                  <p class="text-gray-900">{{ shopStore.shop?.latitude || t('Global.comingSoon') }}</p>
                 </div>
                 
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Longitude</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.longitude || 'Not set' }}</p>
+                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.longitude') }}</h3>
+                  <p class="text-gray-900">{{ shopStore.shop?.longitude || t('Global.comingSoon') }}</p>
                 </div>
               </div>
             </div>
@@ -114,7 +114,7 @@
                   <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
                   <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
                 </svg>
-                Delete Shop
+                {{ t('Shop.manage.deleteShop') }}
               </button>
             </div>
           </div>
@@ -125,7 +125,7 @@
               <!-- Shop Image Upload -->
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Shop Image</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.shopImage') }}</span>
                 </label>
                 <div class="flex flex-col items-center">
                   <div v-if="previewImage" class="mb-4">
@@ -142,7 +142,7 @@
                         <path d="M7 9l5 -5l5 5"></path>
                         <path d="M12 4v12"></path>
                       </svg>
-                      {{ shopImage ? 'Change Image' : 'Upload New Image' }}
+                      {{ shopImage ? t('Shop.create.changeImage') : t('Shop.create.uploadImage') }}
                     </span>
                     <input 
                       type="file" 
@@ -157,7 +157,7 @@
               <!-- Shop Name -->
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Shop Name *</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.shopName') }} *</span>
                 </label>
                 <input
                   v-model="editShopData.name"
@@ -170,7 +170,7 @@
               <!-- Description -->
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Description</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.description') }}</span>
                 </label>
                 <textarea
                   v-model="editShopData.description"
@@ -182,7 +182,7 @@
               <!-- Address -->
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-semibold text-gray-700">Address *</span>
+                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.address') }} *</span>
                 </label>
                 <input
                   v-model="editShopData.address"
@@ -196,7 +196,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="form-control w-full">
                   <label class="label">
-                    <span class="label-text font-semibold text-gray-700">Phone Number</span>
+                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.phone') }}</span>
                   </label>
                   <input
                     v-model="editShopData.phone"
@@ -207,7 +207,7 @@
 
                 <div class="form-control w-full">
                   <label class="label">
-                    <span class="label-text font-semibold text-gray-700">Email</span>
+                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.email') }}</span>
                   </label>
                   <input
                     v-model="editShopData.email"
@@ -221,7 +221,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="form-control w-full">
                   <label class="label">
-                    <span class="label-text font-semibold text-gray-700">Opening Time</span>
+                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.openingTime') }}</span>
                   </label>
                   <input
                     v-model="editShopData.opening_time"
@@ -232,7 +232,7 @@
 
                 <div class="form-control w-full">
                   <label class="label">
-                    <span class="label-text font-semibold text-gray-700">Closing Time</span>
+                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.closingTime') }}</span>
                   </label>
                   <input
                     v-model="editShopData.closing_time"
@@ -246,7 +246,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="form-control w-full">
                   <label class="label">
-                    <span class="label-text font-semibold text-gray-700">Latitude</span>
+                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.latitude') }}</span>
                   </label>
                   <input
                     v-model="editShopData.latitude"
@@ -258,7 +258,7 @@
 
                 <div class="form-control w-full">
                   <label class="label">
-                    <span class="label-text font-semibold text-gray-700">Longitude</span>
+                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.longitude') }}</span>
                   </label>
                   <input
                     v-model="editShopData.longitude"
@@ -281,7 +281,7 @@
                     <path d="M5 12l5 5l10 -10"></path>
                   </svg>
                   <span class="loading loading-spinner" v-else></span>
-                  {{ isSubmitting ? 'Updating Shop...' : 'Update Shop' }}
+                  {{ isSubmitting ? t('Shop.manage.updating') : t('Shop.manage.updateShop') }}
                 </button>
 
                 <button
@@ -294,7 +294,7 @@
                     <path d="M18 6l-12 12"></path>
                     <path d="M6 6l12 12"></path>
                   </svg>
-                  Cancel
+                  {{ t('Shop.manage.cancelEdit') }}
                 </button>
               </div>
             </form>
@@ -313,12 +313,12 @@
             <path d="M12 9v2m0 4v.01"></path>
             <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75"></path>
           </svg>
-          Confirm Deletion
+          {{ t('Shop.manage.confirmDelete') }}
         </h3>
-        <p class="py-4">Are you sure you want to delete your shop? This action cannot be undone.</p>
+        <p class="py-4">{{ t('Shop.manage.deleteConfirmation') }}</p>
         <div class="modal-action">
-          <button @click="showDeleteModal = false" class="btn btn-outline">Cancel</button>
-          <button @click="deleteShop" class="btn btn-error">Delete Shop</button>
+          <button @click="showDeleteModal = false" class="btn btn-outline">{{ t('Shop.manage.cancelDelete') }}</button>
+          <button @click="deleteShop" class="btn btn-error">{{ t('Shop.manage.deleteShop') }}</button>
         </div>
       </div>
       <label class="modal-backdrop" @click="showDeleteModal = false">Close</label>
@@ -331,7 +331,9 @@ import { ref, reactive, onMounted, watch } from 'vue';
 import { useShopStore } from '@/stores/shop';
 import { useRouter } from 'vue-router';
 import type { UpdateShopRequest } from '@/types/shop';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const router = useRouter();
 const shopStore = useShopStore();
 
