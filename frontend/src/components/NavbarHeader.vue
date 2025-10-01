@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore } from '@tabler/icons-vue'
+import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser } from '@tabler/icons-vue'
 import { RouterLink } from 'vue-router'
 import { ref, onBeforeMount, onMounted, watch } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
@@ -66,16 +66,17 @@ const handleLogout = () => {
 
     <!-- โลโก้และชื่อเว็บ -->
     <div class="flex-1">
-      <RouterLink to="/" class="btn btn-ghost normal-case text-2xl font-bold text-green-700">
+      <RouterLink to="/" class="btn btn-ghost normal-case text-xl md:text-2xl font-bold text-green-700">
         ♻️ Recycle Waste
       </RouterLink>
       <!-- เมนูหลัก -->
       <div class="hidden md:flex">
         <ul class="menu menu-horizontal px-1">
-          <li v-if="usersStore.isLogin">
-            <RouterLink to="/marketplace" class="font-semibold hover:text-green-600">{{
-              $t('Navbar.menu.marketplace')
-            }}</RouterLink>
+          <li v-if="usersStore.isLogin" class="mr-2">
+            <RouterLink to="/marketplace" class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
+              <IconBuildingWarehouse stroke="1.5" size="20" />
+              {{ $t('Navbar.menu.marketplace') }}
+            </RouterLink>
           </li>
         </ul>
       </div>
@@ -89,24 +90,22 @@ const handleLogout = () => {
             <IconBell stroke="1.5" size="24" />
           </div>
         </div>
-        <ul
-          tabindex="0"
-          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-72 p-2 shadow h-64 flex flex-col"
-        >
-          <span class="flex justify-between mx-2 py-4">
-            <p class="text-[1rem]">{{ $t('Navbar.notif.title') }}</p>
+        <ul tabindex="0"
+          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-72 p-2 shadow h-64 flex flex-col">
+          <span class="flex justify-between mx-2 py-4 border-b border-gray-200">
+            <p class="text-lg font-semibold text-gray-800">{{ $t('Navbar.notif.title') }}</p>
             <div class="flex justify-between items-center gap-2">
-              <li>
-                <a class="text-xs">{{ $t('Navbar.notif.read_all') }}</a>
+              <li class="px-2">
+                <a class="text-sm font-medium text-green-600 hover:text-green-700">{{ $t('Navbar.notif.read_all') }}</a>
               </li>
-              <button class="hover:text-error">
-                <IconTrash stroke="1.5" size="24" />
+              <button class="hover:text-error p-1">
+                <IconTrash stroke="1.5" size="20" />
               </button>
             </div>
           </span>
-          <div class="flex flex-col items-center justify-center flex-grow gap-2">
-            <IconBellOff stroke="1.5" size="24" class="text-gray-500" />
-            <p class="text-sm text-gray-500">{{ $t('Navbar.notif.empty') }}</p>
+          <div class="flex flex-col items-center justify-center flex-grow gap-3">
+            <IconBellOff stroke="1.5" size="28" class="text-gray-400" />
+            <p class="text-base text-gray-500 font-medium">{{ $t('Navbar.notif.empty') }}</p>
           </div>
           <div class="flex flex-col overflow-auto h-38">
             <!-- <li>
@@ -119,63 +118,66 @@ const handleLogout = () => {
               <a>ไปหน้ากล่องข้อความ</a>
             </li>
             <li>
-              <a>ไปหน้ากล่องข้อความ</a>
+              <a>ไปหน้ากล่องข้อหมู</a>
             </li>
             <li>
               <a>ไปหน้ากล่องข้อความ</a>
             </li> -->
           </div>
-          <li class="flex items-center justify-center w-full mt-auto">
-            <a>{{ $t('Navbar.notif.view_all') }}</a>
+          <li class="flex items-center justify-center w-full mt-auto py-3">
+            <a class="text-center text-base font-medium text-green-600 hover:text-green-700">{{ $t('Navbar.notif.view_all') }}</a>
           </li>
         </ul>
       </div>
 
-      <SwitchLangDesktop />
+      <SwitchLangDesktop class="px-2" />
 
       <!-- โปรไฟล์ผู้ใช้งาน -->
       <div class="dropdown dropdown-end" @click="usersStore.isLogin !== true ? handleLogin() : ''">
-        <div tabindex="0" role="button" class="">
+        <div tabindex="0" role="button" class="flex items-center">
           <div v-if="usersStore.isLogin && usersStore.profileImage" class="avatar placeholder">
             <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
               <img :src="usersStore.profileImage" alt="Profile" class="rounded-full" />
             </div>
           </div>
-          <IconUserCircle 
-            v-else
-            stroke="1.3" 
-            size="32" 
-            class="bg-neutral rounded-full text-base-100" 
-          />
+          <IconUserCircle v-else stroke="1.3" size="32" class="bg-neutral rounded-full text-base-100" />
         </div>
-        <ul
-          tabindex="0"
-          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
-          v-if="usersStore.isLogin"
-        >
+        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+          v-if="usersStore.isLogin">
           <span v-if="usersStore.isLogin">
-            <li>
-              <RouterLink to="/profile" class="justify-between">
-                {{ $t('Navbar.profile.textProfile') }}
+            <li class="py-1">
+              <RouterLink to="/profile" class="flex items-center gap-3 text-base font-medium hover:text-green-700">
+                <div class="flex items-center gap-2">
+                  <IconUser stroke="1.5" size="20" />
+                  <span>{{ $t('Navbar.profile.textProfile') }}</span>
+                </div>
               </RouterLink>
             </li>
 
-            <li v-if="shopStore.hasShop">
-              <RouterLink to="/manage-shop" class="justify-between">
+            <li class="py-1" v-if="shopStore.hasShop">
+              <RouterLink to="/manage-shop" class="flex items-center gap-3 text-base font-medium hover:text-green-700">
                 <div class="flex items-center gap-2">
-                  <IconBuildingStore stroke="1.5" size="18" />
+                  <IconBuildingStore stroke="1.5" size="20" />
                   <span>{{ $t('Navbar.profile.manageShop') }}</span>
                 </div>
               </RouterLink>
             </li>
 
-            <li>
-              <RouterLink to="/settings">
-                {{ $t('Navbar.profile.textSettings') }}
+            <li class="py-1">
+              <RouterLink to="/settings" class="flex items-center gap-3 text-base font-medium hover:text-green-700">
+                <div class="flex items-center gap-2">
+                  <IconSettings stroke="1.5" size="20" />
+                  <span>{{ $t('Navbar.profile.textSettings') }}</span>
+                </div>
               </RouterLink>
             </li>
-            <li>
-              <a @click="handleLogout">{{ $t('Navbar.profile.textLogout') }}</a>
+            <li class="py-1">
+              <a @click="handleLogout" class="flex items-center gap-3 text-base font-medium text-error hover:text-error-focus transition-colors">
+                <div class="flex items-center gap-2">
+                  <IconLogout stroke="1.5" size="20" />
+                  <span>{{ $t('Navbar.profile.textLogout') }}</span>
+                </div>
+              </a>
             </li>
           </span>
         </ul>
@@ -189,24 +191,26 @@ const handleLogout = () => {
     <div class="drawer-side">
       <label for="menu-mobile" aria-label="close sidebar" class="drawer-overlay"></label>
       <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
-        <p class="normal-case text-2xl font-bold text-green-700 m-2">♻️ Recycle Waste</p>
-        <li>
-          <RouterLink to="/" @click="closeDrawer">{{ $t('Navbar.menu.home') }}</RouterLink>
-        </li>
-        <li v-if="usersStore.isLogin">
-          <RouterLink to="/marketplace" @click="closeDrawer">{{
-            $t('Navbar.menu.marketplace')
-          }}</RouterLink>
-        </li>
-        <li v-if="usersStore.isLogin && shopStore.hasShop">
-          <RouterLink to="/manage-shop" @click="closeDrawer">
-            <div class="flex items-center gap-2">
-              <IconBuildingStore stroke="1.5" size="18" />
-              <span>{{ $t('Navbar.profile.manageShop') }}</span>
-            </div>
+        <p class="normal-case text-xl md:text-2xl font-bold text-green-700 m-2 mb-4">♻️ Recycle Waste</p>
+        <li class="py-2">
+          <RouterLink to="/" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
+            <IconHome stroke="1.5" size="20" />
+            <span>{{ $t('Navbar.menu.home') }}</span>
           </RouterLink>
         </li>
-        <SwitchLangMobile />
+        <li class="py-2" v-if="usersStore.isLogin">
+          <RouterLink to="/marketplace" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
+            <IconBuildingWarehouse stroke="1.5" size="20" />
+            <span>{{ $t('Navbar.menu.marketplace') }}</span>
+          </RouterLink>
+        </li>
+        <li class="py-2" v-if="usersStore.isLogin && shopStore.hasShop">
+          <RouterLink to="/manage-shop" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
+            <IconBuildingStore stroke="1.5" size="20" />
+            <span>{{ $t('Navbar.profile.manageShop') }}</span>
+          </RouterLink>
+        </li>
+        <SwitchLangMobile class="mt-2 py-2" />
         <li v-if="usersStore.isLogin" class="mt-auto pt-4 border-t border-gray-400">
           <div class="flex items-center gap-3 p-2">
             <div v-if="usersStore.profileImage" class="avatar">
@@ -218,8 +222,8 @@ const handleLogout = () => {
               <IconUserCircle stroke="1.3" size="24" class="bg-neutral rounded-full text-base-100" />
             </div>
             <div class="flex-1">
-              <p class="font-medium">{{ usersStore.username }}</p>
-              <p class="text-xs opacity-50">Logged in</p>
+              <p class="font-semibold text-base">{{ usersStore.username }}</p>
+              <p class="text-xs opacity-60">Logged in</p>
             </div>
           </div>
         </li>

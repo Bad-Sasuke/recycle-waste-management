@@ -161,6 +161,7 @@
         "close": "Close"
     },
     "Marketplace": {
+        "add": "Add Product",
         "title": "Recycling Waste Price",
         "category": "Category",
         "search": "Search e.g plastic, metal",
@@ -251,6 +252,14 @@
             "title": "Appearance",
             "theme": "Theme",
             "language": "Language"
+        },
+        "messages": {
+            "saveSuccess": "Settings saved successfully!",
+            "saveFailed": "Failed to save settings. Please try again",
+            "fetchFailed": "Failed to fetch settings",
+            "networkError": "Network error occurred",
+            "loginRequired": "Please login to access settings",
+            "apiConfigError": "API configuration error"
         }
     },
     "Shop": {

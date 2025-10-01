@@ -3,9 +3,15 @@ import { ref, onMounted } from 'vue'
 import { IconSettings, IconBell, IconLock, IconPalette, IconCheck, IconX } from '@tabler/icons-vue'
 import { useUsersStore } from '@/stores/users'
 import { useI18nStore } from '@/stores/i18n'
+import { getCookie } from '@/stores/cookie'
+import { useI18n } from 'vue-i18n'
 
 const usersStore = useUsersStore()
 const i18nStore = useI18nStore()
+const { t } = useI18n()
+
+// API URL
+const apiUrl = import.meta.env.VITE_WEB_API
 
 // Settings state
 const settings = ref({
@@ -49,53 +55,141 @@ const visibilityOptions = [
   { value: 'friends', labelKey: 'Settings.privacy.friends' }
 ]
 
-// Save settings
+// Watch for language changes and apply immediately
+const handleLanguageChange = (newLanguage: string) => {
+  if (newLanguage !== i18nStore.locale) {
+    i18nStore.setLocale(newLanguage)
+  }
+}
+
+// Watch for theme changes and apply immediately (you can implement theme switching logic here)
+const handleThemeChange = (newTheme: string) => {
+  // TODO: Implement theme switching logic here
+  // For example: document.documentElement.setAttribute('data-theme', newTheme)
+  console.log('Theme changed to:', newTheme)
+}
+
+// Fetch settings from API
+const fetchSettings = async () => {
+  isLoading.value = true
+  error.value = ''
+
+  try {
+    const token = getCookie('token')
+    if (!token) {
+      error.value = t('Settings.messages.loginRequired')
+      return
+    }
+
+    if (!apiUrl) {
+      error.value = t('Settings.messages.apiConfigError')
+      return
+    }
+
+    const response = await fetch(`${apiUrl}/api/settings/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (response.ok) {
+      const result = await response.json()
+      const data = result.data
+
+      // Map API response to settings
+      settings.value = {
+        emailNotifications: data.email_notifications ?? true,
+        pushNotifications: data.push_notifications ?? false,
+        marketplaceUpdates: data.marketplace_updates ?? true,
+        shopUpdates: data.shop_updates ?? true,
+        profileVisibility: data.profile_visibility ?? 'public',
+        showEmail: data.show_email ?? false,
+        showPhone: data.show_phone ?? false,
+        theme: data.theme ?? 'light',
+        language: data.language ?? 'th'
+      }
+
+      // Update language if different
+      if (settings.value.language !== i18nStore.locale) {
+        i18nStore.setLocale(settings.value.language)
+      }
+    } else {
+      error.value = `${t('Settings.messages.fetchFailed')}: ${response.status} ${response.statusText}`
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : t('Settings.messages.networkError')
+    error.value = `${t('Settings.messages.networkError')}: ${errorMessage}`
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Save settings to API
 const saveSettings = async () => {
   isLoading.value = true
   success.value = ''
   error.value = ''
 
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Save to localStorage
-    localStorage.setItem('userSettings', JSON.stringify(settings.value))
-
-    // Update language if changed
-    if (settings.value.language !== i18nStore.locale) {
-      i18nStore.setLocale(settings.value.language)
+    const token = getCookie('token')
+    if (!token) {
+      error.value = t('Settings.messages.loginRequired')
+      return
     }
 
-    success.value = 'Settings saved successfully!'
+    if (!apiUrl) {
+      error.value = t('Settings.messages.apiConfigError')
+      return
+    }
 
-    // Clear success message after 3 seconds
-    setTimeout(() => {
-      success.value = ''
-    }, 3000)
+    // Prepare request body with snake_case keys
+    const requestBody = {
+      email_notifications: settings.value.emailNotifications,
+      push_notifications: settings.value.pushNotifications,
+      marketplace_updates: settings.value.marketplaceUpdates,
+      shop_updates: settings.value.shopUpdates,
+      profile_visibility: settings.value.profileVisibility,
+      show_email: settings.value.showEmail,
+      show_phone: settings.value.showPhone,
+      theme: settings.value.theme,
+      language: settings.value.language
+    }
+
+    const response = await fetch(`${apiUrl}/api/settings/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    if (response.ok) {
+      success.value = t('Settings.messages.saveSuccess')
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        success.value = ''
+      }, 3000)
+    } else {
+      const result = await response.json()
+      error.value = result.message || `${t('Settings.messages.saveFailed')}: ${response.status}`
+    }
   } catch (err: unknown) {
-    error.value = 'Failed to save settings. Please try again : ' + err
+    const errorMessage = err instanceof Error ? err.message : t('Settings.messages.networkError')
+    error.value = `${t('Settings.messages.networkError')}: ${errorMessage}`
   } finally {
     isLoading.value = false
   }
 }
 
-// Load settings from localStorage
-const loadSettings = () => {
-  const saved = localStorage.getItem('userSettings')
-  if (saved) {
-    settings.value = { ...settings.value, ...JSON.parse(saved) }
-  }
-  // Set current language
-  settings.value.language = i18nStore.locale
-}
-
 onMounted(() => {
   if (!usersStore.isLogin) {
-    error.value = 'Please login to access settings'
+    error.value = t('Settings.messages.loginRequired')
     return
   }
-  loadSettings()
+  fetchSettings()
 })
 </script>
 
@@ -244,7 +338,11 @@ onMounted(() => {
               <label class="label">
                 <span class="label-text font-medium">{{ $t('Settings.appearance.theme') }}</span>
               </label>
-              <select class="select select-bordered w-full" v-model="settings.theme">
+              <select
+                class="select select-bordered w-full"
+                v-model="settings.theme"
+                @change="handleThemeChange(settings.theme)"
+              >
                 <option v-for="option in themeOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>
@@ -256,7 +354,11 @@ onMounted(() => {
               <label class="label">
                 <span class="label-text font-medium">{{ $t('Settings.appearance.language') }}</span>
               </label>
-              <select class="select select-bordered w-full" v-model="settings.language">
+              <select
+                class="select select-bordered w-full"
+                v-model="settings.language"
+                @change="handleLanguageChange(settings.language)"
+              >
                 <option v-for="option in languageOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>
