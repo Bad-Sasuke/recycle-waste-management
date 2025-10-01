@@ -219,6 +219,40 @@
         "invalidFileType": "กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง (JPG, PNG, GIF)",
         "fileSizeError": "ขนาดไฟล์ต้องน้อยกว่า 10MB"
     },
+    "Settings": {
+        "title": "การตั้งค่า",
+        "subtitle": "จัดการการตั้งค่าบัญชีและการแจ้งเตือนของคุณ",
+        "saveSettings": "บันทึกการตั้งค่า",
+        "saving": "กำลังบันทึก...",
+        "notifications": {
+            "title": "การแจ้งเตือน",
+            "emailNotifications": "การแจ้งเตือนทางอีเมล",
+            "emailNotificationsDesc": "รับการแจ้งเตือนทางอีเมลสำหรับกิจกรรมที่สำคัญ",
+            "pushNotifications": "การแจ้งเตือนแบบพุช",
+            "pushNotificationsDesc": "รับการแจ้งเตือนแบบพุชบนอุปกรณ์ของคุณ",
+            "marketplaceUpdates": "อัปเดตตลาดซื้อขาย",
+            "marketplaceUpdatesDesc": "รับข้อมูลอัปเดตเกี่ยวกับราคาและผลิตภัณฑ์ใหม่",
+            "shopUpdates": "อัปเดตร้านค้า",
+            "shopUpdatesDesc": "รับการแจ้งเตือนเกี่ยวกับร้านค้าของคุณ"
+        },
+        "privacy": {
+            "title": "ความเป็นส่วนตัว",
+            "profileVisibility": "การมองเห็นโปรไฟล์",
+            "profileVisibilityDesc": "เลือกว่าใครสามารถดูโปรไฟล์ของคุณได้",
+            "public": "สาธารณะ",
+            "private": "ส่วนตัว",
+            "friends": "เพื่อน",
+            "showEmail": "แสดงอีเมล",
+            "showEmailDesc": "แสดงอีเมลของคุณในโปรไฟล์สาธารณะ",
+            "showPhone": "แสดงเบอร์โทรศัพท์",
+            "showPhoneDesc": "แสดงเบอร์โทรศัพท์ของคุณในโปรไฟล์สาธารณะ"
+        },
+        "appearance": {
+            "title": "รูปลักษณ์",
+            "theme": "ธีม",
+            "language": "ภาษา"
+        }
+    },
     "Shop": {
         "create": {
             "title": "สร้างร้านรับรีไซเคิล",

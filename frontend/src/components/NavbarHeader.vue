@@ -169,11 +169,10 @@ const handleLogout = () => {
               </RouterLink>
             </li>
 
-            <li class="disabled">
-              <a>
+            <li>
+              <RouterLink to="/settings">
                 {{ $t('Navbar.profile.textSettings') }}
-                <span class="badge">{{ $t('Global.comingSoon') }} </span>
-              </a>
+              </RouterLink>
             </li>
             <li>
               <a @click="handleLogout">{{ $t('Navbar.profile.textLogout') }}</a>
