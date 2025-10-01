@@ -39,6 +39,7 @@ func (h *HTTPGateway) CreateShop(ctx *fiber.Ctx) error {
 	if err != nil {
 		fmt.Println("Image file error:", err)
 	}
+	//
 
 	fileBytes := []byte{}
 	if imageFile != nil {

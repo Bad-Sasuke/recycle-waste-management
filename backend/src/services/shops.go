@@ -42,8 +42,16 @@ func (s *ShopService) CreateShop(userID string, data entities.CreateShopRequest,
 	}
 
 	// Check if user already has a shop
-	existingShop, err := s.ShopRepository.GetByUserID(userID)
-	if err == nil && existingShop != nil {
+	_, err := s.ShopRepository.GetByUserID(userID)
+	if err != nil {
+		// If there's an error and it's not "no document found", return the error
+		if err != mongo.ErrNoDocuments {
+			return err
+		}
+		// If it's "no document found" error, it means user doesn't have a shop yet,
+		// so we continue with creating the shop
+	} else {
+		// If we found an existing shop (no error returned), return an error
 		return fmt.Errorf("user already has a shop")
 	}
 
@@ -83,22 +91,22 @@ func (s *ShopService) CreateShop(userID string, data entities.CreateShopRequest,
 
 func (s *ShopService) GetShopByShopID(shopID string) (*entities.ShopModel, error) {
 	shop, err := s.ShopRepository.GetByShopID(shopID)
-	if err != nil && err != mongo.ErrNoDocuments {
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("shop not found")
+		}
 		return nil, err
-	}
-	if shop == nil {
-		return nil, fmt.Errorf("shop not found")
 	}
 	return shop, nil
 }
 
 func (s *ShopService) GetShopByUserID(userID string) (*entities.ShopModel, error) {
 	shop, err := s.ShopRepository.GetByUserID(userID)
-	if err != nil && err != mongo.ErrNoDocuments {
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("no shop found for this user")
+		}
 		return nil, err
-	}
-	if shop == nil {
-		return nil, fmt.Errorf("no shop found for this user")
 	}
 	return shop, nil
 }
@@ -118,7 +126,10 @@ func (s *ShopService) UpdateShop(shopID string, data entities.UpdateShopRequest,
 	// Get existing shop
 	existingShop, err := s.ShopRepository.GetByShopID(shopID)
 	if err != nil {
-		return fmt.Errorf("shop not found")
+		if err == mongo.ErrNoDocuments {
+			return fmt.Errorf("shop not found")
+		}
+		return err
 	}
 
 	// Update fields if provided
