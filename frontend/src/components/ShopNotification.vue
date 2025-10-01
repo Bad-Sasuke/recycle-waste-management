@@ -5,13 +5,13 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v.01m4.5-7.5a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
       <div>
-        <span>You haven't created your recycling shop yet!</span>
+        <span>{{ t('Shop.notification.noShopTitle') }}</span>
         <div class="mt-2">
           <button @click="goToCreateShop" class="btn btn-sm btn-primary">
-            Create Shop Now
+            {{ t('Shop.notification.createNow') }}
           </button>
           <button @click="closeNotification" class="btn btn-sm btn-ghost ml-2">
-            Dismiss
+            {{ t('Shop.notification.dismiss') }}
           </button>
         </div>
       </div>
@@ -23,7 +23,9 @@
 import { computed } from 'vue';
 import { useShopStore } from '@/stores/shop';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const shopStore = useShopStore();
 const router = useRouter();
 
