@@ -1,9 +1,8 @@
 package gateways
 
 import (
-	"recycle-waste-management-backend/src/middlewares"
-
 	"github.com/gofiber/fiber/v2"
+	"recycle-waste-management-backend/src/middlewares"
 )
 
 func RouteUsers(gateway HTTPGateway, app *fiber.App) {
@@ -44,4 +43,19 @@ func RouteAuth(gateway HTTPGateway, app *fiber.App) {
 	api := app.Group("/api/auth")
 	api.Get("github/callback", gateway.AuthGithubCallback)
 	api.Get("google/callback", gateway.AuthGoogleCallback)
+}
+
+func RouteShop(gateway HTTPGateway, app *fiber.App) {
+	api := app.Group("/api/shops")
+
+	// Public routes
+	api.Get("/get-shops", gateway.GetAllShops)
+	api.Get("/get-shop/:shop_id", gateway.GetShopByShopID)
+
+	// Protected routes requiring JWT authentication
+	protected := api.Group("", middlewares.SetJWtHeaderHandler())
+	protected.Post("/create-shop", gateway.CreateShop)
+	protected.Get("/my-shop", gateway.GetShopByUserID)
+	protected.Put("/update-shop/:shop_id", gateway.UpdateShop)
+	protected.Delete("/delete-shop/:shop_id", gateway.DeleteShop)
 }

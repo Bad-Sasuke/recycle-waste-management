@@ -5,6 +5,7 @@ info:
 servers:
   - url: /api/user
   - url: /api/ip
+  - url: /api/shops
 paths:
   /users:
     get:
@@ -200,6 +201,351 @@ paths:
                 message: success
                 data: 39.228.50.232
 
+  /shops/get-shops:
+    get:
+      tags:
+        - shops
+      description: Get all recycling shops with pagination
+      summary: Get all recycling shops
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 12
+          description: Number of items per page
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                message: success
+                data:
+                  - shop_id: shop-abc123
+                    user_id: user-xyz789
+                    name: Eco Recycle Center
+                    description: A shop that buys recyclable materials
+                    address: 123 Green Street, Bangkok
+                    phone: "0812345678"
+                    email: contact@ecorecycle.com
+                    image_url: https://example.com/shop-image.jpg
+                    opening_time: "08:00"
+                    closing_time: "18:00"
+                    latitude: 13.7563
+                    longitude: 100.5018
+                    created_at: "2024-01-01T00:00:00Z"
+                    updated_at: "2024-01-01T00:00:00Z"
+                page: 1
+                limit: 12
+                total_pages: 1
+                total_items: 1
+                status: 200
+
+  /shops/get-shop/{shop_id}:
+    get:
+      tags:
+        - shops
+      description: Get a specific recycling shop by shop ID
+      summary: Get recycling shop by ID
+      parameters:
+        - in: path
+          name: shop_id
+          required: true
+          schema:
+            type: string
+          description: Shop ID
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                message: success
+                data:
+                  shop_id: shop-abc123
+                  user_id: user-xyz789
+                  name: Eco Recycle Center
+                  description: A shop that buys recyclable materials
+                  address: 123 Green Street, Bangkok
+                  phone: "0812345678"
+                  email: contact@ecorecycle.com
+                  image_url: https://example.com/shop-image.jpg
+                  opening_time: "08:00"
+                  closing_time: "18:00"
+                  latitude: 13.7563
+                  longitude: 100.5018
+                  created_at: "2024-01-01T00:00:00Z"
+                  updated_at: "2024-01-01T00:00:00Z"
+
+  /shops/my-shop:
+    get:
+      tags:
+        - shops
+      security:
+        - bearerAuth: []
+      description: Get the current user's recycling shop
+      summary: Get current user's shop
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                message: success
+                data:
+                  shop_id: shop-abc123
+                  user_id: user-xyz789
+                  name: Eco Recycle Center
+                  description: A shop that buys recyclable materials
+                  address: 123 Green Street, Bangkok
+                  phone: "0812345678"
+                  email: contact@ecorecycle.com
+                  image_url: https://example.com/shop-image.jpg
+                  opening_time: "08:00"
+                  closing_time: "18:00"
+                  latitude: 13.7563
+                  longitude: 100.5018
+                  created_at: "2024-01-01T00:00:00Z"
+                  updated_at: "2024-01-01T00:00:00Z"
+
+  /shops/create-shop:
+    post:
+      tags:
+        - shops
+      security:
+        - bearerAuth: []
+      description: Create a new recycling shop for the current user
+      summary: Create recycling shop
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - address
+              properties:
+                name:
+                  type: string
+                  description: Shop name
+                  example: Eco Recycle Center
+                description:
+                  type: string
+                  description: Shop description
+                  example: A shop that buys recyclable materials
+                address:
+                  type: string
+                  description: Shop address
+                  example: 123 Green Street, Bangkok
+                phone:
+                  type: string
+                  description: Shop phone number
+                  example: "0812345678"
+                email:
+                  type: string
+                  description: Shop email
+                  example: contact@ecorecycle.com
+                  format: email
+                opening_time:
+                  type: string
+                  description: Opening time (HH:MM format)
+                  example: "08:00"
+                closing_time:
+                  type: string
+                  description: Closing time (HH:MM format)
+                  example: "18:00"
+                latitude:
+                  type: number
+                  format: float
+                  description: Shop latitude
+                  example: 13.7563
+                longitude:
+                  type: number
+                  format: float
+                  description: Shop longitude
+                  example: 100.5018
+                image:
+                  type: string
+                  format: binary
+                  description: Shop image file
+      responses:
+        "200":
+          description: Shop created successfully
+          content:
+            application/json:
+              example:
+                message: Shop created successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              example:
+                message: name and address are required
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                message: Unauthorized access
+        "409":
+          description: Conflict - user already has a shop
+          content:
+            application/json:
+              example:
+                message: user already has a shop
+
+  /shops/update-shop/{shop_id}:
+    put:
+      tags:
+        - shops
+      security:
+        - bearerAuth: []
+      description: Update an existing recycling shop
+      summary: Update recycling shop
+      parameters:
+        - in: path
+          name: shop_id
+          required: true
+          schema:
+            type: string
+          description: Shop ID to update
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Shop name
+                  example: Updated Eco Recycle Center
+                description:
+                  type: string
+                  description: Shop description
+                  example: An updated description
+                address:
+                  type: string
+                  description: Shop address
+                  example: 456 Updated Street, Bangkok
+                phone:
+                  type: string
+                  description: Shop phone number
+                  example: "0812345678"
+                email:
+                  type: string
+                  description: Shop email
+                  example: updated@ecorecycle.com
+                  format: email
+                opening_time:
+                  type: string
+                  description: Opening time (HH:MM format)
+                  example: "08:00"
+                closing_time:
+                  type: string
+                  description: Closing time (HH:MM format)
+                  example: "18:00"
+                latitude:
+                  type: number
+                  format: float
+                  description: Shop latitude
+                  example: 13.7563
+                longitude:
+                  type: number
+                  format: float
+                  description: Shop longitude
+                  example: 100.5018
+                image:
+                  type: string
+                  format: binary
+                  description: Shop image file
+      responses:
+        "200":
+          description: Shop updated successfully
+          content:
+            application/json:
+              example:
+                message: Shop updated successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              example:
+                message: Shop ID is required
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                message: Unauthorized access
+        "403":
+          description: Forbidden - user doesn't own this shop
+          content:
+            application/json:
+              example:
+                message: Access denied: You don't own this shop
+        "404":
+          description: Shop not found
+          content:
+            application/json:
+              example:
+                message: Shop not found
+
+  /shops/delete-shop/{shop_id}:
+    delete:
+      tags:
+        - shops
+      security:
+        - bearerAuth: []
+      description: Delete a recycling shop
+      summary: Delete recycling shop
+      parameters:
+        - in: path
+          name: shop_id
+          required: true
+          schema:
+            type: string
+          description: Shop ID to delete
+      responses:
+        "200":
+          description: Shop deleted successfully
+          content:
+            application/json:
+              example:
+                message: Shop deleted successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              example:
+                message: Shop ID is required
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                message: Unauthorized access
+        "403":
+          description: Forbidden - user doesn't own this shop
+          content:
+            application/json:
+              example:
+                message: Access denied: You don't own this shop
+        "404":
+          description: Shop not found
+          content:
+            application/json:
+              example:
+                message: Shop not found
+
 components:
   securitySchemes:
     bearerAuth:
@@ -214,3 +560,5 @@ tags:
   - name: user
     description: User All endpoint
   - name: ip
+  - name: shops
+    description: Recycling shops management endpoints
