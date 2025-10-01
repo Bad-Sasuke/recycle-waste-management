@@ -439,7 +439,13 @@ const deleteShop = async () => {
     if (result.success) {
       showDeleteModal.value = false;
       // Redirect to create shop page since user no longer has a shop
-      await router.push({ name: 'create-shop' });
+      // But check if there's a redirect query parameter to go back to intended destination
+      const redirectPath = router.currentRoute.value.query.redirect as string | undefined;
+      if (redirectPath) {
+        await router.push(redirectPath);
+      } else {
+        await router.push({ name: 'create-shop' });
+      }
     } else {
       alert(`Error: ${result.message}`);
     }

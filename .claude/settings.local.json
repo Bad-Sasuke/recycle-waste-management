@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm run lint)",
       "Bash(npm run type-check:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

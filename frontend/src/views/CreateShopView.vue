@@ -143,32 +143,42 @@
               </div>
             </div>
 
-            <!-- Location Coordinates -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.latitude') }}</span>
-                </label>
-                <input
-                  v-model="shopData.latitude"
-                  type="number"
-                  step="any"
-                  :placeholder="t('Shop.create.latitudePlaceholder')"
-                  class="input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.longitude') }}</span>
-                </label>
-                <input
-                  v-model="shopData.longitude"
-                  type="number"
-                  step="any"
-                  :placeholder="t('Shop.create.longitudePlaceholder')"
-                  class="input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500"
-                />
+            <!-- Location Map -->
+            <div class="form-control w-full">
+              <label class="label">
+                <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.location') }}</span>
+              </label>
+              <div class="space-y-2">
+                <p class="text-sm text-gray-600">{{ t('Shop.create.locationHelp') }}</p>
+                <div id="map" class="w-full h-96 rounded-lg border-2 border-gray-200 z-0"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text text-sm">{{ t('Shop.create.latitude') }}</span>
+                    </label>
+                    <input
+                      v-model="shopData.latitude"
+                      type="number"
+                      step="any"
+                      :placeholder="t('Shop.create.latitudePlaceholder')"
+                      class="input input-bordered input-sm w-full"
+                      readonly
+                    />
+                  </div>
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text text-sm">{{ t('Shop.create.longitude') }}</span>
+                    </label>
+                    <input
+                      v-model="shopData.longitude"
+                      type="number"
+                      step="any"
+                      :placeholder="t('Shop.create.longitudePlaceholder')"
+                      class="input input-bordered input-sm w-full"
+                      readonly
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -208,11 +218,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useShopStore } from '@/stores/shop';
 import { useRouter } from 'vue-router';
 import type { CreateShopRequest } from '@/types/shop';
 import { useI18n } from 'vue-i18n';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -238,18 +250,75 @@ const shopData = reactive<CreateShopRequest>({
 const shopImage = ref<File | null>(null);
 const previewImage = ref<string | null>(null);
 
+// Map handling
+let map: L.Map | null = null;
+let marker: L.Marker | null = null;
+
 const handleImageChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files[0]) {
     const file = target.files[0];
     shopImage.value = file;
-    
+
     // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       previewImage.value = e.target?.result as string;
     };
     reader.readAsDataURL(file);
+  }
+};
+
+const initMap = () => {
+  // Default center (Thailand - Bangkok)
+  const defaultLat = 13.7563;
+  const defaultLng = 100.5018;
+
+  // Initialize map
+  map = L.map('map').setView([defaultLat, defaultLng], 13);
+
+  // Add OpenStreetMap tile layer
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Add click event to map
+  map.on('click', (e: L.LeafletMouseEvent) => {
+    const { lat, lng } = e.latlng;
+
+    // Update shop data
+    shopData.latitude = lat;
+    shopData.longitude = lng;
+
+    // Remove existing marker if any
+    if (marker) {
+      map?.removeLayer(marker);
+    }
+
+    // Add new marker
+    marker = L.marker([lat, lng]).addTo(map!);
+    marker.bindPopup(`<b>${t('Shop.create.selectedLocation')}</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
+  });
+
+  // Try to get user's current location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        map?.setView([latitude, longitude], 13);
+
+        // Set initial marker at user's location
+        shopData.latitude = latitude;
+        shopData.longitude = longitude;
+        marker = L.marker([latitude, longitude]).addTo(map!);
+        marker.bindPopup(`<b>${t('Shop.create.yourLocation')}</b>`).openPopup();
+      },
+      () => {
+        // If geolocation fails, use default location
+        console.log('Geolocation not available, using default location');
+      }
+    );
   }
 };
 
@@ -274,8 +343,14 @@ const submitShop = async () => {
     const result = await shopStore.createShop(formData);
     
     if (result.success) {
-      // Redirect to shop management page after successful creation
-      await router.push({ name: 'manage-shop' });
+      // Check if there's a redirect query parameter to go back to intended destination
+      const redirectPath = router.currentRoute.value.query.redirect as string | undefined;
+      if (redirectPath) {
+        await router.push(redirectPath);
+      } else {
+        // Redirect to shop management page after successful creation
+        await router.push({ name: 'manage-shop' });
+      }
     } else {
       alert(`Error: ${result.message}`);
     }
@@ -296,5 +371,30 @@ onMounted(() => {
   Object.keys(shopData).forEach(key => {
     (shopData as any)[key] = key === 'latitude' || key === 'longitude' ? undefined : '';
   });
+
+  // Initialize map after component is mounted
+  setTimeout(() => {
+    initMap();
+  }, 100);
+});
+
+onUnmounted(() => {
+  // Clean up map instance
+  if (map) {
+    map.remove();
+    map = null;
+  }
 });
 </script>
+
+<style scoped>
+/* Fix Leaflet marker icons */
+:deep(.leaflet-default-icon-path) {
+  background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
+}
+
+/* Ensure map container has proper z-index */
+#map {
+  position: relative;
+}
+</style>

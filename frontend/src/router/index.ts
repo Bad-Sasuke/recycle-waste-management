@@ -53,37 +53,49 @@ const router = createRouter({
 
 // Global navigation guard to handle authentication and shop checking
 router.beforeEach(async (to, from, next) => {
+  // Check if this is the create shop route - allow access without shop check
+  if (to.name === 'create-shop') {
+    next();
+    return;
+  }
+
+  // Always check user login state
+  const usersStore = useUsersStore();
+  await usersStore.checkLogin(); // Refresh authentication state
+
+  // Check if user is logged in
+  if (usersStore.isLogin) {
+    // For all authenticated users, check if they have a shop
+    const shopStore = useShopStore();
+    
+    // Only check user shop if we haven't checked yet
+    if (!shopStore.checked) {
+      await shopStore.checkUserShop();
+    }
+    
+    // Check if the user doesn't have a shop and redirect to create shop page
+    // This ensures users who don't have shops are always redirected to create one
+    if (!shopStore.hasShop) {
+      // For all authenticated routes, redirect to create shop if no shop exists
+      // Store the intended destination so we can redirect back after creating a shop
+      next({ 
+        name: 'create-shop',
+        query: { redirect: to.fullPath }
+      });
+      return;
+    }
+  }
+  
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // This route requires auth, check if logged in
     // If not, redirect to login page
-    const usersStore = useUsersStore();
-    await usersStore.checkLogin(); // Refresh authentication state
-    
     if (!usersStore.isLogin) {
       next({
         path: '/auth',
         query: { redirect: to.fullPath }
       })
     } else {
-      // Check if this is the create shop route - allow access without shop check
-      if (to.name === 'create-shop') {
-        next();
-        return;
-      }
-      
-      // For other authenticated routes, check if user has a shop
-      const shopStore = useShopStore();
-      if (!shopStore.checked) {
-        await shopStore.checkUserShop();
-      }
-      
-      // If user doesn't have a shop and is trying to access shop management or other protected areas,
-      // redirect to create shop page (except for the create shop page itself)
-      if (!shopStore.hasShop && to.name !== 'create-shop') {
-        next({ name: 'create-shop' });
-      } else {
-        next();
-      }
+      next();
     }
   } else {
     next() // Make sure to always call next()!
