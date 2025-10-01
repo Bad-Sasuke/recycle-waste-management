@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { getCookie, deleteCookie } from '../stores/cookie'
+import { useShopStore } from './shop';
 
 interface User {
   user_id: string;
@@ -40,6 +41,10 @@ export const useUsersStore = defineStore('users', {
             // If logged in, fetch user profile
             if (this.isLogin) {
                 await this.fetchUserProfile();
+            } else {
+                // If not logged in, reset the shop store as well
+                const shopStore = useShopStore();
+                shopStore.resetShop();
             }
         },
         
@@ -63,6 +68,11 @@ export const useUsersStore = defineStore('users', {
                 if (response.ok) {
                     const result = await response.json();
                     this.user = result.data;
+                    
+                    // After fetching user profile, check if user has a shop
+                    // This will be handled by the router guard, but we can still trigger the shop check here
+                    const shopStore = useShopStore();
+                    await shopStore.checkUserShop();
                 } else {
                     console.error(`Failed to fetch profile data: ${response.status} ${response.statusText}`);
                     // If profile fetch fails, set user to null to avoid stale data
