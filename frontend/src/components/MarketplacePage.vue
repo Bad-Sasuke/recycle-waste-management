@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { debounce } from 'lodash-es'
 import { useUsersStore } from '../stores/users'
 import Card from './CardComponent.vue'
 import PopupWaste from './PopupWaste.vue'
@@ -9,7 +10,6 @@ import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
 import type { GroupedRecyclableItem } from '../types/recycle_waste'
 import { IconTagPlus, IconTagMinus, IconCalendar, IconPlus, IconSearch, IconCategory, IconSortAscending, IconSortDescending, IconArrowsSort, IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight } from '@tabler/icons-vue'
-
 
 const searchQuery = ref('')
 const selectedCategory = ref<string[]>([])
@@ -32,7 +32,9 @@ onMounted(async () => {
     await categoryWasteStore.fetchCategoryWaste()
   }
 
-  // No need to update items.value since we're using groupedWastes directly
+  // Store the original data for filtering
+  originalGroupedWastes.value = [...wastesStore.groupedWastes]
+
   isLoading.value = false
 })
 
@@ -51,6 +53,7 @@ const goToPage = async (page: number) => {
     currentPage.value = page
     isLoading.value = true
     await wastesStore.fetchWastes(page, 12) // Fetch grouped data
+    originalGroupedWastes.value = [...wastesStore.groupedWastes] // Update original data
     isLoading.value = false
   }
 }
@@ -87,13 +90,19 @@ const getVisiblePages = () => {
   return pages;
 }
 
-// Update to use grouped items instead of individual items
+// Store original data to avoid refetching when filtering
+const originalGroupedWastes = ref<GroupedRecyclableItem[]>([])
+
+// Reactive variable to track the current sort method
+const currentSortMethod = ref<string | null>(null)
+
+// Update to use grouped items instead of individual items with local filtering
 const filteredItems = computed(() => {
-  if (wastesStore.groupedWastes.length === 0) {
+  if (originalGroupedWastes.value.length === 0) {
     return []
   }
 
-  return wastesStore.groupedWastes.filter((item) => {
+  let result = originalGroupedWastes.value.filter((item) => {
     const matchesSearch = item.name
       ? item.name.toLowerCase().includes(searchQuery.value.toLowerCase())
       : false
@@ -103,16 +112,55 @@ const filteredItems = computed(() => {
       : true
     return matchesSearch && matchesCategory
   })
+
+  // Apply sorting based on the current sort method
+  if (currentSortMethod.value) {
+    switch (currentSortMethod.value) {
+      case 'price-asc':
+        result.sort((a, b) => (a?.price ?? 0) - (b?.price ?? 0))
+        break
+      case 'price-desc':
+        result.sort((a, b) => (b?.price ?? 0) - (a?.price ?? 0))
+        break
+      case 'date-asc':
+        result.sort((a, b) => {
+          const dateA = new Date(a?.last_update ?? 0)
+          const dateB = new Date(b?.last_update ?? 0)
+          return dateA.getTime() - dateB.getTime()
+        })
+        break
+      case 'date-desc':
+        result.sort((a, b) => {
+          const dateA = new Date(a?.last_update ?? 0)
+          const dateB = new Date(b?.last_update ?? 0)
+          return dateB.getTime() - dateA.getTime()
+        })
+        break
+    }
+  }
+
+  return result
 })
 
-// Update filter behavior to reset pagination
+// Watch for changes in the store data and update original data accordingly
+watch(
+  () => wastesStore.groupedWastes,
+  (newData) => {
+    originalGroupedWastes.value = [...newData]
+  }
+)
+
+// Debounced search function to optimize performance
+const debouncedSearch = debounce(() => {
+  // No need to make API calls - the computed property will automatically update
+  currentPage.value = 1 // Reset to first page when filtering
+}, 300) // 300ms delay
+
+// Update filter behavior to use local filtering instead of API calls with debounce
 watch(
   [searchQuery, selectedCategory],
-  async () => {
-    currentPage.value = 1
-    isLoading.value = true
-    await wastesStore.fetchWastes(currentPage.value, 12) // Fetch grouped data
-    isLoading.value = false
+  () => {
+    debouncedSearch()
   },
   { deep: true }
 )
@@ -128,31 +176,20 @@ const toggleCategory = (category: string) => {
 }
 
 
-const sortByPrice = async () => {
-  wastesStore.groupedWastes.sort((a, b) => (a?.price ?? 0) - (b?.price ?? 0))
+const sortByPrice = () => {
+  currentSortMethod.value = 'price-asc'
 }
 
-const sortByPriceDesc = async () => {
-  // For now, just sort the current page
-  wastesStore.groupedWastes.sort((a, b) => (b?.price ?? 0) - (a?.price ?? 0))
+const sortByPriceDesc = () => {
+  currentSortMethod.value = 'price-desc'
 }
 
-const sortByLastUpdate = async () => {
-  // For now, just sort the current page
-  wastesStore.groupedWastes.sort((a, b) => {
-    const dateA = new Date(a?.last_update ?? 0)
-    const dateB = new Date(b?.last_update ?? 0)
-    return dateB.getTime() - dateA.getTime()
-  })
+const sortByLastUpdate = () => {
+  currentSortMethod.value = 'date-desc' // Latest first
 }
 
-const sortByLastUpdateDesc = async () => {
-  // For now, just sort the current page
-  wastesStore.groupedWastes.sort((a, b) => {
-    const dateA = new Date(a.last_update ?? 0)
-    const dateB = new Date(b.last_update ?? 0)
-    return dateA.getTime() - dateB.getTime()
-  })
+const sortByLastUpdateDesc = () => {
+  currentSortMethod.value = 'date-asc' // Oldest first
 }
 
 const openModalWaste = () => {
