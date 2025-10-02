@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import config from '../config'
 import { fetchData } from '../services/api'
+import { useUsersStore } from './users'
+import { useShopStore } from './shop'
 import type RecycleWaste from '../types/recycle_waste'
 
 const webAPI = config.webAPI
@@ -75,8 +77,20 @@ export const useWastesStore = defineStore('wastes', {
           // ตรวจสอบว่า imageFile มีอยู่ใน waste
           formData.append('image_file', (waste as { imageFile: File }).imageFile);
         }
+        
+        const usersStore = useUsersStore();
+        const shopStore = useShopStore();
+        
+        // Add shop_id to the form data
+        if (shopStore.shop && shopStore.shop.shop_id) {
+          formData.append('shop_id', shopStore.shop.shop_id);
+        }
+        
         const response = await fetch(webAPI + '/api/recycle-waste/add-waste', {
           method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${usersStore.jwt}`
+          },
           body: formData,  // ใช้ formData เป็น body
         });
         if (response.status !== 200) {
@@ -90,8 +104,21 @@ export const useWastesStore = defineStore('wastes', {
     },
     async deleteWaste(id: string) {
       try {
-        const response = await fetch(webAPI + '/api/recycle-waste/delete-waste/' + id, {
+        const usersStore = useUsersStore();
+        const shopStore = useShopStore();
+        
+        let deleteUrl = webAPI + '/api/recycle-waste/delete-waste/' + id;
+        
+        // Add shop_id as query parameter if available
+        if (shopStore.shop && shopStore.shop.shop_id) {
+          deleteUrl += `?shop_id=${shopStore.shop.shop_id}`;
+        }
+        
+        const response = await fetch(deleteUrl, {
           method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${usersStore.jwt}`
+          },
         });
         if (response.status !== 200) {
           return response.status
@@ -112,8 +139,20 @@ export const useWastesStore = defineStore('wastes', {
           // ตรวจสอบว่า imageFile มีอยู่ใน waste
           formData.append('image_file', (waste as { imageFile: File }).imageFile);
         }
+        
+        const usersStore = useUsersStore();
+        const shopStore = useShopStore();
+        
+        // Add shop_id to the form data
+        if (shopStore.shop && shopStore.shop.shop_id) {
+          formData.append('shop_id', shopStore.shop.shop_id);
+        }
+        
         const response = await fetch(webAPI + '/api/recycle-waste/edit-waste/' + id, {
           method: 'PUT', // ใช้ PUT method สำหรับการอัปเดต
+          headers: {
+            'Authorization': `Bearer ${usersStore.jwt}`
+          },
           body: formData,
         });
         if (response.status !== 200) {
