@@ -161,6 +161,7 @@
         "close": "Close"
     },
     "Marketplace": {
+        "add": "Add Product",
         "title": "Recycling Waste Price",
         "category": "Category",
         "search": "Search e.g plastic, metal",
@@ -218,6 +219,48 @@
         "imageUploadSuccess": "Profile image updated successfully!",
         "invalidFileType": "Please select a valid image file (JPG, PNG, GIF)",
         "fileSizeError": "File size must be less than 10MB"
+    },
+    "Settings": {
+        "title": "Settings",
+        "subtitle": "Manage your account settings and notifications",
+        "saveSettings": "Save Settings",
+        "saving": "Saving...",
+        "notifications": {
+            "title": "Notifications",
+            "emailNotifications": "Email Notifications",
+            "emailNotificationsDesc": "Receive email notifications for important activities",
+            "pushNotifications": "Push Notifications",
+            "pushNotificationsDesc": "Receive push notifications on your device",
+            "marketplaceUpdates": "Marketplace Updates",
+            "marketplaceUpdatesDesc": "Get updates about prices and new products",
+            "shopUpdates": "Shop Updates",
+            "shopUpdatesDesc": "Receive notifications about your shop"
+        },
+        "privacy": {
+            "title": "Privacy",
+            "profileVisibility": "Profile Visibility",
+            "profileVisibilityDesc": "Choose who can see your profile",
+            "public": "Public",
+            "private": "Private",
+            "friends": "Friends",
+            "showEmail": "Show Email",
+            "showEmailDesc": "Display your email on your public profile",
+            "showPhone": "Show Phone",
+            "showPhoneDesc": "Display your phone number on your public profile"
+        },
+        "appearance": {
+            "title": "Appearance",
+            "theme": "Theme",
+            "language": "Language"
+        },
+        "messages": {
+            "saveSuccess": "Settings saved successfully!",
+            "saveFailed": "Failed to save settings. Please try again",
+            "fetchFailed": "Failed to fetch settings",
+            "networkError": "Network error occurred",
+            "loginRequired": "Please login to access settings",
+            "apiConfigError": "API configuration error"
+        }
     },
     "Shop": {
         "create": {

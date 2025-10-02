@@ -41,13 +41,15 @@ func main() {
 	recycleWastes := repo.NewRecyclableItemsRepository(mongodb)
 	categoryWasteRepo := repo.NewCategoryWasteRepository(mongodb)
 	shopRepo := repo.NewShopRepository(mongodb)
+	settingsRepo := repo.NewSettingsRepository(mongodb)
 
 	userSV := sv.NewUsersService(userMongo)
 	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes, categoryWasteRepo)
 	authSV := sv.NewAuthService(userMongo)
 	imageSV := sv.NewImageService()
 	shopSV := sv.NewShopService(shopRepo)
-	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV, imageSV, shopSV)
+	settingsSV := sv.NewSettingsService(settingsRepo)
+	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV, imageSV, shopSV, settingsSV)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
