@@ -4,61 +4,59 @@ import { useUsersStore } from '../stores/users'
 import Card from './CardComponent.vue'
 import PopupWaste from './PopupWaste.vue'
 import EditWasteModal from './EditWasteModal.vue'
+import ProductDetailModal from './ProductDetailModal.vue'
 import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
-import type RecycleWaste from '../types/recycle_waste'
-import { IconFilter, IconTagPlus, IconTagMinus, IconCalendar, IconPlus, IconSearch, IconCategory, IconSortAscending, IconSortDescending, IconArrowsSort, IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight } from '@tabler/icons-vue'
+import type { GroupedRecyclableItem } from '../types/recycle_waste'
+import { IconTagPlus, IconTagMinus, IconCalendar, IconPlus, IconSearch, IconCategory, IconSortAscending, IconSortDescending, IconArrowsSort, IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight } from '@tabler/icons-vue'
 
 
 const searchQuery = ref('')
 const selectedCategory = ref<string[]>([])
 
-const items = ref<RecycleWaste[]>([])
+
 const isLoading = ref(true)
 const usersStore = useUsersStore()
 const wastesStore = useWastesStore()
 const categoryWasteStore = useCategoryWasteStore()
 const currentPage = ref(1)
 
+// Ref for product detail modal
+const productDetailModal = ref<InstanceType<typeof ProductDetailModal> | null>(null)
+
 onMounted(async () => {
-  if (!wastesStore.wastes.length) {
-    await wastesStore.fetchWastes(currentPage.value)
+  if (!wastesStore.groupedWastes.length) {
+    await wastesStore.fetchWastes(currentPage.value, 12) // Fetch grouped data
   }
   if (!categoryWasteStore.category.length) {
     await categoryWasteStore.fetchCategoryWaste()
   }
 
-  items.value = wastesStore.wastes
+  // No need to update items.value since we're using groupedWastes directly
   isLoading.value = false
 })
 
-watch(
-  () => wastesStore.wastes,
-  (newValue) => {
-    items.value = newValue
-  },
-)
+
 
 // Watch for pagination changes
 watch(
-  () => [wastesStore.pagination.page, wastesStore.pagination.total_pages],
+  () => [wastesStore.groupedPagination.page, wastesStore.groupedPagination.total_pages],
   () => {
-    currentPage.value = wastesStore.pagination.page
+    currentPage.value = wastesStore.groupedPagination.page
   }
 )
 
 const goToPage = async (page: number) => {
-  if (page >= 1 && page <= wastesStore.pagination.total_pages) {
+  if (page >= 1 && page <= wastesStore.groupedPagination.total_pages) {
     currentPage.value = page
     isLoading.value = true
-    await wastesStore.fetchWastes(page)
-    items.value = wastesStore.wastes
+    await wastesStore.fetchWastes(page, 12) // Fetch grouped data
     isLoading.value = false
   }
 }
 
 const goToNextPage = async () => {
-  if (currentPage.value < wastesStore.pagination.total_pages) {
+  if (currentPage.value < wastesStore.groupedPagination.total_pages) {
     await goToPage(currentPage.value + 1)
   }
 }
@@ -70,7 +68,7 @@ const goToPrevPage = async () => {
 }
 
 const getVisiblePages = () => {
-  const totalPages = wastesStore.pagination.total_pages;
+  const totalPages = wastesStore.groupedPagination.total_pages;
   const maxVisiblePages = 5;
   const halfMax = Math.floor(maxVisiblePages / 2);
 
@@ -89,12 +87,13 @@ const getVisiblePages = () => {
   return pages;
 }
 
+// Update to use grouped items instead of individual items
 const filteredItems = computed(() => {
-  if (items.value.length === 0) {
+  if (wastesStore.groupedWastes.length === 0) {
     return []
   }
 
-  return items.value.filter((item) => {
+  return wastesStore.groupedWastes.filter((item) => {
     const matchesSearch = item.name
       ? item.name.toLowerCase().includes(searchQuery.value.toLowerCase())
       : false
@@ -112,8 +111,7 @@ watch(
   async () => {
     currentPage.value = 1
     isLoading.value = true
-    await wastesStore.fetchWastes(currentPage.value)
-    items.value = wastesStore.wastes
+    await wastesStore.fetchWastes(currentPage.value, 12) // Fetch grouped data
     isLoading.value = false
   },
   { deep: true }
@@ -129,32 +127,30 @@ const toggleCategory = (category: string) => {
   }
 }
 
-// Client-side sorting will not work with pagination, so we need to fetch sorted data from server
-// For now, keeping the original sorting functions but they will only sort the current page
+
 const sortByPrice = async () => {
-  // For now, just sort the current page
-  items.value.sort((a, b) => (a?.price ?? 0) - (b?.price ?? 0))
+  wastesStore.groupedWastes.sort((a, b) => (a?.price ?? 0) - (b?.price ?? 0))
 }
 
 const sortByPriceDesc = async () => {
   // For now, just sort the current page
-  items.value.sort((a, b) => (b?.price ?? 0) - (a?.price ?? 0))
+  wastesStore.groupedWastes.sort((a, b) => (b?.price ?? 0) - (a?.price ?? 0))
 }
 
 const sortByLastUpdate = async () => {
   // For now, just sort the current page
-  items.value.sort((a, b) => {
-    const dateA = new Date(a?.lastUpdate ?? 0)
-    const dateB = new Date(b?.lastUpdate ?? 0)
+  wastesStore.groupedWastes.sort((a, b) => {
+    const dateA = new Date(a?.last_update ?? 0)
+    const dateB = new Date(b?.last_update ?? 0)
     return dateB.getTime() - dateA.getTime()
   })
 }
 
 const sortByLastUpdateDesc = async () => {
   // For now, just sort the current page
-  items.value.sort((a, b) => {
-    const dateA = new Date(a.lastUpdate ?? 0)
-    const dateB = new Date(b.lastUpdate ?? 0)
+  wastesStore.groupedWastes.sort((a, b) => {
+    const dateA = new Date(a.last_update ?? 0)
+    const dateB = new Date(b.last_update ?? 0)
     return dateA.getTime() - dateB.getTime()
   })
 }
@@ -168,6 +164,12 @@ const canAddProduct = computed(() => {
   return usersStore.isLogin && (usersStore.user?.role === 'admin' || usersStore.user?.role === 'moderator')
 })
 
+// Function to open product detail modal
+const openProductDetailModal = (item: GroupedRecyclableItem) => {
+  if (productDetailModal.value) {
+    productDetailModal.value.openModal(item)
+  }
+}
 
 </script>
 
@@ -187,6 +189,7 @@ const canAddProduct = computed(() => {
 
   <PopupWaste />
   <EditWasteModal />
+  <ProductDetailModal ref="productDetailModal" />
 
   <div class="container px-4 py-6 grid grid-cols-1 lg:grid-cols-6 gap-4 max-w-full" v-if="!isLoading">
     <!-- ส่วนซ้าย : หมวดหมู่ -->
@@ -196,12 +199,11 @@ const canAddProduct = computed(() => {
         <h2 class="text-xl md:text-2xl font-bold text-green-700">{{ $t('Marketplace.category') }}</h2>
       </div>
       <div class="overflow-y-auto max-h-[250px] md:max-h-[600px]">
-        <label class="flex items-center gap-2 mb-2 p-2 hover:bg-green-100 rounded cursor-pointer transition-all" v-for="category in categoryWasteStore.category"
-          :key="category.id">
+        <label class="flex items-center gap-2 mb-2 p-2 hover:bg-green-100 rounded cursor-pointer transition-all"
+          v-for="category in categoryWasteStore.category" :key="category.id">
           <input type="checkbox" :value="category.name"
             :checked="selectedCategory.includes((category.name ?? 'ไม่มี').toLowerCase())"
-            @change="toggleCategory(category?.name ?? 'ไม่มี')" 
-            class="checkbox checkbox-primary checkbox-sm" />
+            @change="toggleCategory(category?.name ?? 'ไม่มี')" class="checkbox checkbox-primary checkbox-sm" />
           <span class="text-sm md:text-base">{{ category?.name ?? 'ไม่มี' }}</span>
         </label>
       </div>
@@ -223,7 +225,8 @@ const canAddProduct = computed(() => {
           </div>
         </div>
         <div v-if="canAddProduct">
-          <button class="btn bg-green-700 hover:bg-green-600 text-white flex items-center gap-2" @click="openModalWaste">
+          <button class="btn bg-green-700 hover:bg-green-600 text-white flex items-center gap-2"
+            @click="openModalWaste">
             <IconPlus stroke="2" />
             <span>{{ $t('Marketplace.add_product') }}</span>
           </button>
@@ -275,9 +278,10 @@ const canAddProduct = computed(() => {
       <div class="mb-4 min-h-[800px]">
         <TransitionGroup name="list" tag="div"
           class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-6">
-          <div v-for="item in filteredItems" :key="item.waste_id" class="flex justify-center">
-            <Card :id="item.waste_id" :name="item.name" :price="item.price" :category="item.category"
-              :lastUpdate="item.lastUpdate" :url="item.url" />
+          <div v-for="item in filteredItems" :key="item.name" class="flex justify-center">
+            <Card :id="item.waste_ids && item.waste_ids[0] ? item.waste_ids[0] : ''" :name="item.name"
+              :price="item.price" :category="item.category" :last_update="item.last_update" :url="item.url"
+              @click="openProductDetailModal(item)" />
           </div>
         </TransitionGroup>
       </div>
@@ -297,18 +301,19 @@ const canAddProduct = computed(() => {
             :class="{ 'btn-active': page === currentPage }" @click="goToPage(page)">
             {{ page }}
           </button>
-          <button class="join-item btn" :disabled="currentPage >= wastesStore.pagination.total_pages"
+          <button class="join-item btn" :disabled="currentPage >= wastesStore.groupedPagination.total_pages"
             @click="goToNextPage" :title="$t('Marketplace.pagination.next')">
             <IconChevronRight stroke="2" />
           </button>
-          <button class="join-item btn" :disabled="currentPage >= wastesStore.pagination.total_pages"
-            @click="goToPage(wastesStore.pagination.total_pages)" :title="$t('Marketplace.pagination.last')">
+          <button class="join-item btn" :disabled="currentPage >= wastesStore.groupedPagination.total_pages"
+            @click="goToPage(wastesStore.groupedPagination.total_pages)" :title="$t('Marketplace.pagination.last')">
             <IconChevronsRight stroke="2" />
           </button>
         </div>
 
         <div class="mt-3 text-sm text-gray-600">
-          {{ $t('Marketplace.pagination.page') }} {{ currentPage }} {{ $t('Marketplace.pagination.of') }} {{ wastesStore.pagination.total_pages }}
+          {{ $t('Marketplace.pagination.page') }} {{ currentPage }} {{ $t('Marketplace.pagination.of') }} {{
+            wastesStore.groupedPagination.total_pages }}
         </div>
       </div>
     </div>

@@ -5,7 +5,9 @@ import (
 	"io"
 	"recycle-waste-management-backend/src/domain/entities"
 	"recycle-waste-management-backend/src/middlewares"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,6 +19,7 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 	pageQuery := ctx.Query("page")
 	limitQuery := ctx.Query("limit")
 	shopIDQuery := ctx.Query("shop_id") // Get shop_id from query params
+	searchQuery := ctx.Query("search") // Get search query from params
 
 	if pageQuery != "" {
 		if p, err := strconv.Atoi(pageQuery); err == nil && p > 0 {
@@ -46,11 +49,45 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseModel{Message: err.Error()})
 	}
 
+	// Apply search filter if provided
+	if searchQuery != "" {
+		var filteredData []entities.RecyclableItemsModel
+		searchLower := strings.ToLower(strings.TrimSpace(searchQuery))
+		
+		for _, item := range *data {
+			// Check if the item's name contains the search query (case-insensitive)
+			if item.Name != "" && strings.Contains(strings.ToLower(item.Name), searchLower) {
+				filteredData = append(filteredData, item)
+			} else if item.Category != "" && strings.Contains(strings.ToLower(item.Category), searchLower) {
+				// Also check category for search matches
+				filteredData = append(filteredData, item)
+			}
+		}
+		
+		// Update data to be the filtered results
+		filteredDataPtr := &filteredData
+		data = filteredDataPtr
+		
+		// Update total count to reflect filtered results
+		totalCount = int64(len(filteredData))
+	}
+
 	totalPages := int((totalCount + int64(limit) - 1) / int64(limit)) // Ceiling division
+
+	// Group items by name if not filtering by shop_id
+	var responseData interface{}
+	if shopIDQuery == "" {
+		// Group the recyclable items by name
+		groupedData := groupRecyclableItemsByName(*data, h)
+		responseData = groupedData
+	} else {
+		// Return original data if filtering by specific shop
+		responseData = data
+	}
 
 	response := entities.ResponsePaginationModel{
 		Message:    "success",
-		Data:       data,
+		Data:       responseData,
 		Page:       page,
 		Limit:      limit,
 		TotalPages: totalPages,
@@ -58,6 +95,87 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(response)
+}
+
+// getShopInfo retrieves the shop info (name and image) for a given shop_id
+func getShopInfo(shopID string, gateway *HTTPGateway) entities.ShopInfo {
+	if shopID == "" {
+		return entities.ShopInfo{
+			ShopID:      "",
+			ShopName:    "",
+			ShopImageURL: "",
+		}
+	}
+	shop, err := gateway.ShopService.GetShopByShopID(shopID)
+	if err != nil || shop == nil {
+		return entities.ShopInfo{
+			ShopID:      shopID,
+			ShopName:    "",
+			ShopImageURL: "",
+		}
+	}
+	return entities.ShopInfo{
+		ShopID:      shopID,
+		ShopName:    shop.Name,
+		ShopImageURL: shop.ImageURL,
+	}
+}
+
+// groupRecyclableItemsByName groups recyclable items by their name and collects shop info
+func groupRecyclableItemsByName(items []entities.RecyclableItemsModel, gateway *HTTPGateway) []entities.GroupedRecyclableItem {
+	groupMap := make(map[string]*entities.GroupedRecyclableItem)
+
+	for _, item := range items {
+		key := item.Name
+		shopInfo := getShopInfo(item.ShopID, gateway)
+		
+		if existingItem, exists := groupMap[key]; exists {
+			// If item with same name exists, add shop info and waste_id to arrays
+			existingItem.Shops = append(existingItem.Shops, shopInfo)
+			existingItem.WasteIDs = append(existingItem.WasteIDs, item.WasteID)
+			// Update the LastUpdate to the most recent one
+			if item.LastUpdate.After(existingItem.LastUpdate) {
+				existingItem.LastUpdate = item.LastUpdate
+			}
+		} else {
+			// Create new grouped item
+			groupMap[key] = &entities.GroupedRecyclableItem{
+				Name:       item.Name,
+				Category:   item.Category,
+				Price:      item.Price,
+				LastUpdate: item.LastUpdate,
+				Hours:      item.Hours,
+				URL:        item.URL,
+				Shops:      []entities.ShopInfo{shopInfo},
+				WasteIDs:   []string{item.WasteID},
+			}
+		}
+	}
+
+	// Filter out shop entries with empty shop_id from each grouped item
+	for key, item := range groupMap {
+		filteredShops := []entities.ShopInfo{}
+		for _, shop := range item.Shops {
+			if shop.ShopID != "" {
+				filteredShops = append(filteredShops, shop)
+			}
+		}
+		// Update the shops array to only include entries with non-empty shop_id
+		groupMap[key].Shops = filteredShops
+	}
+
+	// Convert map to slice
+	groupedItems := make([]entities.GroupedRecyclableItem, 0, len(groupMap))
+	for _, item := range groupMap {
+		groupedItems = append(groupedItems, *item)
+	}
+
+	// Sort the grouped items by LastUpdate (most recent first)
+	sort.Slice(groupedItems, func(i, j int) bool {
+		return groupedItems[i].LastUpdate.After(groupedItems[j].LastUpdate)
+	})
+
+	return groupedItems
 }
 
 func (h *HTTPGateway) AddRecycleWaste(ctx *fiber.Ctx) error {
