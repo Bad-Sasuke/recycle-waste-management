@@ -15,6 +15,8 @@ import (
 type IRecycleWasteService interface {
 	GetRecyclableItems() (*[]entities.RecyclableItemsModel, error)
 	GetRecyclableItemsPaginated(page, limit int) (*[]entities.RecyclableItemsModel, int64, error)
+	GetRecyclableItemsByShopIDPaginated(shopID string, page, limit int) (*[]entities.RecyclableItemsModel, int64, error)
+	GetRecyclableItemByWasteID(wasteID string) (*entities.RecyclableItemsModel, error)
 	AddRecycleWaste(data entities.RecyclableItemsModel, image []byte) error
 	DeleteWasteItem(wasteID string) error
 	GetCategoryWaste() (*[]entities.CategoryWasteModel, error)
@@ -54,9 +56,33 @@ func (s *RecycleWasteService) GetRecyclableItemsPaginated(page, limit int) (*[]e
 	return data, totalCount, nil
 }
 
+func (s *RecycleWasteService) GetRecyclableItemsByShopIDPaginated(shopID string, page, limit int) (*[]entities.RecyclableItemsModel, int64, error) {
+	data, totalCount, err := s.RecyclableItemsRepo.FindByShopIDPaginated(shopID, page, limit)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return nil, 0, err
+	}
+	if data == nil {
+		return &[]entities.RecyclableItemsModel{}, 0, nil
+	}
+	return data, totalCount, nil
+}
+
+func (s *RecycleWasteService) GetRecyclableItemByWasteID(wasteID string) (*entities.RecyclableItemsModel, error) {
+	data, err := s.RecyclableItemsRepo.FindByWasteID(wasteID)
+	if err != nil {
+		return nil, fmt.Errorf("error finding recyclable item: %v", err)
+	}
+	return data, nil
+}
+
 func (s *RecycleWasteService) AddRecycleWaste(data entities.RecyclableItemsModel, image []byte) error {
 	if data.Name == "" || data.Category == "" || data.Price == 0 {
 		return fmt.Errorf("invalid data")
+	}
+	// Validate shop_id if provided
+	if data.ShopID != "" {
+		// Additional validation can be added here
+		// For example: check if the shop exists
 	}
 	if len(image) > 0 {
 		keyname, contentType := s.AwsS3.CreateKeyNameImage(data.Name, "webp")
@@ -112,6 +138,11 @@ func (s *RecycleWasteService) GetCategoryWaste() (*[]entities.CategoryWasteModel
 func (s *RecycleWasteService) EditWasteItem(wasteID string, data entities.RecyclableItemsModel, image []byte) error {
 	if data.Name == "" || data.Category == "" || data.Price == 0 {
 		return fmt.Errorf("invalid data")
+	}
+	// Validate shop_id if provided
+	if data.ShopID != "" {
+		// Additional validation can be added here
+		// For example: check if the shop exists
 	}
 	if len(image) > 0 {
 		keyname, contentType := providers.NewAwsS3().CreateKeyNameImage(data.Name, "webp")
