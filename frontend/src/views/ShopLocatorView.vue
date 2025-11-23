@@ -13,7 +13,7 @@
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+      <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-gray-50 to-gray-100">
         <div v-if="isLoading" class="flex justify-center py-8">
           <span class="loading loading-spinner loading-md text-green-600"></span>
         </div>
@@ -23,16 +23,17 @@
         </div>
 
         <div v-else v-for="shop in filteredShops" :key="shop.shop_id"
-          class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow cursor-pointer"
-          @click="focusOnShop(shop)"
-          :class="{ 'border-green-500 ring-1 ring-green-500': selectedShopId === shop.shop_id }">
-          <div class="card-body p-4">
+          class="glass-card cursor-pointer group hover:scale-[1.02] transition-all duration-300"
+          @click="focusOnShop(shop)" :class="{ 'ring-2 ring-green-500': selectedShopId === shop.shop_id }">
+          <div class="p-4 relative z-10">
             <div class="flex gap-3">
               <!-- Shop Logo -->
               <div class="avatar flex-shrink-0">
-                <div class="w-16 h-16 rounded-lg">
-                  <img v-if="shop.image_url" :src="shop.image_url" :alt="shop.name" class="object-cover" />
-                  <div v-else class="w-full h-full bg-green-100 flex items-center justify-center text-2xl">
+                <div class="w-16 h-16 rounded-lg shadow-sm overflow-hidden">
+                  <img v-if="shop.image_url" :src="shop.image_url" :alt="shop.name"
+                    class="object-cover w-full h-full" />
+                  <div v-else
+                    class="w-full h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center text-2xl">
                     🏪
                   </div>
                 </div>
@@ -40,22 +41,22 @@
 
               <!-- Shop Info -->
               <div class="flex-1 min-w-0">
-                <h3 class="font-bold text-lg truncate">{{ shop.name }}</h3>
+                <h3 class="font-bold text-lg truncate text-gray-800">{{ shop.name }}</h3>
                 <p class="text-sm text-gray-600 line-clamp-2">{{ shop.address }}</p>
                 <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-500">
-                  <span v-if="shop.opening_time" class="badge badge-ghost badge-sm">
+                  <span v-if="shop.opening_time" class="badge badge-ghost badge-sm bg-white/50">
                     {{ shop.opening_time }} - {{ shop.closing_time }}
                   </span>
-                  <span v-if="shop.phone" class="badge badge-outline badge-sm">
+                  <span v-if="shop.phone" class="badge badge-outline badge-sm border-gray-300">
                     {{ shop.phone }}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div class="card-actions justify-end mt-2">
+            <div class="flex justify-end mt-3 pt-3 border-t border-gray-100/50">
               <a :href="`https://www.google.com/maps/dir/?api=1&destination=${shop.latitude},${shop.longitude}`"
-                target="_blank" class="btn btn-xs btn-primary text-white" @click.stop>
+                target="_blank" class="btn btn-xs btn-primary text-white shadow-sm" @click.stop>
                 {{ $t('ShopLocator.navigate') }}
               </a>
             </div>
@@ -111,6 +112,88 @@
         <button @click="closeShareModal">close</button>
       </form>
     </dialog>
+
+    <!-- Chat Modal -->
+    <dialog ref="chatModal" class="modal">
+      <div class="modal-box max-w-2xl h-[600px] flex flex-col">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b">
+          <div class="flex items-center gap-3">
+            <div class="avatar online">
+              <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <span class="text-xl">🏪</span>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg">แชทกับร้าน</h3>
+              <p class="text-xs text-gray-500">ออนไลน์</p>
+            </div>
+          </div>
+          <button @click="closeChatModal" class="btn btn-sm btn-circle btn-ghost">✕</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto mb-4 space-y-3 px-2">
+          <div v-for="(msg, index) in chatMessages" :key="index"
+            :class="msg.from === 'user' ? 'chat chat-end' : 'chat chat-start'">
+            <div class="chat-bubble" :class="msg.from === 'user' ? 'chat-bubble-primary' : ''">
+              {{ msg.message }}
+            </div>
+            <div class="chat-footer opacity-50 text-xs">
+              {{ msg.time }}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <input v-model="currentMessage" @keypress="handleChatKeyPress" type="text" placeholder="พิมพ์ข้อความ..."
+            class="input input-bordered flex-1" />
+          <button @click="sendMessage" class="btn btn-primary text-white">ส่ง</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="closeChatModal">close</button>
+      </form>
+    </dialog>
+
+    <!-- Review Modal -->
+    <dialog ref="reviewModal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">⭐ ให้คะแนนบริการ</h3>
+        <p class="text-sm text-gray-600 mb-4">บริการเสร็จสิ้น! กรุณาให้คะแนนและรีวิวบริการของเรา</p>
+
+        <!-- Star Rating -->
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text">ให้คะแนน</span>
+          </label>
+          <div class="flex gap-2 text-4xl justify-center">
+            <button v-for="star in 5" :key="star" type="button" @click="rating = star"
+              class="transition-transform hover:scale-110">
+              <span v-if="star <= rating">⭐</span>
+              <span v-else class="opacity-30">⭐</span>
+            </button>
+          </div>
+          <p class="text-center mt-2 text-sm text-gray-500">{{ rating }} ดาว</p>
+        </div>
+
+        <!-- Review Comment -->
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text">ความคิดเห็น</span>
+            <span class="label-text-alt text-gray-500">{{ reviewComment.length }}/200</span>
+          </label>
+          <textarea v-model="reviewComment" placeholder="แบ่งปันประสบการณ์การใช้บริการของคุณ..."
+            class="textarea textarea-bordered h-24 resize-none" maxlength="200"></textarea>
+        </div>
+
+        <div class="modal-action">
+          <button @click="closeReviewModal" class="btn btn-ghost">ข้าม</button>
+          <button @click="submitReview" class="btn btn-primary text-white">ส่งรีวิว</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="closeReviewModal">close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -148,6 +231,17 @@ const userLocation = ref<{ lat: number; lng: number } | null>(null);
 const shareLocationModal = ref<HTMLDialogElement | null>(null);
 const wasteDetails = ref('');
 const userMarker = ref<L.CircleMarker | null>(null);
+const shareStatus = ref<'idle' | 'pending' | 'accepted'>('idle');
+const chatModal = ref<HTMLDialogElement | null>(null);
+const chatMessages = ref<Array<{ from: 'user' | 'shop', message: string, time: string }>>([
+  { from: 'shop', message: 'สวัสดีครับ เรารับคำขอของคุณแล้ว', time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) },
+  { from: 'shop', message: 'เราจะไปรับภายใน 30 นาทีนี้', time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) }
+]);
+const currentMessage = ref('');
+const reviewModal = ref<HTMLDialogElement | null>(null);
+const rating = ref(5);
+const reviewComment = ref('');
+const messageCount = ref(0);
 
 
 const isLoading = computed(() => shopStore.isLoading);
@@ -159,6 +253,52 @@ const filteredShops = computed(() => {
     shop.name?.toLowerCase().includes(query) ||
     shop.address?.toLowerCase().includes(query)
   );
+});
+
+// Generate popup content based on share status
+const getUserPopupContent = computed(() => {
+  const baseContent = `
+    <div class="glass-card">
+      <div class="glass-card-content" style="padding: 16px; text-align: center;">
+        <div style="width: 48px; height: 48px; margin: 0 auto 12px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+          <svg style="width: 24px; height: 24px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <h3 class="shop-name" style="margin-bottom: 4px;">คุณอยู่ที่นี่</h3>
+        <p class="shop-address" style="font-size: 0.75rem; margin-bottom: 12px;">ตำแหน่งปัจจุบันของคุณ</p>`;
+
+  if (shareStatus.value === 'idle') {
+    // ปุ่มแชร์ตำแหน่งปกติ (สีเขียว)
+    return baseContent + `
+        <button id="share-location-btn" style="width: 100%; padding: 8px 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+          แชร์ตำแหน่งของคุณ
+        </button>
+      </div>
+    </div>`;
+  } else if (shareStatus.value === 'pending') {
+    // สถานะรอร้าน: ปุ่มยกเลิก (สีแดง) + ข้อความรอ
+    return baseContent + `
+        <p style="font-size: 0.75rem; color: #f59e0b; margin-bottom: 8px; font-weight: 600;">⏳ รอร้านค้าใกล้เคียง</p>
+        <button id="cancel-share-btn" style="width: 100%; padding: 8px 16px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+          ยกเลิก
+        </button>
+      </div>
+    </div>`;
+  } else {
+    // สถานะร้านรับแล้ว: ปุ่มแชท + ปุ่มยกเลิก (disabled)
+    return baseContent + `
+        <p style="font-size: 0.75rem; color: #10b981; margin-bottom: 8px; font-weight: 600;">✓ ร้านรับคำขอแล้ว</p>
+        <button id="chat-btn" style="width: 100%; padding: 8px 16px; margin-bottom: 8px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+          💬 แชทกับร้าน
+        </button>
+        <button disabled style="width: 100%; padding: 8px 16px; background: #9ca3af; color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: not-allowed; opacity: 0.6;">
+          ยกเลิก
+        </button>
+      </div>
+    </div>`;
+  }
 });
 
 // Initialize map
@@ -185,17 +325,18 @@ const updateMarkers = () => {
   // Add new markers
   filteredShops.value.forEach(shop => {
     if (shop.latitude && shop.longitude) {
-      // Create custom icon with store SVG
+      // Create custom icon with liquid glass style
       const customIcon = L.divIcon({
         className: 'custom-shop-marker',
         html: `
-          <div class="marker-container">
-            <div class="marker-pin">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <div class="liquid-marker">
+            <div class="liquid-pin" style="background: #10b981;">
+              <div class="liquid-glow"></div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20" style="position: relative; z-index: 2;">
                 <path d="M21 13.242V20H22V22H2V20H3V13.242L1.515 9.583C1.195 8.772 1.633 7.862 2.444 7.541C2.626 7.466 2.821 7.428 3.018 7.428H20.982C21.889 7.428 22.623 8.163 22.623 9.07C22.623 9.267 22.585 9.462 22.51 9.644L21 13.242ZM19 13.972L20.234 10.428H3.766L5 13.972V20H19V13.972ZM14 10H10V12C10 13.105 10.895 14 12 14C13.105 14 14 13.105 14 12V10Z"/>
               </svg>
             </div>
-            <div class="marker-pulse"></div>
+            <div class="liquid-pulse" style="background: #10b981;"></div>
           </div>
         `,
         iconSize: [40, 40],
@@ -239,7 +380,7 @@ const updateMarkers = () => {
               <a href="https://www.google.com/maps/dir/?api=1&destination=${shop.latitude},${shop.longitude}"
                  target="_blank"
                  class="navigate-btn">
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                 </svg>
                 Navigate
@@ -303,25 +444,8 @@ const locateUser = () => {
       fillOpacity: 0.8
     }).addTo(map.value!);
 
-    const popupContent = `
-      <div class="glass-card">
-        <div class="glass-card-content" style="padding: 16px; text-align: center;">
-          <div style="width: 48px; height: 48px; margin: 0 auto 12px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-            <svg style="width: 24px; height: 24px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-          </div>
-          <h3 class="shop-name" style="margin-bottom: 4px;">คุณอยู่ที่นี่</h3>
-          <p class="shop-address" style="font-size: 0.75rem; margin-bottom: 12px;">ตำแหน่งปัจจุบันของคุณ</p>
-          <button id="share-location-btn" style="width: 100%; padding: 8px 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-            แชร์ตำแหน่งของคุณ
-          </button>
-        </div>
-      </div>
-    `;
-
-    userMarker.value.bindPopup(popupContent, {
+    // Use computed content
+    userMarker.value.bindPopup(getUserPopupContent.value, {
       maxWidth: 220,
       className: 'glass-popup'
     }).openPopup();
@@ -333,11 +457,23 @@ const locateUser = () => {
   });
 };
 
+// Watch for status changes and update popup
+watch(shareStatus, () => {
+  if (userMarker.value) {
+    userMarker.value.setPopupContent(getUserPopupContent.value);
+  }
+});
+
 // Use event delegation for share button (works even after popup recreates)
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement;
+
   if (target && target.id === 'share-location-btn') {
     openShareModal();
+  } else if (target && target.id === 'cancel-share-btn') {
+    cancelShareLocation();
+  } else if (target && target.id === 'chat-btn') {
+    openChatModal();
   }
 });
 
@@ -367,10 +503,139 @@ const submitShareLocation = () => {
     details: wasteDetails.value
   });
 
-  // Show success message (you can add a toast notification here)
-  alert('แชร์ตำแหน่งสำเร็จ! ร้านค้าจะติดต่อกลับเร็วๆ นี้');
+  // Update status to pending
+  shareStatus.value = 'pending';
+
+  // Show success message
+  alert('แชร์ตำแหน่งสำเร็จ! รอร้านค้าใกล้เคียงตอบรับ');
 
   closeShareModal();
+
+  // Simulate shop accepting after 5 seconds (for demo)
+  setTimeout(() => {
+    shareStatus.value = 'accepted';
+    alert('ร้านค้ารับคำขอแล้ว! คุณสามารถแชทกับร้านได้');
+  }, 5000);
+};
+
+const cancelShareLocation = () => {
+  if (confirm('ต้องการยกเลิกการแชร์ตำแหน่งหรือไม่?')) {
+    shareStatus.value = 'idle';
+    wasteDetails.value = '';
+    alert('ยกเลิกการแชร์ตำแหน่งแล้ว');
+  }
+};
+
+const openChatModal = () => {
+  if (chatModal.value) {
+    chatModal.value.showModal();
+  }
+};
+
+const closeChatModal = () => {
+  if (chatModal.value) {
+    chatModal.value.close();
+  }
+};
+
+const sendMessage = () => {
+  if (!currentMessage.value.trim()) return;
+
+  // Add user message
+  chatMessages.value.push({
+    from: 'user',
+    message: currentMessage.value,
+    time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+  });
+
+  // Increment message count
+  messageCount.value++;
+
+  // Clear input
+  currentMessage.value = '';
+
+  // Mock auto-reply from shop after 1-2 seconds
+  setTimeout(() => {
+    const replies = [
+      'รับทราบครับ',
+      'ขอบคุณสำหรับข้อมูลครับ',
+      'เข้าใจแล้วครับ จะดำเนินการให้',
+      'ได้ครับ รอสักครู่นะครับ',
+      'กำลังเตรียมออกไปรับแล้วครับ',
+      'เราจะไปถึงเร็วๆ นี้ครับ'
+    ];
+
+    const randomReply = replies[Math.floor(Math.random() * replies.length)];
+
+    chatMessages.value.push({
+      from: 'shop',
+      message: randomReply,
+      time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+    });
+
+    // After 3 user messages, simulate service completion
+    if (messageCount.value >= 3) {
+      setTimeout(() => {
+        // Shop completes the service
+        chatMessages.value.push({
+          from: 'shop',
+          message: '✅ ขอบคุณครับ เรารับของเรียบร้อยแล้ว กรุณาให้คะแนนบริการของเราด้วยครับ',
+          time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+        });
+
+        // Wait a bit then close chat and open review
+        setTimeout(() => {
+          closeChatModal();
+          openReviewModal();
+        }, 2000);
+      }, 2000);
+    }
+  }, 1000 + Math.random() * 1000); // Random delay 1-2 seconds
+};
+
+const handleChatKeyPress = (event: KeyboardEvent) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+};
+
+const openReviewModal = () => {
+  if (reviewModal.value) {
+    reviewModal.value.showModal();
+  }
+};
+
+const closeReviewModal = () => {
+  if (reviewModal.value) {
+    reviewModal.value.close();
+  }
+};
+
+const submitReview = () => {
+  if (!reviewComment.value.trim()) {
+    alert('กรุณากรอกความคิดเห็น');
+    return;
+  }
+
+  // TODO: Send review to backend API
+  console.log('Review submitted:', {
+    rating: rating.value,
+    comment: reviewComment.value
+  });
+
+  alert(`ขอบคุณสำหรับรีวิว ${rating.value} ดาว!`);
+
+  // Reset everything and close share location
+  closeReviewModal();
+  shareStatus.value = 'idle';
+  rating.value = 5;
+  reviewComment.value = '';
+  messageCount.value = 0;
+  chatMessages.value = [
+    { from: 'shop', message: 'สวัสดีครับ เรารับคำขอของคุณแล้ว', time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) },
+    { from: 'shop', message: 'เราจะไปรับภายใน 30 นาทีนี้', time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) }
+  ];
 };
 
 watch(filteredShops, () => {
@@ -581,7 +846,8 @@ onUnmounted(() => {
   border: none !important;
 }
 
-:deep(.marker-container) {
+/* Liquid Marker Styles */
+:deep(.liquid-marker) {
   position: relative;
   width: 40px;
   height: 40px;
@@ -590,65 +856,75 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-:deep(.marker-pin) {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+:deep(.liquid-pin) {
+  width: 40px;
+  height: 40px;
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow:
-    0 4px 12px rgba(16, 185, 129, 0.4),
-    0 2px 6px rgba(0, 0, 0, 0.15),
-    0 0 0 2px rgba(255, 255, 255, 0.9);
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 2;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: float 3s ease-in-out infinite;
 }
 
-:deep(.marker-pin:hover) {
-  transform: rotate(-45deg) scale(1.1);
-  box-shadow:
-    0 6px 20px rgba(16, 185, 129, 0.5),
-    0 4px 10px rgba(0, 0, 0, 0.2),
-    0 0 0 3px rgba(255, 255, 255, 1);
-}
-
-:deep(.marker-pin svg) {
-  width: 18px;
-  height: 18px;
-  color: white;
+:deep(.liquid-pin svg) {
   transform: rotate(45deg);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
-/* Pulse Animation */
-:deep(.marker-pulse) {
+:deep(.liquid-glow) {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 36px;
-  height: 36px;
-  background: rgba(16, 185, 129, 0.4);
+  top: 5px;
+  left: 5px;
+  width: 15px;
+  height: 15px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent);
   border-radius: 50%;
-  z-index: 1;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  z-index: 3;
 }
 
-@keyframes pulse {
+:deep(.liquid-pulse) {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotateX(60deg);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  opacity: 0.5;
+  filter: blur(4px);
+  animation: pulse-shadow 3s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes float {
 
   0%,
   100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.6;
+    transform: translateY(0) rotate(-45deg);
   }
 
   50% {
-    transform: translate(-50%, -50%) scale(1.5);
-    opacity: 0;
+    transform: translateY(-6px) rotate(-45deg);
+  }
+}
+
+@keyframes pulse-shadow {
+
+  0%,
+  100% {
+    transform: translateX(-50%) rotateX(60deg) scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translateX(-50%) rotateX(60deg) scale(0.8);
+    opacity: 0.2;
   }
 }
 
@@ -660,5 +936,150 @@ onUnmounted(() => {
 
 :deep(#share-location-btn:active) {
   transform: translateY(0);
+}
+</style>
+
+<style>
+/* Global Styles for Leaflet Popups (Non-scoped) */
+.glass-popup .leaflet-popup-content-wrapper {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
+}
+
+.glass-popup .leaflet-popup-content {
+  margin: 0 !important;
+  min-width: 280px !important;
+}
+
+.glass-popup .leaflet-popup-tip-container {
+  display: none;
+}
+
+/* Liquid Glass Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px 0 rgba(31, 38, 135, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 40px 0 rgba(31, 38, 135, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(to right,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent);
+  transform: skewX(-25deg);
+  animation: shine 6s infinite;
+  pointer-events: none;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) skewX(-25deg);
+  }
+
+  20% {
+    transform: translateX(100%) skewX(-25deg);
+  }
+
+  100% {
+    transform: translateX(100%) skewX(-25deg);
+  }
+}
+
+.glass-card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Shop Image */
+.shop-image-container {
+  width: 100%;
+  height: 140px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.shop-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shop-placeholder {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-icon {
+  font-size: 3.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Shop Info */
+.shop-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.shop-address {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Info Row with Icons */
+.shop-hours,
+.shop-phone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: #4b5563;
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.shop-hours .icon,
+.shop-phone .icon {
+  width: 14px;
+  height: 14px;
+  color: #10b981;
+  flex-shrink: 0;
 }
 </style>

@@ -1,331 +1,152 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <!-- Header -->
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-green-800 mb-2">
-                    {{ $t('NearbyCustomers.title') }}
-                </h1>
-                <p class="text-gray-600">
-                    {{ $t('NearbyCustomers.subtitle') }}
-                </p>
+    <div class="flex h-[calc(100vh-64px)] bg-white overflow-hidden">
+        <!-- Left Sidebar: Accepted Requests -->
+        <div class="w-96 flex-shrink-0 flex flex-col border-r border-gray-200 bg-white shadow-xl z-20">
+            <!-- Header & Search -->
+            <div class="p-4 border-b border-gray-100">
+                <h2 class="text-xl font-bold text-green-800 mb-4">{{ $t('NearbyCustomers.title') }}</h2>
+                <div class="relative">
+                    <input type="text" :placeholder="$t('NearbyCustomers.searchPlaceholder') || 'ค้นหารายการ...'"
+                        class="input input-bordered w-full pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors" />
+                    <svg class="w-5 h-5 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left: Customer List (2/3 width on large screens) -->
-                <div class="lg:col-span-2 space-y-4">
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-3 gap-4 mb-6">
-                        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
-                            <div class="card-body p-4">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm opacity-90">{{ $t('NearbyCustomers.pending') }}</p>
-                                        <p class="text-3xl font-bold">{{ pendingCount }}</p>
-                                    </div>
-                                    <svg class="w-10 h-10 opacity-80" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
-                            <div class="card-body p-4">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm opacity-90">{{ $t('NearbyCustomers.accepted') }}</p>
-                                        <p class="text-3xl font-bold">{{ acceptedCount }}</p>
-                                    </div>
-                                    <svg class="w-10 h-10 opacity-80" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card bg-gradient-to-br from-gray-500 to-gray-600 text-white shadow-lg">
-                            <div class="card-body p-4">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm opacity-90">{{ $t('NearbyCustomers.total') }}</p>
-                                        <p class="text-3xl font-bold">{{ customerRequests.length }}</p>
-                                    </div>
-                                    <svg class="w-10 h-10 opacity-80" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Filter & Sort -->
-                    <div class="flex gap-3 mb-4">
-                        <select v-model="filterStatus" class="select select-bordered flex-1">
-                            <option value="all">{{ $t('NearbyCustomers.allRequests') }}</option>
-                            <option value="pending">{{ $t('NearbyCustomers.pendingOnly') }}</option>
-                            <option value="accepted">{{ $t('NearbyCustomers.acceptedOnly') }}</option>
-                            <option value="rejected">{{ $t('NearbyCustomers.rejectedOnly') }}</option>
-                        </select>
-                        <select v-model="sortBy" class="select select-bordered flex-1">
-                            <option value="newest">{{ $t('NearbyCustomers.newest') }}</option>
-                            <option value="closest">{{ $t('NearbyCustomers.closest') }}</option>
-                            <option value="largest">{{ $t('NearbyCustomers.largestWaste') }}</option>
-                        </select>
-                    </div>
-
-                    <!-- Customer Requests -->
-                    <div v-if="filteredRequests.length === 0" class="card bg-base-100 shadow-md">
-                        <div class="card-body text-center py-12">
-                            <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            </svg>
-                            <p class="text-gray-500 text-lg">{{ $t('NearbyCustomers.noRequests') }}</p>
-                        </div>
-                    </div>
-
-                    <div v-else class="space-y-4">
-                        <div v-for="request in filteredRequests" :key="request.id"
-                            class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow border-l-4"
-                            :class="getRequestBorderClass(request.status)">
-                            <div class="card-body">
-                                <!-- Header -->
-                                <div class="flex items-start justify-between mb-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="avatar placeholder">
-                                            <div class="bg-green-100 text-green-600 rounded-full w-12">
-                                                <span class="text-xl">👤</span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">{{ request.customerName || 'ลูกค้า' }}</h3>
-                                            <p class="text-sm text-gray-500">{{ formatDateTime(request.createdAt) }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="badge badge-lg" :class="getStatusBadgeClass(request.status)">
-                                        {{ getStatusText(request.status) }}
-                                    </div>
-                                </div>
-
-                                <!-- Request Details -->
-                                <div class="grid grid-cols-2 gap-4 mb-4">
-                                    <!-- Location -->
-                                    <div class="flex items-start gap-2">
-                                        <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        </svg>
-                                        <div class="text-sm">
-                                            <p class="font-semibold text-gray-700">{{ $t('NearbyCustomers.location') }}
-                                            </p>
-                                            <p class="text-gray-600">{{ request.distance || '2.5' }} km</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Waste Amount -->
-                                    <div class="flex items-start gap-2">
-                                        <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                        </svg>
-                                        <div class="text-sm">
-                                            <p class="font-semibold text-gray-700">{{ $t('NearbyCustomers.wasteAmount')
-                                                }}</p>
-                                            <p class="text-gray-600">{{ getWasteAmountText(request.wasteAmount) }}</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Waste Types -->
-                                    <div class="flex items-start gap-2 col-span-2">
-                                        <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                        </svg>
-                                        <div class="text-sm flex-1">
-                                            <p class="font-semibold text-gray-700 mb-1">{{
-                                                $t('NearbyCustomers.wasteTypes') }}</p>
-                                            <div class="flex flex-wrap gap-2">
-                                                <span v-for="type in request.wasteTypes" :key="type"
-                                                    class="badge badge-success badge-sm">
-                                                    {{ getWasteTypeText(type) }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Phone -->
-                                    <div class="flex items-start gap-2 col-span-2">
-                                        <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                        </svg>
-                                        <div class="text-sm">
-                                            <p class="font-semibold text-gray-700">{{ $t('NearbyCustomers.phone') }}</p>
-                                            <p class="text-gray-600">{{ request.phone }}</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Notes -->
-                                    <div v-if="request.notes" class="flex items-start gap-2 col-span-2">
-                                        <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                        </svg>
-                                        <div class="text-sm">
-                                            <p class="font-semibold text-gray-700">{{ $t('NearbyCustomers.notes') }}</p>
-                                            <p class="text-gray-600">{{ request.notes }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Actions -->
-                                <div class="card-actions justify-end pt-3 border-t border-gray-100">
-                                    <!-- Pending Actions -->
-                                    <template v-if="request.status === 'pending'">
-                                        <button @click="viewOnMap(request)" class="btn btn-sm btn-ghost">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                                            </svg>
-                                            {{ $t('NearbyCustomers.viewOnMap') }}
-                                        </button>
-                                        <button @click="openRejectModal(request)"
-                                            class="btn btn-sm btn-error btn-outline">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                            {{ $t('NearbyCustomers.reject') }}
-                                        </button>
-                                        <button @click="acceptRequest(request)"
-                                            class="btn btn-sm btn-success text-white">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            {{ $t('NearbyCustomers.accept') }}
-                                        </button>
-                                    </template>
-
-                                    <!-- Accepted Actions -->
-                                    <template v-else-if="request.status === 'accepted'">
-                                        <button @click="openChat(request)" class="btn btn-sm btn-primary text-white">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                            </svg>
-                                            {{ $t('NearbyCustomers.chat') }}
-                                        </button>
-                                        <button @click="openCancelModal(request)"
-                                            class="btn btn-sm btn-error btn-outline">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                            {{ $t('NearbyCustomers.cancelPickup') }}
-                                        </button>
-                                    </template>
-
-                                    <!-- Rejected - Show Reason -->
-                                    <template v-else-if="request.status === 'rejected'">
-                                        <div class="text-sm text-gray-500">
-                                            {{ $t('NearbyCustomers.rejectedReason') }}: {{ request.rejectionReason }}
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Accepted List -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-br from-gray-50 to-gray-100">
+                <div v-if="acceptedRequestsList.length === 0" class="text-center py-10 text-gray-400">
+                    <p>{{ $t('NearbyCustomers.noAcceptedRequests') || 'ไม่มีงานที่รับแล้ว' }}</p>
                 </div>
 
-                <!-- Right: Map & Chat -->
-                <div class="space-y-6">
-                    <!-- Map -->
-                    <div class="card bg-base-100 shadow-lg">
-                        <div class="card-body p-0">
-                            <div id="customers-map" class="w-full h-[400px] rounded-lg"></div>
+                <div v-for="request in acceptedRequestsList" :key="request.id"
+                    class="glass-card cursor-pointer group hover:scale-[1.02] transition-all duration-300"
+                    @click="viewOnMap(request)" :class="{ 'ring-2 ring-green-500': activeChat?.id === request.id }">
+                    <div class="p-4 relative z-10">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="avatar placeholder">
+                                <div
+                                    class="bg-green-100 text-green-600 rounded-full w-10 group-hover:bg-green-600 group-hover:text-white transition-colors shadow-sm">
+                                    <span class="text-lg">👤</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-bold text-gray-800 truncate">{{ request.customerName }}</h3>
+                                <p class="text-xs text-gray-500">{{ formatTime(request.createdAt) }}</p>
+                            </div>
+                            <div class="badge badge-success badge-sm text-white shadow-sm">
+                                {{ $t('NearbyCustomers.accepted') }}
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Active Chat -->
-                    <div v-if="activeChat" class="card bg-base-100 shadow-lg">
-                        <div class="card-body p-0 flex flex-col h-[400px]">
-                            <!-- Chat Header -->
-                            <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-600">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="avatar placeholder">
-                                            <div class="bg-white text-green-600 rounded-full w-10">
-                                                <span class="text-lg">👤</span>
-                                            </div>
-                                        </div>
-                                        <div class="text-white">
-                                            <h3 class="font-bold">{{ activeChat.customerName || 'ลูกค้า' }}</h3>
-                                            <p class="text-xs opacity-90">{{ $t('NearbyCustomers.chatting') }}</p>
-                                        </div>
-                                    </div>
-                                    <button @click="activeChat = null"
-                                        class="btn btn-ghost btn-sm btn-circle text-white">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Chat Messages -->
-                            <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-                                <div v-for="(message, index) in chatMessages" :key="index" class="flex"
-                                    :class="message.sender === 'shop' ? 'justify-end' : 'justify-start'">
-                                    <div class="max-w-[70%]">
-                                        <div class="px-4 py-2 rounded-2xl" :class="message.sender === 'shop'
-                                            ? 'bg-green-500 text-white rounded-br-sm'
-                                            : 'bg-white border border-gray-200 rounded-bl-sm'">
-                                            <p class="text-sm">{{ message.text }}</p>
-                                            <p class="text-xs mt-1 opacity-70">{{ formatTime(message.timestamp) }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Empty State -->
-                                <div v-if="chatMessages.length === 0" class="text-center py-8">
-                                    <p class="text-gray-400 text-sm">{{ $t('NearbyCustomers.startConversation') }}</p>
-                                </div>
-                            </div>
-
-                            <!-- Chat Input -->
-                            <div class="p-4 border-t border-gray-200 bg-white">
-                                <div class="flex gap-2">
-                                    <input v-model="newMessage" type="text" class="input input-bordered flex-1 input-sm"
-                                        :placeholder="$t('NearbyCustomers.typeMessage')" @keyup.enter="sendMessage" />
-                                    <button @click="sendMessage" class="btn btn-primary btn-sm text-white"
-                                        :disabled="!newMessage.trim()">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-2">{{ $t('NearbyCustomers.chatNotSaved') }}</p>
+                        <div
+                            class="flex items-center justify-end text-sm text-gray-600 mt-3 pt-3 border-t border-gray-100/50">
+                            <div class="flex gap-2">
+                                <button @click.stop="openChat(request)"
+                                    class="btn btn-xs btn-primary btn-outline gap-1 hover:text-white px-3 shadow-sm">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                    Chat
+                                </button>
+                                <button @click.stop="openCancelModal(request)"
+                                    class="btn btn-xs btn-error btn-outline gap-1 hover:text-white px-3 shadow-sm">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    ยกเลิก
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Right Map Area -->
+        <div class="flex-1 relative bg-gray-100">
+            <div id="customers-map" class="w-full h-full z-0"></div>
+
+            <!-- Chat Overlay -->
+            <div v-if="activeChat" class="absolute bottom-6 right-6 w-96 z-[1000]">
+                <div class="card bg-base-100 shadow-2xl border border-gray-200">
+                    <div class="card-body p-0 flex flex-col h-[500px]">
+                        <!-- Chat Header -->
+                        <div
+                            class="p-4 border-b border-gray-200 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-2xl">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-white text-green-600 rounded-full w-10 shadow-sm">
+                                            <span class="text-lg">👤</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-white">
+                                        <h3 class="font-bold">{{ activeChat.customerName || 'ลูกค้า' }}</h3>
+                                        <p class="text-xs opacity-90 flex items-center gap-1">
+                                            <span class="w-2 h-2 bg-green-300 rounded-full animate-pulse"></span>
+                                            {{ $t('NearbyCustomers.chatting') }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button @click="activeChat = null"
+                                    class="btn btn-ghost btn-sm btn-circle text-white hover:bg-white/20">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+                            <div v-for="(message, index) in chatMessages" :key="index" class="flex"
+                                :class="message.sender === 'shop' ? 'justify-end' : 'justify-start'">
+                                <div class="max-w-[80%]">
+                                    <div class="px-4 py-2 shadow-sm" :class="message.sender === 'shop'
+                                        ? 'bg-green-600 text-white rounded-2xl rounded-tr-sm'
+                                        : 'bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-tl-sm'">
+                                        <p class="text-sm">{{ message.text }}</p>
+                                        <p class="text-[10px] mt-1 opacity-70"
+                                            :class="message.sender === 'shop' ? 'text-green-100' : 'text-gray-400'">
+                                            {{ formatTime(message.timestamp) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input -->
+                        <div class="p-4 border-t border-gray-200 bg-white rounded-b-2xl">
+                            <div class="flex gap-2">
+                                <input v-model="newMessage" type="text"
+                                    class="input input-bordered flex-1 input-sm focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                    :placeholder="$t('NearbyCustomers.typeMessage')" @keyup.enter="sendMessage" />
+                                <button @click="sendMessage" class="btn btn-primary btn-sm text-white px-4"
+                                    :disabled="!newMessage.trim()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Location Button -->
+            <button @click="panToMyLocation"
+                class="absolute bottom-6 right-6 z-[400] btn btn-circle btn-primary text-white shadow-lg hover:scale-105 transition-transform"
+                :class="{ 'bottom-24': activeChat }" :title="$t('NearbyCustomers.myLocation') || 'ตำแหน่งของฉัน'">
+                <IconCurrentLocation />
+            </button>
         </div>
 
         <!-- Reject Modal -->
@@ -379,6 +200,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useShopStore } from '@/stores/shop';
+import { IconCurrentLocation } from '@tabler/icons-vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -444,8 +267,6 @@ const customerRequests = ref([
 // State
 const map = ref<L.Map | null>(null);
 const markers = ref<L.Marker[]>([]);
-const filterStatus = ref('all');
-const sortBy = ref('newest');
 const activeChat = ref<any>(null);
 const chatMessages = ref<any[]>([]);
 const newMessage = ref('');
@@ -458,50 +279,47 @@ const cancellationReason = ref('');
 const selectedRequest = ref<any>(null);
 
 // Computed
-const pendingCount = computed(() =>
-    customerRequests.value.filter(r => r.status === 'pending').length
+const acceptedRequestsList = computed(() =>
+    customerRequests.value.filter(r => r.status === 'accepted')
 );
-
-const acceptedCount = computed(() =>
-    customerRequests.value.filter(r => r.status === 'accepted').length
-);
-
-const filteredRequests = computed(() => {
-    let requests = customerRequests.value;
-
-    // Filter by status
-    if (filterStatus.value !== 'all') {
-        requests = requests.filter(r => r.status === filterStatus.value);
-    }
-
-    // Sort
-    if (sortBy.value === 'newest') {
-        requests = [...requests].sort((a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-    } else if (sortBy.value === 'closest') {
-        requests = [...requests].sort((a, b) => a.distance - b.distance);
-    } else if (sortBy.value === 'largest') {
-        const wasteOrder = { very_large: 4, large: 3, medium: 2, small: 1 };
-        requests = [...requests].sort((a, b) =>
-            (wasteOrder[b.wasteAmount as keyof typeof wasteOrder] || 0) -
-            (wasteOrder[a.wasteAmount as keyof typeof wasteOrder] || 0)
-        );
-    }
-
-    return requests;
-});
 
 // Methods
 const initMap = () => {
-    const defaultLat = 13.7563;
-    const defaultLng = 100.5018;
+    // Use shop location from store or fallback to default
+    const shopStore = useShopStore();
+    const defaultLat = shopStore.shop?.latitude || 13.7563;
+    const defaultLng = shopStore.shop?.longitude || 100.5018;
 
-    map.value = L.map('customers-map').setView([defaultLat, defaultLng], 12);
+    map.value = L.map('customers-map', {
+        zoomControl: false // We can add custom zoom control if needed, or keep default
+    }).setView([defaultLat, defaultLng], 14);
+
+    L.control.zoom({
+        position: 'topleft'
+    }).addTo(map.value);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map.value);
+
+    // Add Shop Marker
+    const shopIcon = L.divIcon({
+        className: 'custom-customer-marker',
+        html: `
+        <div class="marker-pin" style="background: #7c3aed; z-index: 1000;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20">
+            <path d="M18.36 9l.6 3H5.04l.6-3h12.72M20 4H4v2h16V4zm0 3H4l-1 5v2h1v6h10v-6h4v6h2v-6h1l-1-5H20zM6 18v-4h6v4H6z"/>
+          </svg>
+        </div>
+      `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+    });
+
+    L.marker([defaultLat, defaultLng], { icon: shopIcon })
+        .addTo(map.value)
+        .bindPopup(`<b>${shopStore.shop?.name || 'ตำแหน่งร้านของคุณ'}</b><br>จุดรับซื้อขยะ`)
+        .openPopup();
 
     // Add markers for all customer requests
     updateMapMarkers();
@@ -516,30 +334,111 @@ const updateMapMarkers = () => {
 
     // Add new markers
     customerRequests.value.forEach(request => {
+        // Skip rejected requests from map
+        if (request.status === 'rejected') return;
+
         const icon = L.divIcon({
             className: 'custom-customer-marker',
             html: `
-        <div class="marker-pin" style="background: ${getMarkerColor(request.status)}">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
+        <div class="liquid-marker">
+          <div class="liquid-pin" style="background: ${getMarkerColor(request.status)}">
+            <div class="liquid-glow"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20" style="position: relative; z-index: 2;">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          </div>
+          <div class="liquid-pulse" style="background: ${getMarkerColor(request.status)}"></div>
         </div>
       `,
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
         });
 
         const marker = L.marker([request.latitude, request.longitude], { icon })
-            .addTo(map.value!)
-            .bindPopup(`
-        <div style="min-width: 200px;">
-          <h4 style="font-weight: bold; margin-bottom: 8px;">${request.customerName}</h4>
-          <p style="font-size: 12px; color: #666;">
-            ${getWasteAmountText(request.wasteAmount)}<br/>
-            ${request.distance} km
-          </p>
-        </div>
-      `);
+            .addTo(map.value!);
+
+        // Create Popup Content
+        const popupContent = document.createElement('div');
+        popupContent.innerHTML = `
+            <div class="glass-card">
+                <div class="glass-card-content">
+                    <div class="shop-image-container shop-placeholder">
+                        <span class="shop-icon">👤</span>
+                    </div>
+                    <h3 class="shop-name">${request.customerName}</h3>
+                    <p class="shop-address">
+                        <span class="px-2 py-0.5 rounded-full text-xs ${request.status === 'pending' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}">
+                            ${getStatusText(request.status)}
+                        </span>
+                    </p>
+
+                    <div class="shop-hours">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span>${getWasteAmountText(request.wasteAmount)}</span>
+                    </div>
+
+                    <div class="shop-phone">
+                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                        <span>${request.distance} km</span>
+                    </div>
+
+                    ${request.notes ? `<p class="text-xs italic text-gray-500 mt-1">"${request.notes}"</p>` : ''}
+
+                    ${request.status === 'pending' ? `
+                        <button id="btn-accept-${request.id}" class="navigate-btn" style="margin-bottom: 8px;">
+                            รับงาน
+                        </button>
+                        <button id="btn-reject-${request.id}" class="navigate-btn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+                            ปฏิเสธ
+                        </button>
+                    ` : ''}
+
+                    ${request.status === 'accepted' ? `
+                        <button id="btn-chat-${request.id}" class="navigate-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            แชท
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent, {
+            maxWidth: 280,
+            className: 'glass-popup'
+        });
+
+        // Attach event listeners after popup opens
+        marker.on('popupopen', () => {
+            const acceptBtn = document.getElementById(`btn-accept-${request.id}`);
+            const rejectBtn = document.getElementById(`btn-reject-${request.id}`);
+            const chatBtn = document.getElementById(`btn-chat-${request.id}`);
+
+            if (acceptBtn) {
+                acceptBtn.onclick = () => {
+                    acceptRequest(request);
+                    marker.closePopup();
+                };
+            }
+            if (rejectBtn) {
+                rejectBtn.onclick = () => {
+                    openRejectModal(request);
+                    marker.closePopup();
+                };
+            }
+            if (chatBtn) {
+                chatBtn.onclick = () => {
+                    openChat(request);
+                    marker.closePopup();
+                };
+            }
+        });
 
         markers.value.push(marker);
     });
@@ -554,28 +453,10 @@ const getMarkerColor = (status: string) => {
     }
 };
 
-const getRequestBorderClass = (status: string) => {
-    switch (status) {
-        case 'pending': return 'border-blue-500';
-        case 'accepted': return 'border-green-500';
-        case 'rejected': return 'border-red-500';
-        default: return 'border-gray-300';
-    }
-};
-
-const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-        case 'pending': return 'badge-warning';
-        case 'accepted': return 'badge-success';
-        case 'rejected': return 'badge-error';
-        default: return 'badge-ghost';
-    }
-};
-
 const getStatusText = (status: string) => {
     switch (status) {
         case 'pending': return 'รอดำเนินการ';
-        case 'accepted': return 'ยอมรับ';
+        case 'accepted': return 'รับงานแล้ว';
         case 'rejected': return 'ปฏิเสธ';
         default: return '-';
     }
@@ -591,26 +472,6 @@ const getWasteAmountText = (amount: string) => {
     return amounts[amount] || amount;
 };
 
-const getWasteTypeText = (type: string) => {
-    const types: Record<string, string> = {
-        plastic: 'พลาสติก',
-        paper: 'กระดาษ',
-        metal: 'โลหะ',
-        glass: 'แก้ว',
-    };
-    return types[type] || type;
-};
-
-const formatDateTime = (date: Date) => {
-    return new Date(date).toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
-
 const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString('th-TH', {
         hour: '2-digit',
@@ -620,7 +481,7 @@ const formatTime = (date: Date) => {
 
 const viewOnMap = (request: any) => {
     if (map.value) {
-        map.value.setView([request.latitude, request.longitude], 15);
+        map.value.setView([request.latitude, request.longitude], 16);
 
         // Find and open the marker popup
         const marker = markers.value.find(m => {
@@ -636,13 +497,12 @@ const viewOnMap = (request: any) => {
 };
 
 const acceptRequest = async (request: any) => {
-    if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการยอมรับคำขอนี้?')) {
-        return;
-    }
-
-    // TODO: API call
+    // Direct accept for demo, or confirmation? User said "click to accept", usually implies direct or simple confirm.
+    // Let's keep it simple.
     request.status = 'accepted';
     updateMapMarkers();
+
+    // Optional: Auto open chat or highlight in sidebar?
 };
 
 const openRejectModal = (request: any) => {
@@ -659,11 +519,8 @@ const closeRejectModal = () => {
 
 const confirmReject = async () => {
     if (!selectedRequest.value) return;
-
-    // TODO: API call
     selectedRequest.value.status = 'rejected';
     selectedRequest.value.rejectionReason = rejectionReason.value;
-
     closeRejectModal();
     updateMapMarkers();
 };
@@ -682,11 +539,8 @@ const closeCancelModal = () => {
 
 const confirmCancel = async () => {
     if (!selectedRequest.value) return;
-
-    // TODO: API call
     selectedRequest.value.status = 'rejected';
     selectedRequest.value.rejectionReason = cancellationReason.value;
-
     closeCancelModal();
     updateMapMarkers();
     activeChat.value = null;
@@ -694,7 +548,7 @@ const confirmCancel = async () => {
 
 const openChat = (request: any) => {
     activeChat.value = request;
-    chatMessages.value = []; // Load messages from backend
+    chatMessages.value = [];
 };
 
 const sendMessage = () => {
@@ -708,7 +562,6 @@ const sendMessage = () => {
 
     newMessage.value = '';
 
-    // Mock customer response
     setTimeout(() => {
         chatMessages.value.push({
             sender: 'customer',
@@ -716,6 +569,16 @@ const sendMessage = () => {
             timestamp: new Date(),
         });
     }, 1000);
+};
+
+const panToMyLocation = () => {
+    const shopStore = useShopStore();
+    const lat = shopStore.shop?.latitude || 13.7563;
+    const lng = shopStore.shop?.longitude || 100.5018;
+
+    if (map.value) {
+        map.value.setView([lat, lng], 16);
+    }
 };
 
 onMounted(() => {
@@ -748,5 +611,284 @@ onUnmounted(() => {
 
 :deep(.marker-pin svg) {
     transform: rotate(45deg);
+}
+
+/* Custom Scrollbar for Sidebar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+</style>
+
+<style>
+/* Global Styles for Leaflet Popups (Non-scoped) */
+.glass-popup .leaflet-popup-content-wrapper {
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+}
+
+.glass-popup .leaflet-popup-content {
+    margin: 0 !important;
+    min-width: 280px !important;
+}
+
+.glass-popup .leaflet-popup-tip-container {
+    display: none;
+}
+
+/* Liquid Glass Card */
+.glass-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+        0 8px 32px 0 rgba(31, 38, 135, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 12px 40px 0 rgba(31, 38, 135, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(to right,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent);
+    transform: skewX(-25deg);
+    animation: shine 6s infinite;
+    pointer-events: none;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) skewX(-25deg);
+    }
+
+    20% {
+        transform: translateX(100%) skewX(-25deg);
+    }
+
+    100% {
+        transform: translateX(100%) skewX(-25deg);
+    }
+}
+
+.glass-card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Liquid Marker Styles */
+.liquid-marker {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.liquid-pin {
+    width: 40px;
+    height: 40px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 2;
+    animation: float 3s ease-in-out infinite;
+}
+
+.liquid-pin svg {
+    transform: rotate(45deg);
+}
+
+.liquid-glow {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 15px;
+    height: 15px;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent);
+    border-radius: 50%;
+    z-index: 3;
+}
+
+.liquid-pulse {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotateX(60deg);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    opacity: 0.5;
+    filter: blur(4px);
+    animation: pulse-shadow 3s ease-in-out infinite;
+    z-index: 1;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(-45deg);
+    }
+
+    50% {
+        transform: translateY(-6px) rotate(-45deg);
+    }
+}
+
+@keyframes pulse-shadow {
+
+    0%,
+    100% {
+        transform: translateX(-50%) rotateX(60deg) scale(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translateX(-50%) rotateX(60deg) scale(0.8);
+        opacity: 0.2;
+    }
+}
+
+/* Shop Image */
+.shop-image-container {
+    width: 100%;
+    height: 140px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.shop-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.shop-placeholder {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shop-icon {
+    font-size: 3.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Shop Info */
+.shop-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.shop-address {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Info Row with Icons */
+.shop-hours,
+.shop-phone {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #4b5563;
+    padding: 6px 12px;
+    background: rgba(16, 185, 129, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.shop-hours .icon,
+.shop-phone .icon {
+    width: 14px;
+    height: 14px;
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+/* Navigate Button */
+.navigate-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 12px;
+    text-decoration: none;
+    margin-top: 8px;
+    box-shadow:
+        0 4px 12px rgba(16, 185, 129, 0.3),
+        0 0 0 1px rgba(16, 185, 129, 0.1) inset;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.navigate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 6px 16px rgba(16, 185, 129, 0.4),
+        0 0 0 1px rgba(16, 185, 129, 0.2) inset;
+}
+
+.navigate-btn:active {
+    transform: translateY(0);
 }
 </style>
