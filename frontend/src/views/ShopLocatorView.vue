@@ -83,6 +83,34 @@
         <IconCurrentLocation />
       </button>
     </div>
+
+    <!-- Share Location Modal -->
+    <dialog ref="shareLocationModal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">{{ $t('ShopLocator.shareLocationTitle') }}</h3>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">{{ $t('ShopLocator.wasteDetails') }}</span>
+            <span class="label-text-alt text-gray-500">{{ wasteDetails.length }}/100</span>
+          </label>
+          <textarea v-model="wasteDetails" :placeholder="$t('ShopLocator.wasteDetailsPlaceholder')"
+            class="textarea textarea-bordered h-24 resize-none" maxlength="100"></textarea>
+        </div>
+
+        <div class="modal-action">
+          <button @click="closeShareModal" class="btn btn-ghost">
+            {{ $t('ShopLocator.cancel') }}
+          </button>
+          <button @click="submitShareLocation" class="btn btn-primary text-white" :disabled="!wasteDetails.trim()">
+            {{ $t('ShopLocator.submit') }}
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="closeShareModal">close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -110,12 +138,17 @@ L.Icon.Default.mergeOptions({
   shadowUrl,
 });
 
+
 const shopStore = useShopStore();
 const searchQuery = ref('');
 const map = ref<L.Map | null>(null);
 const markers = ref<L.Marker[]>([]);
 const selectedShopId = ref<string | null>(null);
 const userLocation = ref<{ lat: number; lng: number } | null>(null);
+const shareLocationModal = ref<HTMLDialogElement | null>(null);
+const wasteDetails = ref('');
+const userMarker = ref<L.CircleMarker | null>(null);
+
 
 const isLoading = computed(() => shopStore.isLoading);
 
@@ -255,39 +288,89 @@ const locateUser = () => {
   map.value.on('locationfound', (e) => {
     userLocation.value = e.latlng;
 
+    // Remove old marker if exists
+    if (userMarker.value) {
+      userMarker.value.remove();
+    }
+
     // Add user marker with glassmorphism popup
-    L.circleMarker(e.latlng, {
+    userMarker.value = L.circleMarker(e.latlng, {
       radius: 8,
       fillColor: '#3b82f6',
       color: '#fff',
       weight: 2,
       opacity: 1,
       fillOpacity: 0.8
-    }).addTo(map.value!)
-      .bindPopup(`
-        <div class="glass-card">
-          <div class="glass-card-content" style="padding: 16px; text-align: center;">
-            <div style="width: 48px; height: 48px; margin: 0 auto 12px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-              <svg style="width: 24px; height: 24px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-            </div>
-            <h3 class="shop-name" style="margin-bottom: 4px;">คุณอยู่ที่นี่</h3>
-            <p class="shop-address" style="font-size: 0.75rem;">ตำแหน่งปัจจุบันของคุณ</p>
+    }).addTo(map.value!);
+
+    const popupContent = `
+      <div class="glass-card">
+        <div class="glass-card-content" style="padding: 16px; text-align: center;">
+          <div style="width: 48px; height: 48px; margin: 0 auto 12px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+            <svg style="width: 24px; height: 24px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
           </div>
+          <h3 class="shop-name" style="margin-bottom: 4px;">คุณอยู่ที่นี่</h3>
+          <p class="shop-address" style="font-size: 0.75rem; margin-bottom: 12px;">ตำแหน่งปัจจุบันของคุณ</p>
+          <button id="share-location-btn" style="width: 100%; padding: 8px 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+            แชร์ตำแหน่งของคุณ
+          </button>
         </div>
-      `, {
-        maxWidth: 220,
-        className: 'glass-popup'
-      })
-      .openPopup();
+      </div>
+    `;
+
+    userMarker.value.bindPopup(popupContent, {
+      maxWidth: 220,
+      className: 'glass-popup'
+    }).openPopup();
   });
 
   map.value.on('locationerror', (e) => {
     console.error('Location error:', e.message);
     // Fallback to default view if location access denied
   });
+};
+
+// Use event delegation for share button (works even after popup recreates)
+document.addEventListener('click', (e) => {
+  const target = e.target as HTMLElement;
+  if (target && target.id === 'share-location-btn') {
+    openShareModal();
+  }
+});
+
+// Modal handlers
+const openShareModal = () => {
+  if (shareLocationModal.value) {
+    shareLocationModal.value.showModal();
+  }
+};
+
+const closeShareModal = () => {
+  if (shareLocationModal.value) {
+    shareLocationModal.value.close();
+    wasteDetails.value = '';
+  }
+};
+
+const submitShareLocation = () => {
+  if (!wasteDetails.value.trim() || !userLocation.value) {
+    return;
+  }
+
+  // TODO: Send location and details to backend API
+  console.log('Sharing location:', {
+    lat: userLocation.value.lat,
+    lng: userLocation.value.lng,
+    details: wasteDetails.value
+  });
+
+  // Show success message (you can add a toast notification here)
+  alert('แชร์ตำแหน่งสำเร็จ! ร้านค้าจะติดต่อกลับเร็วๆ นี้');
+
+  closeShareModal();
 };
 
 watch(filteredShops, () => {
@@ -567,5 +650,15 @@ onUnmounted(() => {
     transform: translate(-50%, -50%) scale(1.5);
     opacity: 0;
   }
+}
+
+/* Share Location Button Styles */
+:deep(#share-location-btn:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+:deep(#share-location-btn:active) {
+  transform: translateY(0);
 }
 </style>

@@ -60,6 +60,12 @@ const router = createRouter({
       component: () => import('../views/SettingsView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/nearby-customers',
+      name: 'nearby-customers',
+      component: () => import('../views/NearbyCustomersView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 

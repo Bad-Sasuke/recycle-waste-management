@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser, IconMapPin } from '@tabler/icons-vue'
+import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser, IconMapPin, IconMapPinShare, IconUsers } from '@tabler/icons-vue'
 import { RouterLink } from 'vue-router'
 import { ref, onBeforeMount, onMounted, watch } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
@@ -84,6 +84,13 @@ const handleLogout = () => {
               class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
               <IconMapPin stroke="1.5" size="20" />
               {{ $t('ShopLocator.title') }}
+            </RouterLink>
+          </li>
+          <li v-if="usersStore.isLogin && shopStore.hasShop" class="mr-2">
+            <RouterLink to="/nearby-customers"
+              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
+              <IconUsers stroke="1.5" size="20" />
+              {{ $t('NearbyCustomers.title') }}
             </RouterLink>
           </li>
         </ul>
@@ -218,6 +225,18 @@ const handleLogout = () => {
           <RouterLink to="/shop-locator" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
             <IconMapPin stroke="1.5" size="20" />
             <span>{{ $t('ShopLocator.title') }}</span>
+          </RouterLink>
+        </li>
+        <li class="py-2" v-if="usersStore.isLogin">
+          <RouterLink to="/share-location" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
+            <IconMapPinShare stroke="1.5" size="20" />
+            <span>{{ $t('ShareLocation.title') }}</span>
+          </RouterLink>
+        </li>
+        <li class="py-2" v-if="usersStore.isLogin && shopStore.hasShop">
+          <RouterLink to="/nearby-customers" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
+            <IconUsers stroke="1.5" size="20" />
+            <span>{{ $t('NearbyCustomers.title') }}</span>
           </RouterLink>
         </li>
         <li class="py-2" v-if="usersStore.isLogin && shopStore.hasShop">
