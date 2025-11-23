@@ -1,113 +1,143 @@
-import { defineStore } from 'pinia';
-import type { Shop } from '@/types/shop';
-import { fetchMyShop, createShop, updateShop, deleteShop } from '@/services/shop';
-import { getCookie } from '@/stores/cookie';
+import { defineStore } from 'pinia'
+import type { Shop } from '@/types/shop'
+import { fetchMyShop, createShop, updateShop, deleteShop, fetchShops } from '@/services/shop'
+import { getCookie } from '@/stores/cookie'
 
 export const useShopStore = defineStore('shop', {
   state: () => ({
     shop: null as Shop | null,
+    allShops: [] as Shop[],
     isLoading: false,
     hasShop: false,
     checked: false, // To track whether we've checked for shop existence
+    pagination: {
+      page: 1,
+      limit: 12,
+      total_pages: 1,
+      total_items: 0,
+    },
   }),
-  
+
   getters: {
     shopName: (state) => state.shop?.name || '',
     shopImage: (state) => state.shop?.image_url || '',
     shopAddress: (state) => state.shop?.address || '',
   },
-  
+
   actions: {
-    async checkUserShop() {
-      if (!getCookie('token')) {
-        this.hasShop = false;
-        this.checked = true;
-        return false;
-      }
-      
-      this.isLoading = true;
+    async fetchAllShops(page: number = 1, limit: number = 100) {
+      this.isLoading = true
       try {
-        const result = await fetchMyShop();
+        const result = await fetchShops(page, limit)
         if (result.data) {
-          this.shop = result.data as Shop;
-          this.hasShop = true;
+          this.allShops = result.data as Shop[]
+          this.pagination = {
+            page: result.page || 1,
+            limit: result.limit || limit,
+            total_pages: result.total_pages || 1,
+            total_items: result.total_items || 0,
+          }
         } else {
-          this.shop = null;
-          this.hasShop = false;
+          this.allShops = []
         }
       } catch (error) {
-        console.error('Error checking user shop:', error);
-        this.hasShop = false;
-        this.shop = null;
+        console.error('Error fetching all shops:', error)
+        this.allShops = []
       } finally {
-        this.isLoading = false;
-        this.checked = true;
+        this.isLoading = false
       }
-      return this.hasShop;
+    },
+
+    async checkUserShop() {
+      if (!getCookie('token')) {
+        this.hasShop = false
+        this.checked = true
+        return false
+      }
+
+      this.isLoading = true
+      try {
+        const result = await fetchMyShop()
+        if (result.data) {
+          this.shop = result.data as Shop
+          this.hasShop = true
+        } else {
+          this.shop = null
+          this.hasShop = false
+        }
+      } catch (error) {
+        console.error('Error checking user shop:', error)
+        this.hasShop = false
+        this.shop = null
+      } finally {
+        this.isLoading = false
+        this.checked = true
+      }
+      return this.hasShop
     },
 
     async createShop(formData: FormData) {
-      this.isLoading = true;
+      this.isLoading = true
       try {
-        const result = await createShop(formData);
+        const result = await createShop(formData)
         if (result.message.includes('successfully')) {
           // Refresh the shop data
-          await this.checkUserShop();
-          return { success: true, message: result.message };
+          await this.checkUserShop()
+          return { success: true, message: result.message }
         } else {
-          return { success: false, message: result.message };
+          return { success: false, message: result.message }
         }
       } catch (error) {
-        console.error('Error creating shop:', error);
-        return { success: false, message: 'Error creating shop' };
+        console.error('Error creating shop:', error)
+        return { success: false, message: 'Error creating shop' }
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
 
     async updateShop(shopId: string, formData: FormData) {
-      this.isLoading = true;
+      this.isLoading = true
       try {
-        const result = await updateShop(shopId, formData);
+        const result = await updateShop(shopId, formData)
         if (result.message.includes('successfully')) {
           // Refresh the shop data
-          await this.checkUserShop();
-          return { success: true, message: result.message };
+          await this.checkUserShop()
+          return { success: true, message: result.message }
         } else {
-          return { success: false, message: result.message };
+          return { success: false, message: result.message }
         }
       } catch (error) {
-        console.error('Error updating shop:', error);
-        return { success: false, message: 'Error updating shop' };
+        console.error('Error updating shop:', error)
+        return { success: false, message: 'Error updating shop' }
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
 
     async deleteShop(shopId: string) {
-      this.isLoading = true;
+      this.isLoading = true
       try {
-        const result = await deleteShop(shopId);
+        const result = await deleteShop(shopId)
         if (result.message.includes('successfully')) {
-          this.shop = null;
-          this.hasShop = false;
-          return { success: true, message: result.message };
+          this.shop = null
+          this.hasShop = false
+          return { success: true, message: result.message }
         } else {
-          return { success: false, message: result.message };
+          return { success: false, message: result.message }
         }
       } catch (error) {
-        console.error('Error deleting shop:', error);
-        return { success: false, message: 'Error deleting shop' };
+        console.error('Error deleting shop:', error)
+        return { success: false, message: 'Error deleting shop' }
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
 
     // Reset the shop state
     resetShop() {
-      this.shop = null;
-      this.hasShop = false;
-      this.checked = false;
-    }
+      this.shop = null
+      this.hasShop = false
+      this.checked = false
+    },
   },
-});
+})

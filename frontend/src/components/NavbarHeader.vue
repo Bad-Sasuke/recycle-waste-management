@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser } from '@tabler/icons-vue'
+import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser, IconMapPin } from '@tabler/icons-vue'
 import { RouterLink } from 'vue-router'
 import { ref, onBeforeMount, onMounted, watch } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
@@ -73,9 +73,17 @@ const handleLogout = () => {
       <div class="hidden md:flex">
         <ul class="menu menu-horizontal px-1">
           <li v-if="usersStore.isLogin" class="mr-2">
-            <RouterLink to="/marketplace" class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
+            <RouterLink to="/marketplace"
+              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
               <IconBuildingWarehouse stroke="1.5" size="20" />
               {{ $t('Navbar.menu.marketplace') }}
+            </RouterLink>
+          </li>
+          <li class="mr-2">
+            <RouterLink to="/shop-locator"
+              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
+              <IconMapPin stroke="1.5" size="20" />
+              {{ $t('ShopLocator.title') }}
             </RouterLink>
           </li>
         </ul>
@@ -125,7 +133,8 @@ const handleLogout = () => {
             </li> -->
           </div>
           <li class="flex items-center justify-center w-full mt-auto py-3">
-            <a class="text-center text-base font-medium text-green-600 hover:text-green-700">{{ $t('Navbar.notif.view_all') }}</a>
+            <a class="text-center text-base font-medium text-green-600 hover:text-green-700">{{
+              $t('Navbar.notif.view_all') }}</a>
           </li>
         </ul>
       </div>
@@ -172,7 +181,8 @@ const handleLogout = () => {
               </RouterLink>
             </li>
             <li class="py-1">
-              <a @click="handleLogout" class="flex items-center gap-3 text-base font-medium text-error hover:text-error-focus transition-colors">
+              <a @click="handleLogout"
+                class="flex items-center gap-3 text-base font-medium text-error hover:text-error-focus transition-colors">
                 <div class="flex items-center gap-2">
                   <IconLogout stroke="1.5" size="20" />
                   <span>{{ $t('Navbar.profile.textLogout') }}</span>
@@ -202,6 +212,12 @@ const handleLogout = () => {
           <RouterLink to="/marketplace" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
             <IconBuildingWarehouse stroke="1.5" size="20" />
             <span>{{ $t('Navbar.menu.marketplace') }}</span>
+          </RouterLink>
+        </li>
+        <li class="py-2">
+          <RouterLink to="/shop-locator" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
+            <IconMapPin stroke="1.5" size="20" />
+            <span>{{ $t('ShopLocator.title') }}</span>
           </RouterLink>
         </li>
         <li class="py-2" v-if="usersStore.isLogin && shopStore.hasShop">

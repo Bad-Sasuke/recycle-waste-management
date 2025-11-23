@@ -49,6 +49,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/shop-locator',
+      name: 'shop-locator',
+      component: () => import('../views/ShopLocatorView.vue'),
+      meta: { requiresAuth: false }, // Public route - anyone can view shops
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/SettingsView.vue'),

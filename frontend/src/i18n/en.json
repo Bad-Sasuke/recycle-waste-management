@@ -332,5 +332,17 @@
             "dismiss": "Dismiss",
             "dismissed": "Notification dismissed"
         }
+    },
+    "ShopLocator": {
+        "title": "Shop Locator",
+        "subtitle": "Find recycling shops near you",
+        "search": "Search shops...",
+        "filter": "Filter",
+        "distance": "Distance",
+        "navigate": "Navigate",
+        "viewDetails": "View Details",
+        "noShops": "No shops found",
+        "loading": "Loading map...",
+        "myLocation": "My Location"
     }
 }
