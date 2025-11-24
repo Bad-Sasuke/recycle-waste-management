@@ -5,9 +5,9 @@ import (
 	"os"
 	"recycle-waste-management-backend/src/configuration"
 	ds "recycle-waste-management-backend/src/domain/datasources"
-	repo "recycle-waste-management-backend/src/domain/repositories"
 	"recycle-waste-management-backend/src/gateways"
 	"recycle-waste-management-backend/src/middlewares"
+	repo "recycle-waste-management-backend/src/repositories"
 	sv "recycle-waste-management-backend/src/services"
 
 	"github.com/gofiber/fiber/v2"
@@ -42,6 +42,7 @@ func main() {
 	categoryWasteRepo := repo.NewCategoryWasteRepository(mongodb)
 	shopRepo := repo.NewShopRepository(mongodb)
 	settingsRepo := repo.NewSettingsRepository(mongodb)
+	customerRequestRepo := repo.NewCustomerRequestRepository(mongodb)
 
 	userSV := sv.NewUsersService(userMongo)
 	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes, categoryWasteRepo)
@@ -49,7 +50,8 @@ func main() {
 	imageSV := sv.NewImageService()
 	shopSV := sv.NewShopService(shopRepo)
 	settingsSV := sv.NewSettingsService(settingsRepo)
-	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV, imageSV, shopSV, settingsSV)
+	customerRequestSV := sv.NewCustomerRequestService(customerRequestRepo)
+	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV, imageSV, shopSV, settingsSV, *customerRequestSV)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {

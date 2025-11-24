@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"recycle-waste-management-backend/src/domain/entities"
-	"recycle-waste-management-backend/src/domain/repositories"
+	"recycle-waste-management-backend/src/repositories"
 )
 
 type usersService struct {

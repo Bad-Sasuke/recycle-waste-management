@@ -3,10 +3,10 @@ package services
 import (
 	"fmt"
 	"recycle-waste-management-backend/src/domain/entities"
-	"recycle-waste-management-backend/src/domain/repositories"
 	"recycle-waste-management-backend/src/infrastructure/httpclients"
 	"recycle-waste-management-backend/src/infrastructure/providers"
 	"recycle-waste-management-backend/src/middlewares"
+	"recycle-waste-management-backend/src/repositories"
 	"strings"
 	"time"
 

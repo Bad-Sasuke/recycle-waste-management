@@ -8,16 +8,6 @@ import (
 )
 
 // GetUserSettings retrieves the current user's settings
-// @Summary Get user settings
-// @Description Get the current user's settings
-// @Tags settings
-// @Accept json
-// @Produce json
-// @Security Bearer
-// @Success 200 {object} entities.ResponseModel{data=entities.UserSettings}
-// @Failure 401 {object} entities.ResponseMessage
-// @Failure 500 {object} entities.ResponseMessage
-// @Router /api/settings [get]
 func (h *HTTPGateway) GetUserSettings(ctx *fiber.Ctx) error {
 	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
 	if err != nil {
@@ -33,18 +23,6 @@ func (h *HTTPGateway) GetUserSettings(ctx *fiber.Ctx) error {
 }
 
 // UpdateUserSettings updates the current user's settings
-// @Summary Update user settings
-// @Description Update the current user's settings
-// @Tags settings
-// @Accept json
-// @Produce json
-// @Security Bearer
-// @Param settings body entities.UpdateSettingsBody true "Settings to update"
-// @Success 200 {object} entities.ResponseModel{data=entities.UserSettings}
-// @Failure 400 {object} entities.ResponseMessage
-// @Failure 401 {object} entities.ResponseMessage
-// @Failure 500 {object} entities.ResponseMessage
-// @Router /api/settings [put]
 func (h *HTTPGateway) UpdateUserSettings(ctx *fiber.Ctx) error {
 	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
 	if err != nil {
@@ -65,16 +43,6 @@ func (h *HTTPGateway) UpdateUserSettings(ctx *fiber.Ctx) error {
 }
 
 // DeleteUserSettings deletes the current user's settings (resets to default)
-// @Summary Delete user settings
-// @Description Delete the current user's settings (will reset to default on next access)
-// @Tags settings
-// @Accept json
-// @Produce json
-// @Security Bearer
-// @Success 200 {object} entities.ResponseMessage
-// @Failure 401 {object} entities.ResponseMessage
-// @Failure 500 {object} entities.ResponseMessage
-// @Router /api/settings [delete]
 func (h *HTTPGateway) DeleteUserSettings(ctx *fiber.Ctx) error {
 	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
 	if err != nil {

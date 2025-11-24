@@ -3,7 +3,7 @@ package services
 import (
 	"fmt"
 	"recycle-waste-management-backend/src/domain/entities"
-	"recycle-waste-management-backend/src/domain/repositories"
+	"recycle-waste-management-backend/src/repositories"
 )
 
 type settingsService struct {

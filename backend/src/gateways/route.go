@@ -1,8 +1,9 @@
 package gateways
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"recycle-waste-management-backend/src/middlewares"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func RouteUsers(gateway HTTPGateway, app *fiber.App) {
@@ -68,4 +69,15 @@ func RouteSettings(gateway HTTPGateway, app *fiber.App) {
 	protected.Get("/", gateway.GetUserSettings)
 	protected.Put("/", gateway.UpdateUserSettings)
 	protected.Delete("/", gateway.DeleteUserSettings)
+}
+
+func RouteCustomerRequest(gateway HTTPGateway, app *fiber.App) {
+	api := app.Group("/api/customer-request")
+	api.Get("/all", gateway.GetCustomerRequests)
+	api.Get("/:request_id", gateway.GetCustomerRequestByRequestID)
+	api.Post("", gateway.AddCustomerRequest)
+	api.Delete("", gateway.DeleteCustomerRequest)
+	api.Put("", gateway.UpdateCustomerRequest)
+	api.Get("/my-request", gateway.GetCustomerRequestByUserID)
+
 }

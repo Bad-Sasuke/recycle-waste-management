@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 	"recycle-waste-management-backend/src/domain/entities"
-	"recycle-waste-management-backend/src/domain/repositories"
 	"recycle-waste-management-backend/src/infrastructure/providers"
+	"recycle-waste-management-backend/src/repositories"
 	"strings"
 	"time"
 
