@@ -9,6 +9,7 @@ import (
 	"recycle-waste-management-backend/src/middlewares"
 	repo "recycle-waste-management-backend/src/repositories"
 	sv "recycle-waste-management-backend/src/services"
+	ws "recycle-waste-management-backend/src/websocket"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -37,6 +38,9 @@ func main() {
 
 	mongodb := ds.NewMongoDB(10)
 
+	// Initialize WebSocket Chat Hub
+	ws.InitChatHub()
+
 	userMongo := repo.NewUsersRepository(mongodb)
 	recycleWastes := repo.NewRecyclableItemsRepository(mongodb)
 	categoryWasteRepo := repo.NewCategoryWasteRepository(mongodb)
@@ -50,8 +54,8 @@ func main() {
 	imageSV := sv.NewImageService()
 	shopSV := sv.NewShopService(shopRepo)
 	settingsSV := sv.NewSettingsService(settingsRepo)
-	customerRequestSV := sv.NewCustomerRequestService(customerRequestRepo)
-	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV, imageSV, shopSV, settingsSV, *customerRequestSV)
+	customerRequestSV := sv.NewCustomerRequestService(customerRequestRepo, shopRepo)
+	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV, imageSV, shopSV, settingsSV, customerRequestSV)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {

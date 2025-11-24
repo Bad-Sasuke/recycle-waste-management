@@ -37,10 +37,6 @@ func NewUsersRepository(db *ds.MongoDB) IUsersRepository {
 }
 
 func (repo *usersRepository) InsertNewUser(data *entities.UserDataFormat) error {
-	// Ensure default role is set if not provided
-	if data.Role == "" {
-		data.Role = string(entities.UserRoleUser) // Default role is 'user'
-	}
 	if _, err := repo.Collection.InsertOne(repo.Context, data); err != nil {
 		return fmt.Errorf("error inserting user: %v", err)
 	}

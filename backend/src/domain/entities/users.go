@@ -2,6 +2,15 @@ package entities
 
 import "time"
 
+// UserRole represents the possible user roles in the system
+type UserRole string
+
+const (
+	UserRoleUser      UserRole = "user"
+	UserRoleAdmin     UserRole = "admin"
+	UserRoleModerator UserRole = "moderator"
+)
+
 type NewUserBody struct {
 	Username string `json:"username" bson:"username"`
 	Email    string `json:"email" bson:"email"`
@@ -17,12 +26,3 @@ type UserDataFormat struct {
 	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	LastLogin time.Time `json:"last_login,omitempty" bson:"last_login,omitempty"`
 }
-
-// UserRole represents the possible user roles in the system
-type UserRole string
-
-const (
-	UserRoleUser      UserRole = "user"
-	UserRoleAdmin     UserRole = "admin"
-	UserRoleModerator UserRole = "moderator"
-)

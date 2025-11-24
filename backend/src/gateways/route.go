@@ -3,6 +3,7 @@ package gateways
 import (
 	"recycle-waste-management-backend/src/middlewares"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,6 +20,7 @@ func RouteUsers(gateway HTTPGateway, app *fiber.App) {
 	api.Get("/profile", middlewares.SetJWtHeaderHandler(), gateway.GetCurrentUser)
 	api.Put("/profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateCurrentUser)
 	api.Post("/update-image-profile", middlewares.SetJWtHeaderHandler(), gateway.UpdateProfileImage)
+	api.Put("/update-role-user", middlewares.SetJWtHeaderHandler(), gateway.UpdateUserRoleUser)
 	// Role management (admin only)
 	api.Put("/update-role", middlewares.SetJWtHeaderHandler(), gateway.UpdateUserRole)
 	api.Get("/my-role", middlewares.SetJWtHeaderHandler(), gateway.GetCurrentUserRole)
@@ -72,12 +74,20 @@ func RouteSettings(gateway HTTPGateway, app *fiber.App) {
 }
 
 func RouteCustomerRequest(gateway HTTPGateway, app *fiber.App) {
-	api := app.Group("/api/customer-request")
-	api.Get("/all", gateway.GetCustomerRequests)
-	api.Get("/:request_id", gateway.GetCustomerRequestByRequestID)
+	api := app.Group("/api/customer-request", middlewares.SetJWtHeaderHandler())
+	api.Get("/my-request", gateway.GetCustomerRequestByRequestID)
 	api.Post("", gateway.AddCustomerRequest)
 	api.Delete("", gateway.DeleteCustomerRequest)
 	api.Put("", gateway.UpdateCustomerRequest)
-	api.Get("/my-request", gateway.GetCustomerRequestByUserID)
+	api.Get("/all", gateway.GetCustomerRequests)
+	api.Put("/accept/:id", gateway.AcceptCustomerRequest)
 
+}
+
+func RouteWebSocket(gateway HTTPGateway, app *fiber.App) {
+	// WebSocket chat endpoint
+	app.Get("/ws/chat",
+		gateway.WebSocketChatUpgrade,
+		websocket.New(gateway.HandleWebSocketChat),
+	)
 }

@@ -34,4 +34,5 @@ func NewHTTPGateway(app *fiber.App, users service.IUsersService, recWasteSV serv
 	RouteShop(*gateway, app)
 	RouteSettings(*gateway, app)
 	RouteCustomerRequest(*gateway, app)
+	RouteWebSocket(*gateway, app)
 }

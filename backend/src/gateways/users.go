@@ -147,6 +147,30 @@ func (h *HTTPGateway) UpdateProfileImage(ctx *fiber.Ctx) error {
 	})
 }
 
+func (h *HTTPGateway) UpdateUserRoleUser(ctx *fiber.Ctx) error {
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+	var req struct {
+		Role string `json:"role"`
+	}
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid json body"})
+	}
+	if req.Role == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "role is required"})
+	}
+	if req.Role != "user" && req.Role != "moderator" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid role"})
+	}
+	err = h.UserService.UpdateUserRole(tokenDetails.UserID, entities.UserRole(req.Role))
+	if err != nil {
+		return ctx.Status(fiber.StatusForbidden).JSON(entities.ResponseMessage{Message: "cannot update user role"})
+	}
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "updated successfully"})
+}
+
 func (h *HTTPGateway) UpdateUserRole(ctx *fiber.Ctx) error {
 	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
 	if err != nil {

@@ -25,6 +25,19 @@ func SetJWtHeaderHandler() fiber.Handler {
 	})
 }
 
+func SetWebSocketJWTMiddleware() fiber.Handler {
+	return jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{
+			Key:    []byte(os.Getenv("JWT_SECRET_KEY")),
+			JWTAlg: jwtware.HS256,
+		},
+		TokenLookup: "query:token",
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return c.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "Unauthorization Token."})
+		},
+	})
+}
+
 type TokenDetails struct {
 	Token     *string `json:"token"`
 	UserID    string  `json:"user_id"`
