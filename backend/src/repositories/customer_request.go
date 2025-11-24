@@ -15,6 +15,7 @@ import (
 type ICustomerRequestRepository interface {
 	AddCustomerRequest(body models.CustomerRequestModel) error
 	GetCustomerRequests(userID string) (*[]models.CustomerRequestModel, error)
+	GetCustomerRequestByID(customerRequestID string) (*models.CustomerRequestModel, error)
 	CheckCustomerRequestAlreadyExist(userID string) error
 	DeleteAllCustomerRequest(userID string) error
 	GetCustomerRequestsPublic() (*[]models.CustomerRequestModel, error)
@@ -57,6 +58,18 @@ func (repo *customerRequestRepository) GetCustomerRequests(userID string) (*[]mo
 		return nil, fmt.Errorf("error getting customer requests: %v", err)
 	}
 	return &customerRequests, nil
+}
+
+func (repo *customerRequestRepository) GetCustomerRequestByID(customerRequestID string) (*models.CustomerRequestModel, error) {
+	var customerRequest models.CustomerRequestModel
+	err := repo.Collection.FindOne(repo.Context, bson.M{"customer_request_id": customerRequestID}).Decode(&customerRequest)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("customer request not found")
+		}
+		return nil, fmt.Errorf("error getting customer request: %v", err)
+	}
+	return &customerRequest, nil
 }
 
 func (repo *customerRequestRepository) CheckCustomerRequestAlreadyExist(userID string) error {

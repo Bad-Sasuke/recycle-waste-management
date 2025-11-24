@@ -72,19 +72,29 @@ const handleLogout = () => {
       <!-- เมนูหลัก -->
       <div class="hidden md:flex">
         <ul class="menu menu-horizontal px-1">
-          <li v-if="usersStore.isLogin" class="mr-2">
-            <RouterLink to="/marketplace"
+          <li class="mr-2">
+            <RouterLink v-if="usersStore.isLogin" to="/marketplace"
               class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
               <IconBuildingWarehouse stroke="1.5" size="20" />
               {{ $t('Navbar.menu.marketplace') }}
             </RouterLink>
+            <a v-else @click="handleLogin"
+              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors cursor-pointer">
+              <IconBuildingWarehouse stroke="1.5" size="20" />
+              {{ $t('Navbar.menu.marketplace') }}
+            </a>
           </li>
-          <li class="mr-2">
-            <RouterLink to="/shop-locator"
+          <li class="mr-2" v-if="usersStore.user?.role !== 'moderator'">
+            <RouterLink v-if="usersStore.isLogin" to="/shop-locator"
               class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
               <IconMapPin stroke="1.5" size="20" />
               {{ $t('ShopLocator.title') }}
             </RouterLink>
+            <a v-else @click="handleLogin"
+              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors cursor-pointer">
+              <IconMapPin stroke="1.5" size="20" />
+              {{ $t('ShopLocator.title') }}
+            </a>
           </li>
           <li v-if="usersStore.isLogin && shopStore.hasShop" class="mr-2">
             <RouterLink to="/nearby-customers"
@@ -149,7 +159,8 @@ const handleLogout = () => {
       <SwitchLangDesktop class="px-2" />
 
       <!-- โปรไฟล์ผู้ใช้งาน -->
-      <div class="dropdown dropdown-end" @click="usersStore.isLogin !== true ? handleLogin() : ''">
+      <div class="dropdown dropdown-end" style="z-index: 999;"
+        @click="usersStore.isLogin !== true ? handleLogin() : ''">
         <div tabindex="0" role="button" class="flex items-center">
           <div v-if="usersStore.isLogin && usersStore.profileImage" class="avatar placeholder">
             <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
@@ -215,17 +226,29 @@ const handleLogout = () => {
             <span>{{ $t('Navbar.menu.home') }}</span>
           </RouterLink>
         </li>
-        <li class="py-2" v-if="usersStore.isLogin">
-          <RouterLink to="/marketplace" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
+        <li class="py-2">
+          <RouterLink v-if="usersStore.isLogin" to="/marketplace" @click="closeDrawer"
+            class="flex items-center gap-3 text-base font-medium">
             <IconBuildingWarehouse stroke="1.5" size="20" />
             <span>{{ $t('Navbar.menu.marketplace') }}</span>
           </RouterLink>
+          <a v-else @click="() => { closeDrawer(); handleLogin(); }"
+            class="flex items-center gap-3 text-base font-medium cursor-pointer">
+            <IconBuildingWarehouse stroke="1.5" size="20" />
+            <span>{{ $t('Navbar.menu.marketplace') }}</span>
+          </a>
         </li>
-        <li class="py-2">
-          <RouterLink to="/shop-locator" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
+        <li class="py-2" v-if="usersStore.user?.role !== 'moderator'">
+          <RouterLink v-if="usersStore.isLogin" to="/shop-locator" @click="closeDrawer"
+            class="flex items-center gap-3 text-base font-medium">
             <IconMapPin stroke="1.5" size="20" />
             <span>{{ $t('ShopLocator.title') }}</span>
           </RouterLink>
+          <a v-else @click="() => { closeDrawer(); handleLogin(); }"
+            class="flex items-center gap-3 text-base font-medium cursor-pointer">
+            <IconMapPin stroke="1.5" size="20" />
+            <span>{{ $t('ShopLocator.title') }}</span>
+          </a>
         </li>
         <li class="py-2" v-if="usersStore.isLogin">
           <RouterLink to="/share-location" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">

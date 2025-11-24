@@ -1,4 +1,5 @@
 {
+    "close": "Close",
     "LandingHome": {
         "hero": {
             "title": "Join recycling and earn money together!",
@@ -344,5 +345,44 @@
         "noShops": "No shops found",
         "loading": "Loading map...",
         "myLocation": "My Location"
+    },
+    "NearbyCustomers": {
+        "title": "Nearby Customers",
+        "subtitle": "See the list of customers who want to sell their recyclable materials",
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "total": "Total",
+        "allRequests": "All Requests",
+        "pendingOnly": "Pending Only",
+        "acceptedOnly": "Accepted Only",
+        "rejectedOnly": "Rejected Only",
+        "newest": "Newest First",
+        "closest": "Closest First",
+        "largestWaste": "Largest Waste First",
+        "noRequests": "No requests at the moment",
+        "location": "Location",
+        "wasteAmount": "Waste Amount",
+        "wasteTypes": "Waste Types",
+        "phone": "Phone",
+        "viewOnMap": "View on Map",
+        "reject": "Reject",
+        "accept": "Accept",
+        "chat": "Chat",
+        "cancelPickup": "Cancel Pickup",
+        "rejectedReason": "Reason for Rejection",
+        "rejectRequest": "Reject Request",
+        "rejectionReason": "Rejection Reason",
+        "reasonPlaceholder": "Enter reason, e.g. too far away, too little waste, etc.",
+        "cancel": "Cancel",
+        "confirmReject": "Confirm Rejection",
+        "cancelPickupTitle": "Cancel Pickup",
+        "cancellationReason": "Cancellation Reason",
+        "confirmCancel": "Confirm Cancellation",
+        "chatting": "Chatting",
+        "startConversation": "Start Conversation",
+        "typeMessage": "Type message...",
+        "chatNotSaved": "Message will not be saved",
+        "searchPlaceholder": "Search...",
+        "noAcceptedRequests": "No accepted requests"
     }
 }

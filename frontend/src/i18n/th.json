@@ -1,4 +1,5 @@
 {
+    "close": "ปิด",
     "LandingHome": {
         "hero": {
             "title": "ร่วมรีไซเคิลและทำเงินไปพร้อมกัน!",
@@ -429,6 +430,8 @@
         "chatting": "กำลังสนทนา",
         "startConversation": "เริ่มการสนทนาได้เลย",
         "typeMessage": "พิมพ์ข้อความ...",
-        "chatNotSaved": "ข้อความจะไม่ถูกบันทึก"
+        "chatNotSaved": "ข้อความจะไม่ถูกบันทึก",
+        "searchPlaceholder": "ค้นหา",
+        "noAcceptedRequests": "ไม่มีคำขอที่จะไปรับซื้อขยะ"
     }
 }

@@ -90,5 +90,30 @@ export const useUsersStore = defineStore('users', {
       this.jwt = ''
       this.user = null
     },
+
+    async updateUserRole(role: string) {
+      if (!this.isLogin || !this.jwt) return false
+
+      try {
+        const apiUrl = import.meta.env.VITE_WEB_API
+        const response = await fetch(`${apiUrl}/api/user/update-role-user`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${this.jwt}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ role }),
+        })
+
+        if (response.ok) {
+          await this.fetchUserProfile()
+          return true
+        }
+        return false
+      } catch (error) {
+        console.error('Error updating user role:', error)
+        return false
+      }
+    },
   },
 })

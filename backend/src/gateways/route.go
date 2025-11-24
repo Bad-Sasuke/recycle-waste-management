@@ -93,3 +93,16 @@ func RouteWebSocket(gateway HTTPGateway, app *fiber.App) {
 		websocket.New(gateway.HandleWebSocketChat),
 	)
 }
+
+func RouteReview(reviewGateway *ReviewGateway, app *fiber.App) {
+	api := app.Group("/api/reviews")
+
+	// Public routes
+	api.Get("/shop/:shop_id", reviewGateway.GetReviewsByShopID)
+	api.Get("/check/:customer_request_id", reviewGateway.CheckReviewExists)
+
+	// Protected routes requiring JWT authentication
+	protected := api.Group("", middlewares.SetJWtHeaderHandler())
+	protected.Post("", reviewGateway.CreateReview)
+	protected.Post("/skip", reviewGateway.SkipReview)
+}

@@ -52,7 +52,7 @@ const router = createRouter({
       path: '/shop-locator',
       name: 'shop-locator',
       component: () => import('../views/ShopLocatorView.vue'),
-      meta: { requiresAuth: false }, // Public route - anyone can view shops
+      meta: { requiresAuth: true, restrictedRoles: ['moderator'] },
     },
     {
       path: '/settings',
@@ -93,12 +93,24 @@ router.beforeEach(async (to, from, next) => {
 
     // Check if the user doesn't have a shop and redirect to create shop page
     // This ensures users who don't have shops are always redirected to create one
-    if (!shopStore.hasShop) {
+    if (!shopStore.hasShop && usersStore.user?.role === 'moderator') {
       // For all authenticated routes, redirect to create shop if no shop exists
       // Store the intended destination so we can redirect back after creating a shop
       next({
         name: 'create-shop',
         query: { redirect: to.fullPath },
+      })
+      return
+    }
+  }
+
+  // Check for restricted roles
+  if (to.meta.restrictedRoles && Array.isArray(to.meta.restrictedRoles)) {
+    const userRole = usersStore.user?.role
+    if (userRole && to.meta.restrictedRoles.includes(userRole)) {
+      // Redirect moderators away from restricted pages
+      next({
+        path: '/',
       })
       return
     }

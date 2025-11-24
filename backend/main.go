@@ -47,6 +47,7 @@ func main() {
 	shopRepo := repo.NewShopRepository(mongodb)
 	settingsRepo := repo.NewSettingsRepository(mongodb)
 	customerRequestRepo := repo.NewCustomerRequestRepository(mongodb)
+	reviewRepo := repo.NewReviewRepository(mongodb)
 
 	userSV := sv.NewUsersService(userMongo)
 	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes, categoryWasteRepo)
@@ -55,7 +56,13 @@ func main() {
 	shopSV := sv.NewShopService(shopRepo)
 	settingsSV := sv.NewSettingsService(settingsRepo)
 	customerRequestSV := sv.NewCustomerRequestService(customerRequestRepo, shopRepo)
+	reviewSV := sv.NewReviewService(reviewRepo, customerRequestRepo)
+
 	gateways.NewHTTPGateway(app, userSV, recycleWasteSV, authSV, imageSV, shopSV, settingsSV, customerRequestSV)
+
+	// Initialize Review Gateway
+	reviewGateway := gateways.NewReviewGateway(reviewSV)
+	gateways.RouteReview(reviewGateway, app)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
