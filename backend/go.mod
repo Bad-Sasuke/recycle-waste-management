@@ -7,9 +7,11 @@ require (
 	github.com/aws/aws-sdk-go v1.34.28
 	github.com/goccy/go-json v0.10.2
 	github.com/gofiber/contrib/jwt v1.0.8
+	github.com/gofiber/contrib/websocket v1.3.4
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.3.0
 	github.com/nickalie/go-webpbin v0.0.0-20220110095747-f10016bf2dc1
 	github.com/redis/go-redis/v9 v9.7.0
@@ -51,16 +53,12 @@ require (
 	github.com/frankban/quicktest v1.14.6 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/gofiber/adaptor/v2 v2.2.1 // indirect
-	github.com/gofiber/contrib/websocket v1.3.4 // indirect
-	github.com/gofiber/websocket/v2 v2.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jcchavezs/porto v0.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect

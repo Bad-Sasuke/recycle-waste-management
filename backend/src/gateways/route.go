@@ -81,6 +81,8 @@ func RouteCustomerRequest(gateway HTTPGateway, app *fiber.App) {
 	api.Put("", gateway.UpdateCustomerRequest)
 	api.Get("/all", gateway.GetCustomerRequests)
 	api.Put("/accept/:id", gateway.AcceptCustomerRequest)
+	api.Put("/cancel/:id", gateway.CancelCustomerRequest)
+	api.Put("/complete/:id", gateway.CompleteCustomerRequest)
 
 }
 

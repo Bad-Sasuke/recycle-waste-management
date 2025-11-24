@@ -19,6 +19,8 @@ type ICustomerRequestRepository interface {
 	DeleteAllCustomerRequest(userID string) error
 	GetCustomerRequestsPublic() (*[]models.CustomerRequestModel, error)
 	UpdateCustomerRequestStatus(customerRequestID string, status models.STATUS_REQUEST) error
+	CancelCustomerRequest(customerRequestID string, cancelReason string) error
+	CompleteCustomerRequest(customerRequestID string) error
 }
 
 type customerRequestRepository struct {
@@ -82,7 +84,13 @@ func (repo *customerRequestRepository) DeleteAllCustomerRequest(userID string) e
 }
 
 func (repo *customerRequestRepository) GetCustomerRequestsPublic() (*[]models.CustomerRequestModel, error) {
-	cursor, err := repo.Collection.Find(repo.Context, bson.M{})
+	// Only return pending and accepted requests (exclude cancelled and done)
+	filter := bson.M{
+		"status": bson.M{
+			"$in": []models.STATUS_REQUEST{models.CR_PENDING, models.CR_ACCEPTED},
+		},
+	}
+	cursor, err := repo.Collection.Find(repo.Context, filter)
 	if err != nil {
 		return nil, fmt.Errorf("error getting customer requests: %v", err)
 	}
@@ -106,6 +114,49 @@ func (repo *customerRequestRepository) UpdateCustomerRequestStatus(customerReque
 	result, err := repo.Collection.UpdateOne(repo.Context, filter, update)
 	if err != nil {
 		return fmt.Errorf("error updating customer request status: %v", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("customer request not found")
+	}
+
+	return nil
+}
+
+func (repo *customerRequestRepository) CancelCustomerRequest(customerRequestID string, cancelReason string) error {
+	filter := bson.M{"customer_request_id": customerRequestID}
+	update := bson.M{
+		"$set": bson.M{
+			"status":        models.CR_CANCELLED,
+			"cancel_reason": cancelReason,
+			"updated_at":    time.Now(),
+		},
+	}
+
+	result, err := repo.Collection.UpdateOne(repo.Context, filter, update)
+	if err != nil {
+		return fmt.Errorf("error cancelling customer request: %v", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("customer request not found")
+	}
+
+	return nil
+}
+
+func (repo *customerRequestRepository) CompleteCustomerRequest(customerRequestID string) error {
+	filter := bson.M{"customer_request_id": customerRequestID}
+	update := bson.M{
+		"$set": bson.M{
+			"status":     models.CR_DONE,
+			"updated_at": time.Now(),
+		},
+	}
+
+	result, err := repo.Collection.UpdateOne(repo.Context, filter, update)
+	if err != nil {
+		return fmt.Errorf("error completing customer request: %v", err)
 	}
 
 	if result.MatchedCount == 0 {

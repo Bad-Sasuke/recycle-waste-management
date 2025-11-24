@@ -17,6 +17,8 @@ type ICustomerRequestService interface {
 	GetCustomerRequestByRequestID(userID string) ([]entities.CustomerRequestResponse, error)
 	GetCustomerRequests(userID string, page, limit int, maxDistanceKm float64) (*entities.PaginatedCustomerRequestResponse, error)
 	AcceptCustomerRequest(customerRequestID string) error
+	CancelCustomerRequest(customerRequestID string, cancelReason string) error
+	CompleteCustomerRequest(customerRequestID string) error
 }
 type customerRequestService struct {
 	customerRequestRepository repositories.ICustomerRequestRepository
@@ -67,6 +69,7 @@ func (s *customerRequestService) GetCustomerRequestByRequestID(userID string) ([
 			Longitude:         v.Longitude,
 			Description:       v.Description,
 			Status:            string(v.Status),
+			CancelReason:      v.CancelReason,
 			CreatedAt:         v.CreatedAt,
 			UpdatedAt:         v.UpdatedAt,
 		})
@@ -142,6 +145,7 @@ func (s *customerRequestService) GetCustomerRequests(userID string, page, limit 
 				Longitude:         v.Longitude,
 				Description:       v.Description,
 				Status:            string(v.Status),
+				CancelReason:      v.CancelReason,
 				Distance:          distance,
 				CreatedAt:         v.CreatedAt,
 				UpdatedAt:         v.UpdatedAt,
@@ -197,4 +201,12 @@ func (s *customerRequestService) GetCustomerRequests(userID string, page, limit 
 
 func (s *customerRequestService) AcceptCustomerRequest(customerRequestID string) error {
 	return s.customerRequestRepository.UpdateCustomerRequestStatus(customerRequestID, models.CR_ACCEPTED)
+}
+
+func (s *customerRequestService) CancelCustomerRequest(customerRequestID string, cancelReason string) error {
+	return s.customerRequestRepository.CancelCustomerRequest(customerRequestID, cancelReason)
+}
+
+func (s *customerRequestService) CompleteCustomerRequest(customerRequestID string) error {
+	return s.customerRequestRepository.CompleteCustomerRequest(customerRequestID)
 }

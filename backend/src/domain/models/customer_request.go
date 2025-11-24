@@ -5,10 +5,11 @@ import "time"
 type STATUS_REQUEST string
 
 const (
-	CR_PENDING  STATUS_REQUEST = "pending"
-	CR_ACCEPTED STATUS_REQUEST = "accepted"
-	CR_REJECTED STATUS_REQUEST = "rejected"
-	CR_DONE     STATUS_REQUEST = "done"
+	CR_PENDING   STATUS_REQUEST = "pending"
+	CR_ACCEPTED  STATUS_REQUEST = "accepted"
+	CR_REJECTED  STATUS_REQUEST = "rejected"
+	CR_DONE      STATUS_REQUEST = "done"
+	CR_CANCELLED STATUS_REQUEST = "cancelled"
 )
 
 type CustomerRequestModel struct {
@@ -18,6 +19,7 @@ type CustomerRequestModel struct {
 	Longitude         float64        `json:"longitude" bson:"longitude"`
 	Description       string         `json:"description" bson:"description"`
 	Status            STATUS_REQUEST `json:"status" bson:"status"`
+	CancelReason      string         `json:"cancel_reason,omitempty" bson:"cancel_reason,omitempty"`
 	CreatedAt         time.Time      `json:"created_at" bson:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at" bson:"updated_at"`
 }

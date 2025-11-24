@@ -55,6 +55,47 @@ func (h *HTTPGateway) GetCustomerRequestByRequestID(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Data: customerRequests, Message: "success"})
 }
 
+func (h *HTTPGateway) CancelCustomerRequest(ctx *fiber.Ctx) error {
+	// Verify authentication
+	_, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+
+	// Get customer_request_id from URL params
+	customerRequestID := ctx.Params("id")
+	if customerRequestID == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "customer_request_id is required"})
+	}
+
+	// Parse request body
+	body := new(entities.CancelCustomerRequest)
+	if err := ctx.BodyParser(&body); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid json body"})
+	}
+
+	// Validate reason
+	if body.Reason == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "reason is required"})
+	}
+
+	// Check reason length (max 100 characters)
+	if len(body.Reason) > 100 {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "reason must not exceed 100 characters"})
+	}
+
+	// Verify that the request belongs to the user
+	// (You might want to add this verification in the service layer)
+
+	// Cancel the request
+	err = h.CustomerRequestService.CancelCustomerRequest(customerRequestID, body.Reason)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseMessage{Message: "customer request cancelled successfully"})
+}
+
 func (h *HTTPGateway) DeleteCustomerRequest(ctx *fiber.Ctx) error {
 	return nil
 }
@@ -87,4 +128,26 @@ func (h *HTTPGateway) AcceptCustomerRequest(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseMessage{Message: "customer request accepted successfully"})
+}
+
+func (h *HTTPGateway) CompleteCustomerRequest(ctx *fiber.Ctx) error {
+	// Verify authentication
+	_, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+
+	// Get customer_request_id from URL params
+	customerRequestID := ctx.Params("id")
+	if customerRequestID == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "customer_request_id is required"})
+	}
+
+	// Complete the request
+	err = h.CustomerRequestService.CompleteCustomerRequest(customerRequestID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseMessage{Message: "customer request completed successfully"})
 }

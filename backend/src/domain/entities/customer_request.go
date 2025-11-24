@@ -14,9 +14,14 @@ type CustomerRequestResponse struct {
 	Longitude         float64   `json:"longitude"`
 	Description       string    `json:"description"`
 	Status            string    `json:"status"`
+	CancelReason      string    `json:"cancel_reason,omitempty"`
 	Distance          float64   `json:"distance"` // Distance in kilometers
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+type CancelCustomerRequest struct {
+	Reason string `json:"reason" validate:"required,max=100"`
 }
 
 type PaginatedCustomerRequestResponse struct {
