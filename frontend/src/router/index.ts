@@ -103,10 +103,22 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // Check if the user doesn't have a shop and redirect to create shop page
-    // This ensures users who don't have shops are always redirected to create one
-    if (!shopStore.hasShop && usersStore.user?.role === 'moderator') {
-      // For all authenticated routes, redirect to create shop if no shop exists
+    // This ONLY applies to moderators who don't have a shop yet
+    const user = usersStore.user
+
+    // Debug logging
+    console.log('[Router Guard] User:', user)
+    console.log('[Router Guard] User role:', user?.role)
+    console.log('[Router Guard] Has shop:', shopStore.hasShop)
+    console.log(
+      '[Router Guard] Should redirect?',
+      user && user.role === 'moderator' && !shopStore.hasShop,
+    )
+
+    if (user && user.role === 'moderator' && !shopStore.hasShop) {
+      // For moderator without shop, redirect to create shop
       // Store the intended destination so we can redirect back after creating a shop
+      console.log('[Router Guard] Redirecting to create-shop')
       next({
         name: 'create-shop',
         query: { redirect: to.fullPath },

@@ -10,6 +10,7 @@ interface User {
   created_at: string
   last_login: string
   role?: string
+  shop_id?: string
 }
 
 // Interface for waste data to edit

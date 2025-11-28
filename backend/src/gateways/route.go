@@ -54,7 +54,7 @@ func RouteShop(gateway HTTPGateway, app *fiber.App) {
 	// Public routes
 	api.Get("/get-shops", gateway.GetAllShops)
 	api.Get("/get-shop/:shop_id", gateway.GetShopByShopID)
-	api.Get("/:shop_id", gateway.GetShopByShopID) // Add this line for cleaner URL
+	// api.Get("/:shop_id", gateway.GetShopByShopID) // Add this line for cleaner URL
 
 	// Protected routes requiring JWT authentication
 	protected := api.Group("", middlewares.SetJWtHeaderHandler())

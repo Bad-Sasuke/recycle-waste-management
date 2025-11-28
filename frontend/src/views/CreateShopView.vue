@@ -209,6 +209,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useShopStore } from '@/stores/shop';
+import { useUsersStore } from '@/stores/users';
 import { useRouter } from 'vue-router';
 import type { CreateShopRequest } from '@/types/shop';
 import { useI18n } from 'vue-i18n';
@@ -218,6 +219,7 @@ import 'leaflet/dist/leaflet.css';
 const { t } = useI18n();
 const router = useRouter();
 const shopStore = useShopStore();
+const usersStore = useUsersStore();
 
 // Loading states
 const isSubmitting = ref(false);
@@ -365,7 +367,26 @@ const cancel = () => {
   router.push({ name: 'home' });
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // Guard: Check if user is moderator and doesn't have a shop yet
+  const user = usersStore.user;
+
+  // Check if user role is moderator
+  if (!user || user.role !== 'moderator') {
+    console.warn('Access denied: User is not a moderator');
+    await router.push({ name: 'home' });
+    return;
+  }
+
+  // Check if user already has a shop using shopStore
+  await shopStore.checkUserShop();
+  if (shopStore.hasShop) {
+    console.warn('Access denied: User already has a shop');
+    // Redirect to manage shop instead
+    await router.push({ name: 'manage-shop' });
+    return;
+  }
+
   // Reset any previous shop data
   Object.keys(shopData).forEach(key => {
     (shopData as Record<string, string | number | undefined>)[key] = key === 'latitude' || key === 'longitude' ? undefined : '';

@@ -117,12 +117,17 @@ func (s *ShopService) GetShopByShopID(shopID string) (*entities.ShopResponse, er
 
 func (s *ShopService) GetShopByUserID(userID string) (*entities.ShopModel, error) {
 	shop, err := s.ShopRepository.GetByUserID(userID)
+	fmt.Println("shop", shop)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
+			// Fallback: Try to find shop_id from user document (for legacy data)
+			// This handles shops created before user_id field was added
+			// In this case, we'll return the error as we don't have access to UsersRepository here
 			return nil, fmt.Errorf("no shop found for this user")
 		}
 		return nil, err
 	}
+
 	return shop, nil
 }
 

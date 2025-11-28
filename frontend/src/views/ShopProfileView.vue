@@ -68,7 +68,7 @@
                                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     <span class="text-sm text-gray-700">{{ shop.opening_time }} - {{ shop.closing_time
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -131,7 +131,7 @@
                                         <div class="avatar placeholder">
                                             <div class="bg-neutral text-neutral-content rounded-full w-10">
                                                 <span class="text-sm">{{ review.user_id.substring(0, 2).toUpperCase()
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div>
@@ -189,6 +189,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import config from '../config';
+import { fetchShopById } from '@/services/shop';
 
 const route = useRoute();
 const webAPI = config.webAPI;
@@ -227,11 +228,10 @@ const displayPages = computed(() => {
 const fetchShop = async () => {
     try {
         const shopId = route.params.shop_id as string;
-        const response = await fetch(`${webAPI}/api/shops/${shopId}`);
-        const data = await response.json();
+        const response = await fetchShopById(shopId);
 
-        if (data.data) {
-            shop.value = data.data;
+        if (response.data) {
+            shop.value = response.data;
             // Use total reviews from shop data if available
             if (shop.value.total_reviews !== undefined) {
                 totalReviews.value = shop.value.total_reviews;
