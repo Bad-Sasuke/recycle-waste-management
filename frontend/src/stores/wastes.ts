@@ -36,11 +36,16 @@ export const useWastesStore = defineStore('wastes', {
     },
   }),
   actions: {
-    async fetchWastes(page: number = 1, limit: number = 12) {
+    async fetchWastes(page: number = 1, limit: number = 12, shopId?: string, category?: string) {
       try {
-        const response = await fetch(
-          webAPI + `/api/recycle-waste/get-wastes?page=${page}&limit=${limit}`,
-        )
+        let url = webAPI + `/api/recycle-waste/get-wastes?page=${page}&limit=${limit}`
+        if (shopId) {
+          url += `&shop_id=${shopId}`
+        }
+        if (category) {
+          url += `&category=${category}`
+        }
+        const response = await fetch(url)
         const dataJson = await response.json()
 
         if (!response.ok) {

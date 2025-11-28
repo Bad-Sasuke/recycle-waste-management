@@ -18,7 +18,7 @@ type ICustomerRequestService interface {
 	GetCustomerRequests(userID string, page, limit int, maxDistanceKm float64) (*entities.PaginatedCustomerRequestResponse, error)
 	AcceptCustomerRequest(customerRequestID string) error
 	CancelCustomerRequest(customerRequestID string, cancelReason string) error
-	CompleteCustomerRequest(customerRequestID string) error
+	CompleteCustomerRequest(customerRequestID string, shopID string) error
 }
 type customerRequestService struct {
 	customerRequestRepository repositories.ICustomerRequestRepository
@@ -207,6 +207,6 @@ func (s *customerRequestService) CancelCustomerRequest(customerRequestID string,
 	return s.customerRequestRepository.CancelCustomerRequest(customerRequestID, cancelReason)
 }
 
-func (s *customerRequestService) CompleteCustomerRequest(customerRequestID string) error {
-	return s.customerRequestRepository.CompleteCustomerRequest(customerRequestID)
+func (s *customerRequestService) CompleteCustomerRequest(customerRequestID string, shopID string) error {
+	return s.customerRequestRepository.CompleteCustomerRequest(customerRequestID, shopID)
 }

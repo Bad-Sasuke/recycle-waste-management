@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, shallowRef, onMounted, computed, watch, onUnmounted, h, render, nextTick } from 'vue';
-import { IconSearch, IconCurrentLocation, IconHourglass, IconList, IconSend, IconStar, IconStarFilled } from '@tabler/icons-vue';
+import { IconSearch, IconCurrentLocation, IconHourglass, IconList, IconSend, IconStar, IconStarFilled, IconFileText, IconX, IconCheck, IconDownload, IconNavigation, IconClock, IconPhone, IconBuildingStore, IconInfoCircle } from '@tabler/icons-vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -17,7 +17,10 @@ import { useChatStore } from '../stores/chat';
 import { useUsersStore } from '../stores/users';
 import { storeToRefs } from 'pinia';
 import AlertModal from '../components/AlertModal.vue';
+import config from '../config';
 import type { Shop } from '../types/shop';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Fix for default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -64,6 +67,7 @@ const requestMarker = shallowRef<L.Marker | null>(null);
 const shareStatus = ref<'idle' | 'pending' | 'accepted'>('idle');
 const chatModal = ref<HTMLDialogElement | null>(null);
 const chatMessagesContainer = ref<HTMLDivElement | null>(null);
+const webAPI = config.webAPI;
 
 const currentMessage = ref('');
 const reviewModal = ref<HTMLDialogElement | null>(null);
@@ -72,12 +76,34 @@ const reviewComment = ref('');
 const messageCount = ref(0);
 const alertModal = ref<InstanceType<typeof AlertModal> | null>(null);
 const requestsModal = ref<HTMLDialogElement | null>(null);
+const receiptModal = ref<HTMLDialogElement | null>(null);
 const refreshIntervalId = ref<number | null>(null);
 const currentReviewRequest = ref<any | null>(null);
+const receiptData = ref<any | null>(null);
+const isLoadingReceipt = ref(false);
+const reviewedRequests = ref<Map<string, boolean>>(new Map()); // Track which requests have been reviewed
 
-const openRequestsModal = () => {
+
+
+const checkReviewStatus = async (requestId: string) => {
+  try {
+    const response = await fetch(`${webAPI}/api/reviews/check/${requestId}`);
+    const data = await response.json();
+    reviewedRequests.value.set(requestId, data.exists);
+  } catch (error) {
+    console.error('Error checking review status:', error);
+  }
+};
+
+const openRequestsModal = async () => {
   if (requestsModal.value) {
     requestsModal.value.showModal();
+
+    // Check review status for all done requests
+    const doneRequests = customerRequestsMyRequests.value.filter(req => req.status === 'done');
+    for (const req of doneRequests) {
+      await checkReviewStatus(req.customer_request_id);
+    }
   }
 };
 
@@ -85,6 +111,109 @@ const closeRequestsModal = () => {
   if (requestsModal.value) {
     requestsModal.value.close();
   }
+};
+
+const openReceiptModal = async (requestId: string) => {
+  isLoadingReceipt.value = true;
+  try {
+    const response = await fetch(`${webAPI}/api/receipts/by-request/${requestId}`, {
+      headers: {
+        'Authorization': `Bearer ${usersStore.jwt}`
+      }
+    });
+
+    if (!response.ok) throw new Error('Receipt not found');
+
+    const result = await response.json();
+    receiptData.value = result.data;
+
+    if (receiptModal.value) {
+      receiptModal.value.showModal();
+    }
+  } catch (error) {
+    console.error('Error fetching receipt:', error);
+    if (alertModal.value) {
+      alertModal.value.show('ไม่พบใบเสร็จสำหรับรายการนี้', 'error');
+    }
+  } finally {
+    isLoadingReceipt.value = false;
+  }
+};
+
+const closeReceiptModal = () => {
+  if (receiptModal.value) {
+    receiptModal.value.close();
+  }
+  receiptData.value = null;
+};
+
+const downloadPDF = () => {
+  if (!receiptData.value) return;
+
+  const doc = new jsPDF();
+  const { receipt, items, shop } = receiptData.value;
+
+  // Set font
+  doc.setFont('helvetica');
+
+  // Title
+  doc.setFontSize(20);
+  doc.text('Receipt / ใบเสร็จรับเงิน', 105, 20, { align: 'center' });
+
+  // Receipt Info
+  doc.setFontSize(10);
+  let y = 35;
+  doc.text(`Receipt No: ${receipt.id}`, 15, y);
+  y += 7;
+  doc.text(`Date: ${new Date(receipt.created_at).toLocaleString('th-TH')}`, 15, y);
+  y += 7;
+  doc.text(`Payment: ${receipt.payment_method}`, 15, y);
+  y += 10;
+
+  // Shop Info
+  if (shop) {
+    doc.setFontSize(12);
+    doc.text('Shop Information', 15, y);
+    doc.setFontSize(10);
+    y += 7;
+    doc.text(`Name: ${shop.name}`, 15, y);
+    y += 7;
+    doc.text(`Address: ${shop.address}`, 15, y);
+    if (shop.phone) {
+      y += 7;
+      doc.text(`Phone: ${shop.phone}`, 15, y);
+    }
+    y += 10;
+  }
+
+  // Items Table
+  const tableData = items.map((item: any) => [
+    item.name,
+    item.category,
+    item.weight.toFixed(2),
+    item.unit_price.toFixed(2),
+    item.price.toFixed(2)
+  ]);
+
+  autoTable(doc, {
+    startY: y,
+    head: [['Item', 'Category', 'Weight (kg)', 'Price/Unit', 'Total']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: { fillColor: [66, 139, 202] },
+  });
+
+  // Summary
+  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFontSize(10);
+  doc.text(`Subtotal: ฿${receipt.total_amount.toFixed(2)}`, 140, finalY, { align: 'right' });
+  doc.text(`VAT (${(receipt.vat_rate * 100).toFixed(0)}%): ฿${receipt.vat.toFixed(2)}`, 140, finalY + 7, { align: 'right' });
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Net Total: ฿${receipt.net_total.toFixed(2)}`, 140, finalY + 14, { align: 'right' });
+
+  // Save
+  doc.save(`receipt-${receipt.id}.pdf`);
 };
 
 
@@ -215,28 +344,31 @@ const updateMarkers = () => {
               <p class="shop-address">${shop.address}</p>
               ${shop.opening_time ? `
                 <div class="shop-hours">
-                  <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
                   <span>${shop.opening_time} - ${shop.closing_time}</span>
                 </div>
               ` : ''}
               ${shop.phone ? `
                 <div class="shop-phone">
-                  <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-phone"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" /></svg>
                   <span>${shop.phone}</span>
                 </div>
               ` : ''}
-              <a href="https://www.google.com/maps/dir/?api=1&destination=${shop.latitude},${shop.longitude}"
-                 target="_blank"
-                 class="navigate-btn">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                </svg>
-                Navigate
-              </a>
+              <div class="flex flex-col gap-2 mt-4">
+                <a href="/shop/${shop.shop_id}"
+                   class="btn btn-sm border-none bg-gradient-to-r from-primary to-secondary hover:from-primary-focus hover:to-secondary-focus text-white w-full gap-2 shadow-md rounded-lg"
+                   style="text-decoration: none;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" color="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-building-store"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2 -4h14l2 4" /><path d="M5 21l0 -10.15" /><path d="M19 21l0 -10.15" /><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" /></svg>
+                  <span class="text-white">ดูโปรไฟล์ร้านค้า</span>
+                </a>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${shop.latitude},${shop.longitude}"
+                   target="_blank"
+                   class="btn btn-sm btn-outline btn-primary w-full gap-2 hover:bg-primary hover:text-white shadow-sm rounded-lg"
+                   style="text-decoration: none;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-navigation"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3l5.5 18l-5.5 -2.5l-5.5 2.5z" /></svg>
+                  นำทางไปยังร้าน
+                </a>
+              </div>
             </div>
           </div>
         `, {
@@ -505,6 +637,9 @@ const submitReview = async () => {
     // Success
     alertModal.value?.show(`ขอบคุณสำหรับรีวิว ${rating.value} ดาว!`, 'Thank You', 'success');
 
+    // Mark this request as reviewed
+    reviewedRequests.value.set(currentReviewRequest.value.customer_request_id, true);
+
     // Reset everything and close
     closeReviewModal();
     rating.value = 5;
@@ -680,17 +815,23 @@ onUnmounted(() => {
                 <h3 class="font-bold text-lg truncate text-gray-800">{{ shop.name }}</h3>
                 <p class="text-sm text-gray-600 line-clamp-2">{{ shop.address }}</p>
                 <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-500">
-                  <span v-if="shop.opening_time" class="badge badge-ghost badge-sm bg-white/50">
+                  <span v-if="shop.opening_time" class="badge badge-ghost badge-sm bg-white/50 gap-1">
+                    <IconClock size="12" />
                     {{ shop.opening_time }} - {{ shop.closing_time }}
                   </span>
-                  <span v-if="shop.phone" class="badge badge-outline badge-sm border-gray-300">
+                  <span v-if="shop.phone" class="badge badge-outline badge-sm border-gray-300 gap-1">
+                    <IconPhone size="12" />
                     {{ shop.phone }}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div class="flex justify-end mt-3 pt-3 border-t border-gray-100/50">
+            <div class="flex justify-end mt-3 pt-3 border-t border-gray-100/50 gap-2">
+              <router-link :to="{ name: 'shop-profile', params: { shop_id: shop.shop_id } }"
+                class="btn btn-xs btn-outline btn-primary" @click.stop>
+                Profile
+              </router-link>
               <a :href="`https://www.google.com/maps/dir/?api=1&destination=${shop.latitude},${shop.longitude}`"
                 target="_blank" class="btn btn-xs btn-primary text-white shadow-sm" @click.stop>
                 {{ $t('ShopLocator.navigate') }}
@@ -880,12 +1021,13 @@ onUnmounted(() => {
                 <th>ตำแหน่ง (Lat, Lng)</th>
                 <th>สถานะ</th>
                 <th>รีวิว</th>
+                <th>ใบเสร็จ</th>
                 <th class="rounded-tr-lg text-center">จัดการ</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="customerRequestsMyRequests.length === 0">
-                <td colspan="5" class="text-center py-8 text-gray-500">
+                <td colspan="7" class="text-center py-8 text-gray-500">
                   <div class="flex flex-col items-center gap-2">
                     <IconList size="48" class="text-gray-300" />
                     <p>ไม่พบรายการคำขอ</p>
@@ -914,13 +1056,30 @@ onUnmounted(() => {
                   </div>
                 </td>
                 <td class="text-center">
-                  <button v-if="req.status === 'done'" class="btn btn-xs btn-warning gap-1"
+                  <!-- Show "รีวิวแล้ว" if reviewed -->
+                  <span v-if="req.status === 'done' && reviewedRequests.get(req.customer_request_id)"
+                    class="text-xs text-green-600 font-semibold flex items-center justify-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                    </svg>
+                    รีวิวแล้ว
+                  </span>
+                  <!-- Show review button if not reviewed -->
+                  <button v-else-if="req.status === 'done'" class="btn btn-xs btn-warning gap-1"
                     @click="openReviewModalForRequest(req)">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                       <path
                         d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
                     รีวิว
+                  </button>
+                  <span v-else class="text-xs text-gray-400">-</span>
+                </td>
+                <td class="text-center">
+                  <button v-if="req.status === 'done'" class="btn btn-xs btn-info text-white gap-1"
+                    @click="openReceiptModal(req.customer_request_id)">
+                    <IconFileText size="14" />
+                    ดูใบเสร็จ
                   </button>
                   <span v-else class="text-xs text-gray-400">-</span>
                 </td>
@@ -936,6 +1095,113 @@ onUnmounted(() => {
       </div>
       <form method="dialog" class="modal-backdrop">
         <button @click="closeRequestsModal">close</button>
+      </form>
+    </dialog>
+
+    <!-- Receipt Modal -->
+    <dialog ref="receiptModal" class="modal">
+      <div class="modal-box w-11/12 max-w-2xl">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-bold text-2xl text-gray-800">ใบเสร็จรับเงิน</h3>
+          <button @click="closeReceiptModal" class="btn btn-sm btn-circle btn-ghost">✕</button>
+        </div>
+
+        <div v-if="isLoadingReceipt" class="flex justify-center items-center py-12">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+
+        <div v-else-if="receiptData" class="space-y-6">
+          <!-- Receipt Info -->
+          <div class="bg-base-200 rounded-lg p-4 space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">เลขที่ใบเสร็จ:</span>
+              <span class="font-mono font-semibold">{{ receiptData.receipt.id }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">วันที่:</span>
+              <span>{{ new Date(receiptData.receipt.created_at).toLocaleString('th-TH') }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">วิธีชำระเงิน:</span>
+              <span class="badge badge-success text-white">{{ receiptData.receipt.payment_method }}</span>
+            </div>
+          </div>
+
+          <!-- Shop Info -->
+          <div v-if="receiptData.shop" class="bg-base-200 rounded-lg p-4 space-y-2">
+            <h4 class="font-semibold text-base mb-2 text-gray-700">ร้านที่รับซื้อ</h4>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">ชื่อร้าน:</span>
+              <span class="font-medium">{{ receiptData.shop.name }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">ที่อยู่:</span>
+              <span class="text-right max-w-xs">{{ receiptData.shop.address }}</span>
+            </div>
+            <div v-if="receiptData.shop.phone" class="flex justify-between text-sm">
+              <span class="text-gray-600">เบอร์โทร:</span>
+              <span>{{ receiptData.shop.phone }}</span>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div>
+            <h4 class="font-semibold text-lg mb-3">รายการสินค้า</h4>
+            <div class="overflow-x-auto">
+              <table class="table w-full">
+                <thead>
+                  <tr class="bg-base-200">
+                    <th>รายการ</th>
+                    <th>หมวดหมู่</th>
+                    <th class="text-right">น้ำหนัก (kg)</th>
+                    <th class="text-right">ราคา/หน่วย (฿)</th>
+                    <th class="text-right">รวม (฿)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, idx) in receiptData.items" :key="idx">
+                    <td class="font-medium">{{ item.name }}</td>
+                    <td><span class="badge badge-sm">{{ item.category }}</span></td>
+                    <td class="text-right">{{ item.weight.toFixed(2) }}</td>
+                    <td class="text-right">{{ item.unit_price.toFixed(2) }}</td>
+                    <td class="text-right font-semibold">{{ item.price.toFixed(2) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="border-t-2 border-gray-300 pt-4 space-y-2">
+            <div class="flex justify-between text-lg">
+              <span class="text-gray-600">ยอดรวม (ก่อน VAT):</span>
+              <span class="font-semibold">฿{{ receiptData.receipt.total_amount.toFixed(2) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">VAT ({{ (receiptData.receipt.vat_rate * 100).toFixed(0) }}%):</span>
+              <span class="font-semibold">฿{{ receiptData.receipt.vat.toFixed(2) }}</span>
+            </div>
+            <div class="flex justify-between text-xl border-t-2 border-primary pt-3 mt-2">
+              <span class="text-gray-800 font-bold">ยอดรวมสุทธิ:</span>
+              <span class="text-primary font-bold">฿{{ receiptData.receipt.net_total.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-action">
+          <button @click="downloadPDF" class="btn btn-success text-white gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            ดาวน์โหลด PDF
+          </button>
+          <button @click="closeReceiptModal" class="btn btn-ghost">ปิด</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="closeReceiptModal">close</button>
       </form>
     </dialog>
 

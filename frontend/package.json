@@ -15,11 +15,16 @@
   },
   "dependencies": {
     "@tabler/icons-vue": "^3.23.0",
+    "animejs": "^4.2.2",
     "caniuse-lite": "^1.0.30001745",
     "firebase": "^11.1.0",
+    "gsap": "^3.13.0",
+    "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",
     "lodash-es": "^4.17.21",
     "pinia": "^2.2.6",
+    "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.13",
     "vue-i18n": "10",
     "vue-router": "^4.4.5"

@@ -680,7 +680,7 @@ onUnmounted(() => {
                 <div
                   class="bg-green-100 text-green-600 rounded-full w-10 group-hover:bg-green-600 group-hover:text-white transition-colors shadow-sm">
                   <span class="text-sm font-bold">#{{ request.customer_request_id.substring(0, 2).toUpperCase()
-                    }}</span>
+                  }}</span>
                 </div>
               </div>
               <div class="flex-1 min-w-0">
@@ -697,38 +697,51 @@ onUnmounted(() => {
               {{ request.description }}
             </div>
 
-            <div class="flex items-center justify-end text-sm text-gray-600 mt-3 pt-3 border-t border-gray-100/50">
-              <div class="flex gap-2">
-                <button @click.stop="navigateToRequest(request)"
-                  class="btn btn-xs btn-info btn-outline gap-1 hover:!text-white px-3 shadow-sm">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Action Buttons - Mobile Optimized -->
+            <div class="mt-3 pt-3 border-t border-gray-100/50 space-y-2">
+              <!-- Primary Action -->
+              <button
+                @click.stop="$router.push({ path: '/waste-purchase', query: { request_id: request.customer_request_id } })"
+                class="btn btn-sm btn-success text-white w-full gap-2 shadow-md hover:shadow-lg transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span class="font-semibold">ชั่งและชำระ</span>
+              </button>
+
+              <!-- Secondary Actions Grid -->
+              <div class="grid grid-cols-2 gap-2">
+                <button @click.stop="navigateToRequest(request)" class="btn btn-sm btn-info text-white gap-1 shadow-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                   </svg>
-                  นำทาง
+                  <span class="text-xs font-medium">นำทาง</span>
                 </button>
+
                 <button @click.stop="openCompleteModal(request)"
-                  class="btn btn-xs btn-success btn-outline gap-1 hover:!text-white px-3 shadow-sm">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="btn btn-sm btn-success text-white gap-1 shadow-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  เสร็จสิ้น
+                  <span class="text-xs font-medium">เสร็จสิ้น</span>
                 </button>
-                <button @click.stop="openChat(request)"
-                  class="btn btn-xs btn-warning btn-outline gap-1 hover:!text-white px-3 shadow-sm">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                <button @click.stop="openChat(request)" class="btn btn-sm btn-warning text-white gap-1 shadow-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
-                  Chat
+                  <span class="text-xs font-medium">แชท</span>
                 </button>
-                <button @click.stop="openCancelModal(request)"
-                  class="btn btn-xs btn-error btn-outline gap-1 hover:!text-white px-3 shadow-sm">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                <button @click.stop="openCancelModal(request)" class="btn btn-sm btn-error text-white gap-1 shadow-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  ยกเลิก
+                  <span class="text-xs font-medium">ยกเลิก</span>
                 </button>
               </div>
             </div>
@@ -752,7 +765,7 @@ onUnmounted(() => {
                   <div class="avatar placeholder">
                     <div class="bg-green-100 text-green-600 rounded-full w-10 shadow-sm">
                       <span class="text-sm font-bold">#{{ activeChat.customer_request_id?.substring(0, 2).toUpperCase()
-                      }}</span>
+                        }}</span>
                     </div>
                   </div>
                   <div class="text-white">

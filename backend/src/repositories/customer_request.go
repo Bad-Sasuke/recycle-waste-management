@@ -21,7 +21,7 @@ type ICustomerRequestRepository interface {
 	GetCustomerRequestsPublic() (*[]models.CustomerRequestModel, error)
 	UpdateCustomerRequestStatus(customerRequestID string, status models.STATUS_REQUEST) error
 	CancelCustomerRequest(customerRequestID string, cancelReason string) error
-	CompleteCustomerRequest(customerRequestID string) error
+	CompleteCustomerRequest(customerRequestID string, shopID string) error
 }
 
 type customerRequestRepository struct {
@@ -158,11 +158,12 @@ func (repo *customerRequestRepository) CancelCustomerRequest(customerRequestID s
 	return nil
 }
 
-func (repo *customerRequestRepository) CompleteCustomerRequest(customerRequestID string) error {
+func (repo *customerRequestRepository) CompleteCustomerRequest(customerRequestID string, shopID string) error {
 	filter := bson.M{"customer_request_id": customerRequestID}
 	update := bson.M{
 		"$set": bson.M{
 			"status":     models.CR_DONE,
+			"shop_id":    shopID,
 			"updated_at": time.Now(),
 		},
 	}

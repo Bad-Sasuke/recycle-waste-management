@@ -42,3 +42,9 @@ type UpdateShopRequest struct {
 	Latitude    *float64 `json:"latitude,omitempty"`
 	Longitude   *float64 `json:"longitude,omitempty"`
 }
+
+type ShopResponse struct {
+	ShopModel
+	AverageRating float64 `json:"average_rating"`
+	TotalReviews  int64   `json:"total_reviews"`
+}

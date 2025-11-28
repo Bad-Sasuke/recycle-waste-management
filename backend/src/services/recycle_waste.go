@@ -16,6 +16,7 @@ type IRecycleWasteService interface {
 	GetRecyclableItems() (*[]entities.RecyclableItemsModel, error)
 	GetRecyclableItemsPaginated(page, limit int) (*[]entities.RecyclableItemsModel, int64, error)
 	GetRecyclableItemsByShopIDPaginated(shopID string, page, limit int) (*[]entities.RecyclableItemsModel, int64, error)
+	GetRecyclableItemsByShopIDAndCategoryPaginated(shopID, category string, page, limit int) (*[]entities.RecyclableItemsModel, int64, error)
 	GetRecyclableItemByWasteID(wasteID string) (*entities.RecyclableItemsModel, error)
 	AddRecycleWaste(data entities.RecyclableItemsModel, image []byte) error
 	DeleteWasteItem(wasteID string) error
@@ -26,12 +27,13 @@ type IRecycleWasteService interface {
 type RecycleWasteService struct {
 	RecyclableItemsRepo repositories.IRecyclableItemsRepository
 	CategoryWAsteRepo   repositories.ICategoryWasteRepository
+	StockService        IStockService // Inject StockService
 	AwsS3               providers.IAwsS3Upload
 	ImageURLDefault     string
 }
 
-func NewRecycleWasteService(recyclableItemsRepo repositories.IRecyclableItemsRepository, CategoryWAsteRepo repositories.ICategoryWasteRepository) IRecycleWasteService {
-	return &RecycleWasteService{RecyclableItemsRepo: recyclableItemsRepo, CategoryWAsteRepo: CategoryWAsteRepo, AwsS3: providers.NewAwsS3(), ImageURLDefault: "https://bucketnaja2.s3.ap-southeast-1.amazonaws.com/images/wastes/DEFAULT.jpg"}
+func NewRecycleWasteService(recyclableItemsRepo repositories.IRecyclableItemsRepository, CategoryWAsteRepo repositories.ICategoryWasteRepository, stockService IStockService) IRecycleWasteService {
+	return &RecycleWasteService{RecyclableItemsRepo: recyclableItemsRepo, CategoryWAsteRepo: CategoryWAsteRepo, StockService: stockService, AwsS3: providers.NewAwsS3(), ImageURLDefault: "https://bucketnaja2.s3.ap-southeast-1.amazonaws.com/images/wastes/DEFAULT.jpg"}
 }
 
 func (s *RecycleWasteService) GetRecyclableItems() (*[]entities.RecyclableItemsModel, error) {
@@ -58,6 +60,17 @@ func (s *RecycleWasteService) GetRecyclableItemsPaginated(page, limit int) (*[]e
 
 func (s *RecycleWasteService) GetRecyclableItemsByShopIDPaginated(shopID string, page, limit int) (*[]entities.RecyclableItemsModel, int64, error) {
 	data, totalCount, err := s.RecyclableItemsRepo.FindByShopIDPaginated(shopID, page, limit)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return nil, 0, err
+	}
+	if data == nil {
+		return &[]entities.RecyclableItemsModel{}, 0, nil
+	}
+	return data, totalCount, nil
+}
+
+func (s *RecycleWasteService) GetRecyclableItemsByShopIDAndCategoryPaginated(shopID, category string, page, limit int) (*[]entities.RecyclableItemsModel, int64, error) {
+	data, totalCount, err := s.RecyclableItemsRepo.FindByShopIDAndCategoryPaginated(shopID, category, page, limit)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return nil, 0, err
 	}
@@ -114,6 +127,14 @@ func (s *RecycleWasteService) DeleteWasteItem(wasteID string) error {
 	if err := s.RecyclableItemsRepo.Delete(wasteID); err != nil {
 		return err
 	}
+
+	// Delete associated stock
+	if err := s.StockService.DeleteStockByWasteID(wasteID); err != nil {
+		// Log error but don't fail the operation? Or fail?
+		// For now, let's return error to ensure consistency
+		return fmt.Errorf("error deleting associated stock: %v", err)
+	}
+
 	if data.URL != s.ImageURLDefault {
 		keyName := fmt.Sprintf("images/wastes/%v.webp", strings.ToUpper(data.Name))
 		if err := s.AwsS3.DeleteS3(keyName); err != nil {

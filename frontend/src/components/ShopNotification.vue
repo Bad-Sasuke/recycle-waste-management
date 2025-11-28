@@ -41,6 +41,10 @@ const DISMISS_KEY = 'shop_notification_dismissed';
 const dismissed = ref(localStorage.getItem(DISMISS_KEY) === 'true');
 
 const showNotification = computed(() => {
+  // Don't show notification for regular users (role: 'user')
+  if (user.value?.role === 'user') {
+    return false;
+  }
   // Show notification if user is logged in, has checked for shop, but doesn't have one, and hasn't dismissed it
   return shopStore.checked && !shopStore.hasShop && !dismissed.value;
 });

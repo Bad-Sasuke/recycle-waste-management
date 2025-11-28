@@ -18,8 +18,9 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 
 	pageQuery := ctx.Query("page")
 	limitQuery := ctx.Query("limit")
-	shopIDQuery := ctx.Query("shop_id") // Get shop_id from query params
-	searchQuery := ctx.Query("search") // Get search query from params
+	shopIDQuery := ctx.Query("shop_id")    // Get shop_id from query params
+	searchQuery := ctx.Query("search")     // Get search query from params
+	categoryQuery := ctx.Query("category") // Get category query from params
 
 	if pageQuery != "" {
 		if p, err := strconv.Atoi(pageQuery); err == nil && p > 0 {
@@ -38,8 +39,14 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 	var err error
 
 	if shopIDQuery != "" {
-		// Get recyclable items for a specific shop
-		data, totalCount, err = h.RecycleService.GetRecyclableItemsByShopIDPaginated(shopIDQuery, page, limit)
+		// Check if category filter is also provided
+		if categoryQuery != "" {
+			// Get recyclable items for a specific shop and category
+			data, totalCount, err = h.RecycleService.GetRecyclableItemsByShopIDAndCategoryPaginated(shopIDQuery, categoryQuery, page, limit)
+		} else {
+			// Get recyclable items for a specific shop
+			data, totalCount, err = h.RecycleService.GetRecyclableItemsByShopIDPaginated(shopIDQuery, page, limit)
+		}
 	} else {
 		// Get all recyclable items regardless of shop
 		data, totalCount, err = h.RecycleService.GetRecyclableItemsPaginated(page, limit)
@@ -53,7 +60,7 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 	if searchQuery != "" {
 		var filteredData []entities.RecyclableItemsModel
 		searchLower := strings.ToLower(strings.TrimSpace(searchQuery))
-		
+
 		for _, item := range *data {
 			// Check if the item's name contains the search query (case-insensitive)
 			if item.Name != "" && strings.Contains(strings.ToLower(item.Name), searchLower) {
@@ -63,11 +70,11 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 				filteredData = append(filteredData, item)
 			}
 		}
-		
+
 		// Update data to be the filtered results
 		filteredDataPtr := &filteredData
 		data = filteredDataPtr
-		
+
 		// Update total count to reflect filtered results
 		totalCount = int64(len(filteredData))
 	}
@@ -101,22 +108,22 @@ func (h *HTTPGateway) GetRecycleWaste(ctx *fiber.Ctx) error {
 func getShopInfo(shopID string, gateway *HTTPGateway) entities.ShopInfo {
 	if shopID == "" {
 		return entities.ShopInfo{
-			ShopID:      "",
-			ShopName:    "",
+			ShopID:       "",
+			ShopName:     "",
 			ShopImageURL: "",
 		}
 	}
 	shop, err := gateway.ShopService.GetShopByShopID(shopID)
 	if err != nil || shop == nil {
 		return entities.ShopInfo{
-			ShopID:      shopID,
-			ShopName:    "",
+			ShopID:       shopID,
+			ShopName:     "",
 			ShopImageURL: "",
 		}
 	}
 	return entities.ShopInfo{
-		ShopID:      shopID,
-		ShopName:    shop.Name,
+		ShopID:       shopID,
+		ShopName:     shop.Name,
 		ShopImageURL: shop.ImageURL,
 	}
 }
@@ -128,7 +135,7 @@ func groupRecyclableItemsByName(items []entities.RecyclableItemsModel, gateway *
 	for _, item := range items {
 		key := item.Name
 		shopInfo := getShopInfo(item.ShopID, gateway)
-		
+
 		if existingItem, exists := groupMap[key]; exists {
 			// If item with same name exists, add shop info and waste_id to arrays
 			existingItem.Shops = append(existingItem.Shops, shopInfo)

@@ -18,6 +18,7 @@ type CustomerRequestModel struct {
 	Latitude          float64        `json:"latitude" bson:"latitude"`
 	Longitude         float64        `json:"longitude" bson:"longitude"`
 	Description       string         `json:"description" bson:"description"`
+	ShopID            string         `json:"shop_id,omitempty" bson:"shop_id,omitempty"` // Shop that completed the request
 	Status            STATUS_REQUEST `json:"status" bson:"status"`
 	CancelReason      string         `json:"cancel_reason,omitempty" bson:"cancel_reason,omitempty"`
 	CreatedAt         time.Time      `json:"created_at" bson:"created_at"`

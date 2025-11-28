@@ -132,7 +132,7 @@ func (h *HTTPGateway) AcceptCustomerRequest(ctx *fiber.Ctx) error {
 
 func (h *HTTPGateway) CompleteCustomerRequest(ctx *fiber.Ctx) error {
 	// Verify authentication
-	_, err := middlewares.DecodeJWTToken(ctx)
+	token, err := middlewares.DecodeJWTToken(ctx)
 	if err != nil {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
 	}
@@ -143,8 +143,14 @@ func (h *HTTPGateway) CompleteCustomerRequest(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "customer_request_id is required"})
 	}
 
+	// Get shop by user ID
+	shop, err := h.ShopService.GetShopByUserID(token.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: "cannot get shop info"})
+	}
+
 	// Complete the request
-	err = h.CustomerRequestService.CompleteCustomerRequest(customerRequestID)
+	err = h.CustomerRequestService.CompleteCustomerRequest(customerRequestID, shop.ShopID)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: err.Error()})
 	}

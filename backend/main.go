@@ -48,12 +48,14 @@ func main() {
 	settingsRepo := repo.NewSettingsRepository(mongodb)
 	customerRequestRepo := repo.NewCustomerRequestRepository(mongodb)
 	reviewRepo := repo.NewReviewRepository(mongodb)
+	stockRepo := repo.NewStockRepository(mongodb) // Moved up
 
 	userSV := sv.NewUsersService(userMongo)
-	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes, categoryWasteRepo)
+	stockSV := sv.NewStockService(stockRepo)                                               // Moved up
+	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes, categoryWasteRepo, stockSV) // Updated
 	authSV := sv.NewAuthService(userMongo)
 	imageSV := sv.NewImageService()
-	shopSV := sv.NewShopService(shopRepo)
+	shopSV := sv.NewShopService(shopRepo, reviewRepo)
 	settingsSV := sv.NewSettingsService(settingsRepo)
 	customerRequestSV := sv.NewCustomerRequestService(customerRequestRepo, shopRepo)
 	reviewSV := sv.NewReviewService(reviewRepo, customerRequestRepo)
@@ -63,6 +65,14 @@ func main() {
 	// Initialize Review Gateway
 	reviewGateway := gateways.NewReviewGateway(reviewSV)
 	gateways.RouteReview(reviewGateway, app)
+
+	// Initialize Receipt Gateway
+	receiptRepo := repo.NewReceiptRepository(mongodb)
+	receiptItemRepo := repo.NewReceiptItemRepository(mongodb)
+	// stockRepo and stockSV are already initialized above
+	receiptSV := sv.NewReceiptService(receiptRepo, receiptItemRepo, recycleWastes, stockSV, customerRequestRepo, shopRepo)
+	receiptGateway := gateways.NewReceiptGateway(receiptSV)
+	gateways.RouteReceipt(receiptGateway, app)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {

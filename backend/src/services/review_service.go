@@ -65,10 +65,8 @@ func (s *reviewService) CreateReview(ctx context.Context, userID string, req *en
 		return errors.New("review already exists for this request")
 	}
 
-	// Get shop_id from accepted shop (assuming it's stored somewhere)
-	// For now, we'll need to get this from the customer request
-	// You may need to add shop_id field to CustomerRequestModel
-	shopID := customerRequest.UserID // This might need adjustment based on your schema
+	// Get shop_id from customer request
+	shopID := customerRequest.ShopID
 
 	review := &models.ReviewModel{
 		CustomerRequestID: req.CustomerRequestID,
@@ -105,7 +103,7 @@ func (s *reviewService) SkipReview(ctx context.Context, userID string, req *enti
 	}
 
 	// Get shop_id from customer request
-	shopID := customerRequest.UserID // This might need adjustment based on your schema
+	shopID := customerRequest.ShopID
 
 	// Create a skipped review (no rating, no comment)
 	review := &models.ReviewModel{

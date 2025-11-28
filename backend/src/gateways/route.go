@@ -54,6 +54,7 @@ func RouteShop(gateway HTTPGateway, app *fiber.App) {
 	// Public routes
 	api.Get("/get-shops", gateway.GetAllShops)
 	api.Get("/get-shop/:shop_id", gateway.GetShopByShopID)
+	api.Get("/:shop_id", gateway.GetShopByShopID) // Add this line for cleaner URL
 
 	// Protected routes requiring JWT authentication
 	protected := api.Group("", middlewares.SetJWtHeaderHandler())
@@ -105,4 +106,13 @@ func RouteReview(reviewGateway *ReviewGateway, app *fiber.App) {
 	protected := api.Group("", middlewares.SetJWtHeaderHandler())
 	protected.Post("", reviewGateway.CreateReview)
 	protected.Post("/skip", reviewGateway.SkipReview)
+}
+
+func RouteReceipt(receiptGateway *ReceiptGateway, app *fiber.App) {
+	api := app.Group("/api/receipts")
+
+	// Protected routes requiring JWT authentication
+	protected := api.Group("", middlewares.SetJWtHeaderHandler())
+	protected.Post("", receiptGateway.CreateReceipt)
+	protected.Get("/by-request/:request_id", receiptGateway.GetReceiptByRequestID)
 }

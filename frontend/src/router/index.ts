@@ -66,6 +66,17 @@ const router = createRouter({
       component: () => import('../views/NearbyCustomersView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/waste-purchase',
+      name: 'waste-purchase',
+      component: () => import('../views/WastePurchaseView.vue'),
+    },
+    {
+      path: '/shop/:shop_id',
+      name: 'shop-profile',
+      component: () => import('../views/ShopProfileView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 

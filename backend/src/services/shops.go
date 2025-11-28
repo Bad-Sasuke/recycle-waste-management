@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"recycle-waste-management-backend/src/domain/entities"
@@ -14,7 +15,7 @@ import (
 
 type IShopService interface {
 	CreateShop(userID string, data entities.CreateShopRequest, image []byte) error
-	GetShopByShopID(shopID string) (*entities.ShopModel, error)
+	GetShopByShopID(shopID string) (*entities.ShopResponse, error)
 	GetShopByUserID(userID string) (*entities.ShopModel, error)
 	GetAllShops(page, limit int) (*[]entities.ShopModel, int64, error)
 	UpdateShop(shopID string, data entities.UpdateShopRequest, image []byte) error
@@ -22,16 +23,18 @@ type IShopService interface {
 }
 
 type ShopService struct {
-	ShopRepository  repositories.IShopRepository
-	AwsS3           providers.IAwsS3Upload
-	ImageURLDefault string
+	ShopRepository   repositories.IShopRepository
+	ReviewRepository repositories.IReviewRepository
+	AwsS3            providers.IAwsS3Upload
+	ImageURLDefault  string
 }
 
-func NewShopService(shopRepo repositories.IShopRepository) IShopService {
+func NewShopService(shopRepo repositories.IShopRepository, reviewRepo repositories.IReviewRepository) IShopService {
 	return &ShopService{
-		ShopRepository:  shopRepo,
-		AwsS3:           providers.NewAwsS3(),
-		ImageURLDefault: "https://bucketnaja2.s3.ap-southeast-1.amazonaws.com/images/shops/DEFAULT.jpg",
+		ShopRepository:   shopRepo,
+		ReviewRepository: reviewRepo,
+		AwsS3:            providers.NewAwsS3(),
+		ImageURLDefault:  "https://bucketnaja2.s3.ap-southeast-1.amazonaws.com/images/shops/DEFAULT.jpg",
 	}
 }
 
@@ -89,7 +92,7 @@ func (s *ShopService) CreateShop(userID string, data entities.CreateShopRequest,
 	return nil
 }
 
-func (s *ShopService) GetShopByShopID(shopID string) (*entities.ShopModel, error) {
+func (s *ShopService) GetShopByShopID(shopID string) (*entities.ShopResponse, error) {
 	shop, err := s.ShopRepository.GetByShopID(shopID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -97,7 +100,19 @@ func (s *ShopService) GetShopByShopID(shopID string) (*entities.ShopModel, error
 		}
 		return nil, err
 	}
-	return shop, nil
+
+	// Calculate rating
+	avgRating, totalReviews, err := s.ReviewRepository.GetShopRatingStats(context.Background(), shopID)
+	if err != nil {
+		// Log error but continue
+		fmt.Printf("Error calculating shop rating: %v\n", err)
+	}
+
+	return &entities.ShopResponse{
+		ShopModel:     *shop,
+		AverageRating: avgRating,
+		TotalReviews:  totalReviews,
+	}, nil
 }
 
 func (s *ShopService) GetShopByUserID(userID string) (*entities.ShopModel, error) {

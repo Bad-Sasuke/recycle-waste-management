@@ -18,6 +18,7 @@ type IReviewRepository interface {
 	GetReviewByCustomerRequestID(ctx context.Context, customerRequestID string) (*models.ReviewModel, error)
 	GetReviewsByShopID(ctx context.Context, shopID string, page, pageSize int) ([]models.ReviewModel, int64, error)
 	CheckReviewExists(ctx context.Context, customerRequestID string) (bool, error)
+	GetShopRatingStats(ctx context.Context, shopID string) (float64, int64, error)
 }
 
 type reviewRepository struct {
@@ -97,4 +98,67 @@ func (r *reviewRepository) CheckReviewExists(ctx context.Context, customerReques
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (r *reviewRepository) GetShopRatingStats(ctx context.Context, shopID string) (float64, int64, error) {
+	matchStage := bson.D{{Key: "$match", Value: bson.M{"shop_id": shopID, "is_skipped": false}}}
+	groupStage := bson.D{{Key: "$group", Value: bson.M{
+		"_id":           nil,
+		"averageRating": bson.M{"$avg": "$rating"},
+		"totalReviews":  bson.M{"$sum": 1},
+	}}}
+
+	cursor, err := r.collection.Aggregate(ctx, mongo.Pipeline{matchStage, groupStage})
+	if err != nil {
+		return 0, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+
+	if err := cursor.All(ctx, &results); err != nil {
+		return 0, 0, err
+	}
+
+	if len(results) > 0 {
+		result := results[0]
+		var avgRating float64
+		var totalReviews int64
+
+		// Safely convert averageRating
+		if val, ok := result["averageRating"]; ok {
+			switch v := val.(type) {
+			case int32:
+				avgRating = float64(v)
+			case int64:
+				avgRating = float64(v)
+			case float64:
+				avgRating = v
+			case float32:
+				avgRating = float64(v)
+			default:
+				avgRating = 0
+			}
+		}
+
+		// Safely convert totalReviews
+		if val, ok := result["totalReviews"]; ok {
+			switch v := val.(type) {
+			case int32:
+				totalReviews = int64(v)
+			case int64:
+				totalReviews = v
+			case float64:
+				totalReviews = int64(v)
+			case float32:
+				totalReviews = int64(v)
+			default:
+				totalReviews = 0
+			}
+		}
+
+		return avgRating, totalReviews, nil
+	}
+
+	return 0, 0, nil
 }
