@@ -84,7 +84,7 @@ func RouteCustomerRequest(gateway HTTPGateway, app *fiber.App) {
 	api.Put("/accept/:id", gateway.AcceptCustomerRequest)
 	api.Put("/cancel/:id", gateway.CancelCustomerRequest)
 	api.Put("/complete/:id", gateway.CompleteCustomerRequest)
-
+	api.Post("/walk-in", gateway.CreateWalkInRequest)
 }
 
 func RouteWebSocket(gateway HTTPGateway, app *fiber.App) {
@@ -111,8 +111,18 @@ func RouteReview(reviewGateway *ReviewGateway, app *fiber.App) {
 func RouteReceipt(receiptGateway *ReceiptGateway, app *fiber.App) {
 	api := app.Group("/api/receipts")
 
+	// Public routes
+	api.Get("/shop/:shop_id", receiptGateway.GetReceiptsByShopID)
+
 	// Protected routes requiring JWT authentication
 	protected := api.Group("", middlewares.SetJWtHeaderHandler())
 	protected.Post("", receiptGateway.CreateReceipt)
 	protected.Get("/by-request/:request_id", receiptGateway.GetReceiptByRequestID)
+}
+
+func RouteStock(stockGateway *StockGateway, app *fiber.App) {
+	api := app.Group("/api/stocks")
+
+	// Public routes
+	api.Get("/shop/:shop_id", stockGateway.GetStocksByShopID)
 }

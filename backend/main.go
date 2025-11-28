@@ -51,7 +51,7 @@ func main() {
 	stockRepo := repo.NewStockRepository(mongodb) // Moved up
 
 	userSV := sv.NewUsersService(userMongo)
-	stockSV := sv.NewStockService(stockRepo)                                               // Moved up
+	stockSV := sv.NewStockService(stockRepo, recycleWastes)                                // Pass recycleWastes repo
 	recycleWasteSV := sv.NewRecycleWasteService(recycleWastes, categoryWasteRepo, stockSV) // Updated
 	authSV := sv.NewAuthService(userMongo)
 	imageSV := sv.NewImageService()
@@ -70,9 +70,13 @@ func main() {
 	receiptRepo := repo.NewReceiptRepository(mongodb)
 	receiptItemRepo := repo.NewReceiptItemRepository(mongodb)
 	// stockRepo and stockSV are already initialized above
-	receiptSV := sv.NewReceiptService(receiptRepo, receiptItemRepo, recycleWastes, stockSV, customerRequestRepo, shopRepo)
+	receiptSV := sv.NewReceiptService(receiptRepo, receiptItemRepo, recycleWastes, stockSV, customerRequestRepo, shopRepo, userMongo)
 	receiptGateway := gateways.NewReceiptGateway(receiptSV)
 	gateways.RouteReceipt(receiptGateway, app)
+
+	// Initialize Stock Gateway
+	stockGateway := gateways.NewStockGateway(stockSV)
+	gateways.RouteStock(stockGateway, app)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {

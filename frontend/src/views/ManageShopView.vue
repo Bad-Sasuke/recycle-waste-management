@@ -25,281 +25,347 @@
     </div>
 
     <!-- Shop Content -->
-    <div v-else class="max-w-4xl mx-auto">
+    <div v-else class="max-w-6xl mx-auto">
       <!-- Shop Header -->
       <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
-          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-              <div class="bg-white/20 p-3 rounded-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-store text-3xl"
-                  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                  <path d="M3 21l18 0"></path>
-                  <path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1"></path>
-                  <path d="M5 21v-14a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v14"></path>
-                  <path d="M4 11h7m-7 4h7m-7 4h16"></path>
-                </svg>
-              </div>
-              <div>
-                <h1 class="text-2xl font-bold">{{ shopStore.shopName || t('Shop.manage.title') }}</h1>
-                <p class="opacity-90">{{ shopStore.shopAddress || t('Shop.manage.shopDetails') }}</p>
-              </div>
-            </div>
-            <button @click="editMode = !editMode" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="16" height="16"
-                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                stroke-linejoin="round">
+          <div class="flex items-center gap-4">
+            <div class="bg-white/20 p-3 rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" fill="none">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
-                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
-                <path d="M16 5l3 3"></path>
+                <path d="M3 21l18 0"></path>
+                <path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1"></path>
+                <path d="M5 21v-14a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v14"></path>
               </svg>
-              {{ editMode ? t('Shop.manage.cancelEdit') : t('Shop.manage.editMode') }}
-            </button>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold">{{ shopStore.shopName || 'จัดการร้าน' }}</h1>
+              <p class="opacity-90">{{ shopStore.shopAddress || 'จัดการข้อมูลร้านของคุณ' }}</p>
+            </div>
           </div>
-        </div>
-
-        <!-- Shop Image -->
-        <div class="p-6 flex justify-center">
-          <img :src="shopStore.shop?.image_url || 'https://placehold.co/400x300?text=No+Image'" alt="Shop Image"
-            class="w-full max-w-md h-64 object-cover rounded-xl border border-gray-200" />
         </div>
       </div>
 
-      <!-- Shop Details -->
+      <!-- Tabs -->
       <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div role="tablist" class="tabs tabs-lifted tabs-lg border-b">
+          <button role="tab" :class="['tab', { 'tab-active': activeTab === 'info' }]" @click="activeTab = 'info'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" fill="none">
+              <path d="M12 12h-6v4h6m0 0h6v-4h-6m-6-4h12v-4h-12z"></path>
+            </svg>
+            ข้อมูลร้าน
+          </button>
+          <button role="tab" :class="['tab', { 'tab-active': activeTab === 'stock' }]" @click="activeTab = 'stock'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" fill="none">
+              <path d="M3 3h18v18h-18z M9 8v8M15 8v8"></path>
+            </svg>
+            สต็อก
+          </button>
+          <button role="tab" :class="['tab', { 'tab-active': activeTab === 'receipts' }]"
+            @click="activeTab = 'receipts'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" fill="none">
+              <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"></path>
+              <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"></path>
+            </svg>
+            ใบเสร็จ
+          </button>
+        </div>
+
         <div class="p-6 md:p-8">
-          <div v-if="!editMode">
-            <!-- Shop Info Display -->
-            <div class="space-y-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.shopName') }}</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.name || t('Global.comingSoon') }}</p>
-                </div>
+          <!-- Tab 1: Shop Info -->
+          <div v-show="activeTab === 'info'">
+            <div v-if="!editMode">
+              <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">ข้อมูลร้าน</h2>
+                <button @click="editMode = true" class="btn btn-primary btn-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor">
+                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+                    <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+                  </svg>
+                  แก้ไข
+                </button>
+              </div>
 
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.email') }}</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.email || t('Global.comingSoon') }}</p>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="col-span-2 flex justify-center mb-4">
+                  <img :src="shopStore.shop?.image_url || 'https://placehold.co/400x300'"
+                    class="w-64 h-64 object-cover rounded-xl shadow-md" />
                 </div>
-
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.phone') }}</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.phone || t('Global.comingSoon') }}</p>
+                  <h3 class="font-semibold text-gray-600">ชื่อร้าน</h3>
+                  <p class="text-lg">{{ shopStore.shop?.name || '-' }}</p>
                 </div>
-
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.address') }}</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.address || t('Global.comingSoon') }}</p>
+                  <h3 class="font-semibold text-gray-600">อีเมล</h3>
+                  <p class="text-lg">{{ shopStore.shop?.email || '-' }}</p>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-600">เบอร์โทร</h3>
+                  <p class="text-lg">{{ shopStore.shop?.phone || '-' }}</p>
+                </div>
+                <div class="col-span-2">
+                  <h3 class="font-semibold text-gray-600">ที่อยู่</h3>
+                  <p class="text-lg">{{ shopStore.shop?.address || '-' }}</p>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-600">เวลาเปิด</h3>
+                  <p class="text-lg">{{ shopStore.shop?.opening_time || '-' }}</p>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-600">เวลาปิด</h3>
+                  <p class="text-lg">{{ shopStore.shop?.closing_time || '-' }}</p>
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.openingTime') }}</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.opening_time || t('Global.comingSoon') }}</p>
-                </div>
-
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.closingTime') }}</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.closing_time || t('Global.comingSoon') }}</p>
-                </div>
-              </div>
-
-              <div>
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.description') }}</h3>
-                <p class="text-gray-900">{{ shopStore.shop?.description || t('Global.comingSoon') }}</p>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.latitude') }}</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.latitude || t('Global.comingSoon') }}</p>
-                </div>
-
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ t('Shop.manage.longitude') }}</h3>
-                  <p class="text-gray-900">{{ shopStore.shop?.longitude || t('Global.comingSoon') }}</p>
-                </div>
+              <div class="flex justify-end mt-8 pt-6 border-t">
+                <button @click="confirmDelete" class="btn btn-error btn-sm">ลบร้าน</button>
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="flex justify-end mt-8 pt-6 border-t border-gray-200">
-              <button @click="confirmDelete" class="btn btn-error text-white flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="16"
-                  height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                  <path d="M4 7l16 0"></path>
-                  <path d="M10 11v6"></path>
-                  <path d="M14 11v6"></path>
-                  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
-                  <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
-                </svg>
-                {{ t('Shop.manage.deleteShop') }}
-              </button>
+            <!-- Edit Form (existing form code shortened for brevity) -->
+            <div v-else>
+              <form @submit.prevent="updateShop" class="space-y-4">
+                <div class="flex justify-center mb-4">
+                  <div class="form-control">
+                    <img :src="previewImage || shopStore.shop?.image_url || 'https://placehold.co/200'"
+                      class="w-48 h-48 object-cover rounded-xl mb-2" />
+                    <label class="btn btn-outline btn-sm">
+                      อัพโหลดรูป
+                      <input type="file" class="hidden" accept="image/*" @change="handleImageChange" />
+                    </label>
+                  </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div class="form-control"><label class="label"><span class="label-text">ชื่อร้าน
+                        *</span></label><input v-model="editShopData.name" type="text" class="input input-bordered"
+                      required /></div>
+                  <div class="form-control"><label class="label"><span class="label-text">อีเมล</span></label><input
+                      v-model="editShopData.email" type="email" class="input input-bordered" /></div>
+                  <div class="form-control"><label class="label"><span class="label-text">เบอร์โทร</span></label><input
+                      v-model="editShopData.phone" type="tel" class="input input-bordered" /></div>
+                  <div class="form-control col-span-2"><label class="label"><span class="label-text">ที่อยู่
+                        *</span></label><input v-model="editShopData.address" type="text" class="input input-bordered"
+                      required /></div>
+                  <div class="form-control"><label class="label"><span class="label-text">เวลาเปิด</span></label><input
+                      v-model="editShopData.opening_time" type="time" class="input input-bordered" /></div>
+                  <div class="form-control"><label class="label"><span class="label-text">เวลาปิด</span></label><input
+                      v-model="editShopData.closing_time" type="time" class="input input-bordered" /></div>
+                  <div class="form-control col-span-2"><label class="label"><span
+                        class="label-text">คำอธิบาย</span></label><textarea v-model="editShopData.description"
+                      class="textarea textarea-bordered" rows="3"></textarea></div>
+                </div>
+
+                <div class="form-control">
+                  <label class="label"><span class="label-text">ตำแหน่งร้าน</span></label>
+                  <div id="edit-map" class="w-full h-64 rounded-lg border"></div>
+                </div>
+
+                <div class="flex gap-2">
+                  <button type="submit" :disabled="isSubmitting" class="btn btn-primary flex-1">บันทึก</button>
+                  <button type="button" @click="editMode = false" class="btn btn-outline flex-1">ยกเลิก</button>
+                </div>
+              </form>
             </div>
           </div>
 
-          <!-- Edit Mode -->
-          <div v-else>
-            <form @submit.prevent="updateShop" class="space-y-6">
-              <!-- Shop Image Upload -->
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.shopImage') }}</span>
-                </label>
-                <div class="flex flex-col items-center">
-                  <div v-if="previewImage" class="mb-4">
-                    <img :src="previewImage" alt="Preview"
-                      class="w-48 h-48 object-cover rounded-xl border-2 border-gray-200" />
-                  </div>
-                  <div v-else-if="shopStore.shop?.image_url" class="mb-4">
-                    <img :src="shopStore.shop.image_url" alt="Current Shop Image"
-                      class="w-48 h-48 object-cover rounded-xl border-2 border-gray-200" />
-                  </div>
-                  <label class="btn btn-outline w-full max-w-xs cursor-pointer">
-                    <span class="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-upload" width="16"
-                        height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
-                        <path d="M7 9l5 -5l5 5"></path>
-                        <path d="M12 4v12"></path>
-                      </svg>
-                      {{ shopImage ? t('Shop.create.changeImage') : t('Shop.create.uploadImage') }}
-                    </span>
-                    <input type="file" class="hidden" accept="image/*" @change="handleImageChange" />
-                  </label>
-                </div>
-              </div>
-
-              <!-- Shop Name -->
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.shopName') }} *</span>
-                </label>
-                <input v-model="editShopData.name" type="text"
-                  class="input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500" required />
-              </div>
-
-              <!-- Description -->
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.description') }}</span>
-                </label>
-                <textarea v-model="editShopData.description"
-                  class="textarea textarea-bordered w-full max-w-md focus:ring-2 focus:ring-green-500"
-                  rows="3"></textarea>
-              </div>
-
-              <!-- Address -->
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.address') }} *</span>
-                </label>
-                <input v-model="editShopData.address" type="text"
-                  class="input input-bordered w-full max-w-md focus:ring-2 focus:ring-green-500" required />
-              </div>
-
-              <!-- Contact Information -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="form-control w-full">
-                  <label class="label">
-                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.phone') }}</span>
-                  </label>
-                  <input v-model="editShopData.phone" type="tel"
-                    class="input input-bordered w-full focus:ring-2 focus:ring-green-500" />
-                </div>
-
-                <div class="form-control w-full">
-                  <label class="label">
-                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.email') }}</span>
-                  </label>
-                  <input v-model="editShopData.email" type="email"
-                    class="input input-bordered w-full focus:ring-2 focus:ring-green-500" />
-                </div>
-              </div>
-
-              <!-- Business Hours -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="form-control w-full">
-                  <label class="label">
-                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.openingTime') }}</span>
-                  </label>
-                  <input v-model="editShopData.opening_time" type="time"
-                    class="input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500" />
-                </div>
-
-                <div class="form-control w-full">
-                  <label class="label">
-                    <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.closingTime') }}</span>
-                  </label>
-                  <input v-model="editShopData.closing_time" type="time"
-                    class="input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500" />
-                </div>
-              </div>
-
-              <!-- Location Map -->
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text font-semibold text-gray-700">{{ t('Shop.create.location') }}</span>
-                </label>
-                <div class="space-y-2">
-                  <p class="text-sm text-gray-600">{{ t('Shop.create.locationHelp') }}</p>
-                  <div id="edit-map" class="w-full h-96 rounded-lg border-2 border-gray-200 z-0"></div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text text-sm">{{ t('Shop.create.latitude') }}</span>
-                      </label>
-                      <input v-model="editShopData.latitude" type="number" step="any"
-                        class="input input-bordered input-sm w-full" readonly />
-                    </div>
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text text-sm">{{ t('Shop.create.longitude') }}</span>
-                      </label>
-                      <input v-model="editShopData.longitude" type="number" step="any"
-                        class="input input-bordered input-sm w-full" readonly />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Form Actions -->
-              <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                <button type="submit" :disabled="isSubmitting" class="btn btn-primary flex-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check"
-                    v-if="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" stroke-width="2"
-                    stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                    <path d="M5 12l5 5l10 -10"></path>
+          <!-- Tab 2: Stock -->
+          <div v-show="activeTab === 'stock'">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-xl font-bold">วัสดุรีไซเคิลในคลัง</h2>
+              <!-- Desktop Action Buttons (Hidden on mobile) -->
+              <div class="hidden md:flex gap-2">
+                <button class="btn btn-primary btn-sm text-white" @click="goToWastePurchase">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-4 h-4 mr-1">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span class="loading loading-spinner" v-else></span>
-                  {{ isSubmitting ? t('Shop.manage.updating') : t('Shop.manage.updateShop') }}
+                  ชั่งชำระเงิน
                 </button>
-
-                <button type="button" @click="editMode = false" class="btn btn-outline flex-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="16" height="16"
-                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                    <path d="M18 6l-12 12"></path>
-                    <path d="M6 6l12 12"></path>
+                <button class="btn btn-error btn-sm text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-4 h-4 mr-1">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                   </svg>
-                  {{ t('Shop.manage.cancelEdit') }}
+                  นำออกคลัง
                 </button>
               </div>
-            </form>
+            </div>
+
+            <!-- Mobile Action Buttons (Visible only on mobile) -->
+            <div class="grid grid-cols-1 gap-3 mb-6 md:hidden">
+              <button class="btn btn-primary w-full text-white" @click="goToWastePurchase">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-5 h-5 mr-2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                ชั่งชำระเงิน
+              </button>
+              <button class="btn btn-error w-full text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-5 h-5 mr-2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                </svg>
+                นำออกคลัง
+              </button>
+            </div>
+            <!-- TODO: เชื่อม API GET /api/stocks/shop/:shop_id -->
+            <div class="overflow-x-auto">
+              <table class="table table-zebra">
+                <thead>
+                  <tr class="bg-base-200">
+                    <th>ลำดับ</th>
+                    <th class="text-center">อัปเดตล่าสุด</th>
+                    <th>หมวดหมู่</th>
+                    <th>ชื่อวัสดุ</th>
+                    <th class="text-right">จำนวน (กก.)</th>
+                    <th class="text-right">ราคา/กก.</th>
+                    <th class="text-right">ส่วนต่าง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, index) in paginatedStocks" :key="item.id">
+                    <td>{{ (stockPage - 1) * stockPageSize + index + 1 }}</td>
+                    <td class="text-center text-sm text-gray-500">
+                      {{ new Date(item.updated_at).toLocaleString('th-TH', {
+                        dateStyle: 'short', timeStyle: 'short'
+                      }) }}
+                    </td>
+                    <td><span class="badge badge-primary">{{ item.category }}</span></td>
+                    <td class="font-semibold">{{ item.name }}</td>
+                    <td class="text-right">{{ item.quantity }}</td>
+                    <td class="text-right">
+                      <div class="flex flex-col items-end">
+                        <span class="font-bold text-red-500">ซื้อเข้ามา: {{ formatCurrency(item.purchase_price)
+                          }}</span>
+                        <span class="font-bold text-green-600">ปัจจุบัน: {{ formatCurrency(item.current_price) }}</span>
+                      </div>
+                    </td>
+                    <td class="text-right font-bold" :class="item.profit >= 0 ? 'text-green-600' : 'text-red-600'">
+                      {{ item.profit > 0 ? '+' : '' }}{{ formatCurrency(item.profit) }}
+                    </td>
+                  </tr>
+                  <tr v-if="stocks.length === 0">
+                    <td colspan="6" class="text-center text-gray-500 py-8">
+                      <span v-if="loadingStocks">กำลังโหลด...</span>
+                      <span v-else>ไม่มีข้อมูลสต็อก</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination for Stock -->
+            <div v-if="totalStockPages > 1" class="flex justify-center mt-6">
+              <div class="join">
+                <button class="join-item btn btn-sm" :disabled="stockPage === 1" @click="stockPage--">«</button>
+                <button v-for="page in totalStockPages" :key="page" class="join-item btn btn-sm"
+                  :class="{ 'btn-active': stockPage === page }" @click="stockPage = page">
+                  {{ page }}
+                </button>
+                <button class="join-item btn btn-sm" :disabled="stockPage === totalStockPages"
+                  @click="stockPage++">»</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Receipts -->
+          <div v-show="activeTab === 'receipts'">
+            <h2 class="text-xl font-bold mb-6">ประวัติการทำรายการ</h2>
+            <!-- TODO: เชื่อม API GET /api/receipts/shop/:shop_id -->
+            <div class="overflow-x-auto">
+              <table class="table table-zebra">
+                <thead>
+                  <tr class="bg-base-200">
+                    <th>เลขที่ใบเสร็จ</th>
+                    <th>วันที่-เวลา</th>
+                    <th>ลูกค้า</th>
+                    <th class="text-center">จำนวนรายการ</th>
+                    <th class="text-right">ยอดรวม</th>
+                    <th class="text-center">สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="receipt in paginatedReceipts" :key="receipt.id">
+                    <td class="font-mono font-semibold text-xs">#{{ receipt.id.substring(0, 8) }}...</td>
+                    <td class="text-sm">{{ new Date(receipt.created_at).toLocaleString('th-TH') }}</td>
+                    <td>{{ receipt.customer_name }}</td>
+                    <td class="text-center">{{ receipt.items_count }}</td>
+                    <td class="text-right font-bold text-green-600">{{ formatCurrency(receipt.net_total) }}</td>
+                    <td class="text-center">
+                      <span class="badge badge-success badge-sm">{{ receipt.status }}</span>
+                    </td>
+                  </tr>
+                  <tr v-if="receipts.length === 0">
+                    <td colspan="6" class="text-center text-gray-500 py-8">
+                      <span v-if="loadingReceipts">กำลังโหลด...</span>
+                      <span v-else>ไม่มีข้อมูลใบเสร็จ</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination for Receipts -->
+            <div v-if="totalReceiptPages > 1" class="flex justify-center mt-6">
+              <div class="join">
+                <button class="join-item btn btn-sm" :disabled="receiptPage === 1" @click="receiptPage--">«</button>
+                <button v-for="page in totalReceiptPages" :key="page" class="join-item btn btn-sm"
+                  :class="{ 'btn-active': receiptPage === page }" @click="receiptPage = page">
+                  {{ page }}
+                </button>
+                <button class="join-item btn btn-sm" :disabled="receiptPage === totalReceiptPages"
+                  @click="receiptPage++">»</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Walk-in Customer Modal -->
+    <dialog id="walk-in-modal" class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': showWalkInModal }">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">ลูกค้า Walk-in</h3>
+        <p class="text-sm text-gray-500 mb-4">กรอกข้อมูลลูกค้าที่นำขยะมารีไซเคิลที่ร้าน</p>
+        <form @submit.prevent="handleCreateWalkIn">
+          <div class="form-control w-full mb-4">
+            <label class="label">
+              <span class="label-text">ชื่อลูกค้า (ไม่บังคับ)</span>
+            </label>
+            <input type="text" v-model="walkInCustomerName" placeholder="ระบุชื่อลูกค้า"
+              class="input input-bordered w-full" />
+          </div>
+          <div class="form-control w-full mb-6">
+            <label class="label">
+              <span class="label-text">เบอร์โทรศัพท์ (ไม่บังคับ)</span>
+            </label>
+            <input type="tel" v-model="walkInCustomerPhone" placeholder="ระบุเบอร์โทรศัพท์"
+              class="input input-bordered w-full" />
+          </div>
+          <div class="modal-action">
+            <button type="button" class="btn" @click="showWalkInModal = false"
+              :disabled="isCreatingWalkIn">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary" :disabled="isCreatingWalkIn">
+              <span v-if="isCreatingWalkIn" class="loading loading-spinner"></span>
+              สร้างรายการ
+            </button>
+          </div>
+        </form>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="showWalkInModal = false">close</button>
+      </form>
+    </dialog>
 
     <!-- Delete Confirmation Modal -->
     <input type="checkbox" id="delete-modal" class="modal-toggle" v-model="showDeleteModal" />
@@ -357,7 +423,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useShopStore } from '@/stores/shop';
 import { useRouter } from 'vue-router';
 import type { UpdateShopRequest } from '@/types/shop';
@@ -370,11 +436,48 @@ const router = useRouter();
 const shopStore = useShopStore();
 
 // States
+const activeTab = ref('info');
 const editMode = ref(false);
 const isSubmitting = ref(false);
 const showDeleteModal = ref(false);
 const modalType = ref<'success' | 'error'>('success');
 const modalMessage = ref('');
+
+// Walk-in Modal States
+const showWalkInModal = ref(false);
+const walkInCustomerName = ref('');
+const walkInCustomerPhone = ref('');
+const isCreatingWalkIn = ref(false);
+
+// Loading states
+const loadingStocks = ref(false);
+const loadingReceipts = ref(false);
+
+// Data สำหรับ Stock และ Receipts
+const stocks = ref<any[]>([]);
+const receipts = ref<any[]>([]);
+
+// Pagination for Stock
+const stockPage = ref(1);
+const stockPageSize = 5;
+const totalStockPages = computed(() => Math.ceil(stocks.value.length / stockPageSize));
+const paginatedStocks = computed(() => stocks.value); // ใช้ข้อมูลจาก server โดยตรง
+
+// Pagination for Receipts
+const receiptPage = ref(1);
+const receiptPageSize = 5;
+const totalReceiptPages = computed(() => Math.ceil(receipts.value.length / receiptPageSize));
+const paginatedReceipts = computed(() => receipts.value); // ใช้ข้อมูลจาก server โดยตรง
+
+// Helper to format currency
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('th-TH', {
+    style: 'currency',
+    currency: 'THB',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+};
 
 // Image handling
 const shopImage = ref<File | null>(null);
@@ -557,6 +660,113 @@ watch(editMode, (newValue) => {
   } else {
     // When exiting edit mode, cleanup map
     cleanupMap();
+  }
+});
+
+// Fetch stocks data
+const fetchStocks = async () => {
+  if (!shopStore.shop?.shop_id) return;
+
+  loadingStocks.value = true;
+  try {
+    const { fetchStocksByShopID } = await import('@/services/manageShop');
+    const response = await fetchStocksByShopID(shopStore.shop.shop_id, stockPage.value, stockPageSize);
+    console.log('fetchStocks response:', response);
+    if (response.success && response.data) {
+      stocks.value = response.data;
+      // Update total pages from server response if available
+      if (response.total_pages) {
+        // totalStockPages will be recomputed automatically from stocks.value.length
+      }
+    } else {
+      console.error('Stock fetch failed:', response.message);
+      stocks.value = [];
+    }
+  } catch (error) {
+    console.error('Error fetching stocks:', error);
+    stocks.value = [];
+  } finally {
+    loadingStocks.value = false;
+  }
+};
+
+// Fetch receipts data
+const fetchReceipts = async () => {
+  if (!shopStore.shop?.shop_id) return;
+
+  loadingReceipts.value = true;
+  try {
+    const { fetchReceiptsByShopID } = await import('@/services/manageShop');
+    const response = await fetchReceiptsByShopID(shopStore.shop.shop_id, receiptPage.value, receiptPageSize);
+    console.log('fetchReceipts response:', response);
+    if (response.success && response.data) {
+      receipts.value = response.data;
+    } else {
+      console.error('Receipt fetch failed:', response.message);
+      receipts.value = [];
+    }
+  } catch (error) {
+    console.error('Error fetching receipts:', error);
+    receipts.value = [];
+  } finally {
+    loadingReceipts.value = false;
+  }
+};
+
+// Watch activeTab to fetch data when switching tabs
+watch(activeTab, (newTab) => {
+  if (newTab === 'stock') {
+    fetchStocks();
+  } else if (newTab === 'receipts') {
+    fetchReceipts();
+  }
+});
+
+const goToWastePurchase = () => {
+  // Reset form and open modal
+  walkInCustomerName.value = '';
+  walkInCustomerPhone.value = '';
+  showWalkInModal.value = true;
+};
+
+const handleCreateWalkIn = async () => {
+  if (!shopStore.shop?.shop_id) return;
+
+  isCreatingWalkIn.value = true;
+  try {
+    // Dynamic import to avoid circular dependencies if any, or just good practice
+    const { createWalkInRequest } = await import('@/services/customer_request');
+
+    const response = await createWalkInRequest(walkInCustomerName.value, walkInCustomerPhone.value);
+
+    if (response.success && response.customer_request_id) {
+      showWalkInModal.value = false;
+      router.push({
+        path: '/waste-purchase',
+        query: { customer_request_id: response.customer_request_id }
+      });
+    } else {
+      showModal('error', response.message || 'เกิดข้อผิดพลาดในการสร้างรายการ');
+    }
+  } catch (error) {
+    console.error('Error creating walk-in request:', error);
+    const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างรายการ';
+    showModal('error', errorMessage);
+  } finally {
+    isCreatingWalkIn.value = false;
+  }
+};
+
+// Watch pagination changes
+watch(stockPage, () => {
+  if (activeTab.value === 'stock') {
+    fetchStocks();
+  }
+});
+
+watch(receiptPage, () => {
+  if (activeTab.value === 'receipts') {
+    fetchReceipts();
   }
 });
 

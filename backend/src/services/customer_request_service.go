@@ -7,6 +7,7 @@ import (
 	"recycle-waste-management-backend/src/domain/models"
 	"recycle-waste-management-backend/src/repositories"
 	"sort"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -19,6 +20,7 @@ type ICustomerRequestService interface {
 	AcceptCustomerRequest(customerRequestID string) error
 	CancelCustomerRequest(customerRequestID string, cancelReason string) error
 	CompleteCustomerRequest(customerRequestID string, shopID string) error
+	CreateWalkInRequest(body entities.WalkInCustomerRequest) (string, error)
 }
 type customerRequestService struct {
 	customerRequestRepository repositories.ICustomerRequestRepository
@@ -209,4 +211,31 @@ func (s *customerRequestService) CancelCustomerRequest(customerRequestID string,
 
 func (s *customerRequestService) CompleteCustomerRequest(customerRequestID string, shopID string) error {
 	return s.customerRequestRepository.CompleteCustomerRequest(customerRequestID, shopID)
+}
+
+func (s *customerRequestService) CreateWalkInRequest(body entities.WalkInCustomerRequest) (string, error) {
+	// Create a new request with "WALK_IN" status or similar
+	// Since we don't have a real user, we'll use a placeholder UserID or "WALK_IN"
+	// And we store customer name/phone in description or a new field?
+	// For now, let's put it in Description as JSON or text
+	description := fmt.Sprintf("Walk-in Customer: %s, Phone: %s", body.CustomerName, body.PhoneNumber)
+
+	requestID := uuid.New().String()
+	modelData := models.CustomerRequestModel{
+		CustomerRequestID: requestID,
+		UserID:            "WALK_IN_" + uuid.New().String(), // Unique fake user ID
+		Latitude:          0,                                // Shop's location?
+		Longitude:         0,
+		Description:       description,
+		Status:            models.CR_ACCEPTED, // Auto accepted
+		ShopID:            body.ShopID,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
+	}
+
+	if err := s.customerRequestRepository.AddCustomerRequest(modelData); err != nil {
+		return "", err
+	}
+
+	return requestID, nil
 }

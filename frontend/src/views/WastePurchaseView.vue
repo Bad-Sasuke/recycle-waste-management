@@ -286,7 +286,7 @@ const weightInput = ref('');
 
 onMounted(async () => {
   // Check for request_id in query params
-  const requestId = route.query.request_id as string;
+  const requestId = (route.query.request_id || route.query.customer_request_id) as string;
   if (requestId) {
     wastePurchaseStore.setRequestId(requestId);
   }
@@ -353,7 +353,7 @@ const confirmPayment = async () => {
     const payload = {
       shop_id: shopStore.shop.shop_id,
       payment_method: 'cash',
-      customer_request_id: route.query.request_id || '',
+      customer_request_id: (route.query.request_id || route.query.customer_request_id) as string || '',
       items: items.value.map(item => ({
         shop_id: shopStore.shop?.shop_id || '',
         waste_id: item.waste_id,
@@ -617,8 +617,8 @@ const goToPage = async (page: number) => {
         </div>
         <!-- Payment Button -->
         <div class="p-4">
-          <button v-if="usersStore.user?.role === 'shop' || usersStore.user?.role === 'admin'" @click="openPaymentModal"
-            class="btn btn-primary w-full text-white text-lg shadow-lg gap-2">
+          <button v-if="usersStore.user?.role === 'moderator' || usersStore.user?.role === 'admin'"
+            @click="openPaymentModal" class="btn btn-primary w-full text-white text-lg shadow-lg gap-2">
             <IconCash :size="24" />
             ชำระเงิน
           </button>

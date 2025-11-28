@@ -26,3 +26,9 @@ type ReceiptItem struct {
 	UnitPrice float64 `json:"unit_price" bson:"unit_price"` // Price per unit at that time
 	Price     float64 `json:"price" bson:"price"`           // Total price for this item
 }
+
+type ReceiptWithDetails struct {
+	Receipt
+	CustomerName string `json:"customer_name"`
+	ItemsCount   int    `json:"items_count"`
+}

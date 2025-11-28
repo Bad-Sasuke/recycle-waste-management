@@ -157,3 +157,36 @@ func (h *HTTPGateway) CompleteCustomerRequest(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseMessage{Message: "customer request completed successfully"})
 }
+
+func (h *HTTPGateway) CreateWalkInRequest(ctx *fiber.Ctx) error {
+	// Verify authentication (Shop Owner)
+	token, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(entities.ResponseMessage{Message: "unauthorized"})
+	}
+
+	// Parse body
+	body := new(entities.WalkInCustomerRequest)
+	if err := ctx.BodyParser(&body); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "invalid json body"})
+	}
+
+	// Get Shop ID from User ID (to ensure security)
+	shop, err := h.ShopService.GetShopByUserID(token.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: "cannot get shop info"})
+	}
+	body.ShopID = shop.ShopID
+
+	// Call Service
+	requestID, err := h.CustomerRequestService.CreateWalkInRequest(*body)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success":             true,
+		"message":             "Walk-in request created successfully",
+		"customer_request_id": requestID,
+	})
+}

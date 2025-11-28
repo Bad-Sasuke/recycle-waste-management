@@ -14,8 +14,9 @@ import (
 )
 
 type IStockRepository interface {
-	UpdateStock(shopID, wasteID string, quantity float64) error
+	UpdateStock(shopID, wasteID string, quantity float64, category, name string, pricePerKg float64) error
 	GetStock(shopID, wasteID string) (*entities.Stock, error)
+	GetStocksByShopID(shopID string) ([]entities.Stock, error)
 	DeleteByWasteID(wasteID string) error
 }
 
@@ -31,7 +32,7 @@ func NewStockRepository(db *ds.MongoDB) IStockRepository {
 	}
 }
 
-func (repo *stockRepository) UpdateStock(shopID, wasteID string, quantity float64) error {
+func (repo *stockRepository) UpdateStock(shopID, wasteID string, quantity float64, category, name string, pricePerKg float64) error {
 	filter := bson.M{
 		"shop_id":  shopID,
 		"waste_id": wasteID,
@@ -39,9 +40,14 @@ func (repo *stockRepository) UpdateStock(shopID, wasteID string, quantity float6
 
 	update := bson.M{
 		"$inc": bson.M{"quantity": quantity},
-		"$set": bson.M{"updated_at": time.Now()},
+		"$set": bson.M{
+			"updated_at":   time.Now(),
+			"category":     category,
+			"name":         name,
+			"price_per_kg": pricePerKg,
+		},
 		"$setOnInsert": bson.M{
-			"created_at": time.Now(), // Optional: track creation time
+			"created_at": time.Now(),
 		},
 	}
 
@@ -80,4 +86,20 @@ func (repo *stockRepository) DeleteByWasteID(wasteID string) error {
 		return fmt.Errorf("error deleting stock by waste_id: %v", err)
 	}
 	return nil
+}
+
+func (repo *stockRepository) GetStocksByShopID(shopID string) ([]entities.Stock, error) {
+	filter := bson.M{"shop_id": shopID}
+	cursor, err := repo.Collection.Find(repo.Context, filter)
+	if err != nil {
+		return nil, fmt.Errorf("error finding stocks: %v", err)
+	}
+	defer cursor.Close(repo.Context)
+
+	var stocks []entities.Stock
+	if err = cursor.All(repo.Context, &stocks); err != nil {
+		return nil, fmt.Errorf("error decoding stocks: %v", err)
+	}
+
+	return stocks, nil
 }

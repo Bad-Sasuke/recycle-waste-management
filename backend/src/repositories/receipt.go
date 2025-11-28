@@ -7,12 +7,15 @@ import (
 	ds "recycle-waste-management-backend/src/domain/datasources"
 	"recycle-waste-management-backend/src/domain/entities"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type IReceiptRepository interface {
 	Create(data *entities.Receipt) error
 	FindByCustomerRequestID(requestID string) (*entities.Receipt, error)
+	FindByShopID(shopID string) ([]entities.Receipt, error)
 }
 
 type receiptRepository struct {
@@ -47,4 +50,22 @@ func (repo *receiptRepository) FindByCustomerRequestID(requestID string) (*entit
 		return nil, fmt.Errorf("error finding receipt: %v", err)
 	}
 	return &receipt, nil
+}
+
+func (repo *receiptRepository) FindByShopID(shopID string) ([]entities.Receipt, error) {
+	filter := bson.M{"shop_id": shopID}
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}}) // เรียงใหม่ไปเก่า
+
+	cursor, err := repo.Collection.Find(repo.Context, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error finding receipts: %v", err)
+	}
+	defer cursor.Close(repo.Context)
+
+	var receipts []entities.Receipt
+	if err = cursor.All(repo.Context, &receipts); err != nil {
+		return nil, fmt.Errorf("error decoding receipts: %v", err)
+	}
+
+	return receipts, nil
 }

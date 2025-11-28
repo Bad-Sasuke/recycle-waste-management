@@ -160,4 +160,40 @@ export {
   acceptCustomerRequest,
   cancelCustomerRequest,
   completeCustomerRequest,
+  createWalkInRequest,
+}
+
+interface WalkInResponse {
+  success: boolean
+  message: string
+  customer_request_id: string
+}
+
+const createWalkInRequest = async (
+  customerName: string,
+  phoneNumber: string,
+): Promise<WalkInResponse> => {
+  const apiUrl = import.meta.env.VITE_WEB_API
+  const token = getCookie('token')
+  if (!apiUrl || !token) {
+    console.error('API configuration error or missing token. Please check environment settings.')
+    throw new Error('API configuration error or missing token')
+  }
+
+  const response = await fetch(`${apiUrl}/api/customer-request/walk-in`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ customer_name: customerName, phone_number: phoneNumber }),
+  })
+
+  if (response.ok) {
+    const data = await response.json()
+    return data as WalkInResponse
+  } else {
+    const errorData = await response.json()
+    throw new Error(errorData.message || `HTTP error! Status: ${response.status}`)
+  }
 }

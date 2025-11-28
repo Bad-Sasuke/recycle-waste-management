@@ -31,3 +31,9 @@ type PaginatedCustomerRequestResponse struct {
 	Limit      int                       `json:"limit"`
 	TotalPages int                       `json:"total_pages"`
 }
+
+type WalkInCustomerRequest struct {
+	ShopID       string `json:"shop_id"`
+	CustomerName string `json:"customer_name"`
+	PhoneNumber  string `json:"phone_number"`
+}
