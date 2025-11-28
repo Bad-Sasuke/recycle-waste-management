@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onUnmounted, h, render, nextTick } from 'vue';
+import { ref, shallowRef, onMounted, computed, watch, onUnmounted, h, render, nextTick } from 'vue';
 import { IconSearch, IconCurrentLocation, IconHourglass, IconList, IconSend, IconStar, IconStarFilled } from '@tabler/icons-vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -53,14 +53,14 @@ const chatShop = computed(() => {
 
 const activeRequestId = ref<string | null>(null);
 const searchQuery = ref('');
-const map = ref<L.Map | null>(null);
-const markers = ref<L.Marker[]>([]);
+const map = shallowRef<L.Map | null>(null);
+const markers = shallowRef<L.Marker[]>([]);
 const selectedShopId = ref<string | null>(null);
 const userLocation = ref<{ lat: number; lng: number } | null>(null);
 const shareLocationModal = ref<HTMLDialogElement | null>(null);
 const wasteDetails = ref('');
-const userMarker = ref<L.CircleMarker | null>(null);
-const requestMarker = ref<L.Marker | null>(null);
+const userMarker = shallowRef<L.CircleMarker | null>(null);
+const requestMarker = shallowRef<L.Marker | null>(null);
 const shareStatus = ref<'idle' | 'pending' | 'accepted'>('idle');
 const chatModal = ref<HTMLDialogElement | null>(null);
 const chatMessagesContainer = ref<HTMLDivElement | null>(null);
@@ -301,7 +301,7 @@ const locateUser = () => {
 
   map.value.locate({ setView: true, maxZoom: 16 });
 
-  map.value.on('locationfound', (e) => {
+  map.value.on('locationfound', (e: L.LocationEvent) => {
     userLocation.value = e.latlng;
 
     // Remove old marker if exists
@@ -326,7 +326,7 @@ const locateUser = () => {
     }).openPopup();
   });
 
-  map.value.on('locationerror', (e) => {
+  map.value.on('locationerror', (e: L.ErrorEvent) => {
     console.error('Location error:', e.message);
     // Fallback to default view if location access denied
   });

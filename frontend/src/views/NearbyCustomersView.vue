@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { ref, shallowRef, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useShopStore } from '@/stores/shop';
 import { IconCurrentLocation, IconSend } from '@tabler/icons-vue';
 import L from 'leaflet';
@@ -77,9 +77,9 @@ const { messages: chatMessages } = storeToRefs(chatStore);
 const filteredChatMessages = computed(() => chatMessages.value.filter(msg => msg.type === 'message'));
 
 // State
-const map = ref<L.Map | null>(null);
-const markers = ref<L.Marker[]>([]);
-const radiusCircle = ref<L.Circle | null>(null); // Circle overlay for distance radius
+const map = shallowRef<L.Map | null>(null);
+const markers = shallowRef<L.Marker[]>([]);
+const radiusCircle = shallowRef<L.Circle | null>(null); // Circle overlay for distance radius
 const isFirstLoad = ref(true);
 const activeChat = ref<CustomerRequest | null>(null);
 const newMessage = ref('');
