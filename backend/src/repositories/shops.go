@@ -17,6 +17,7 @@ type IShopRepository interface {
 	Create(data *entities.ShopModel) error
 	GetByShopID(shopID string) (*entities.ShopModel, error)
 	GetByUserID(userID string) (*entities.ShopModel, error)
+	GetByShopCode(shopCode string) (*entities.ShopModel, error)
 	GetAll(page, limit int) (*[]entities.ShopModel, int64, error)
 	Update(shopID string, data *entities.ShopModel) error
 	Delete(shopID string) error
@@ -28,10 +29,16 @@ type shopRepository struct {
 }
 
 func NewShopRepository(db *ds.MongoDB) IShopRepository {
-	return &shopRepository{
-		Collection: db.MongoDB.Database(os.Getenv("DATABASE_NAME")).Collection("shops"),
+	collection := db.MongoDB.Database(os.Getenv("DATABASE_NAME")).Collection("shops")
+	repo := &shopRepository{
+		Collection: collection,
 		Context:    db.Context,
 	}
+
+	// Create unique indexes
+	repo.ensureIndexes()
+
+	return repo
 }
 
 func (repo *shopRepository) Create(data *entities.ShopModel) error {
@@ -64,6 +71,32 @@ func (repo *shopRepository) GetByUserID(userID string) (*entities.ShopModel, err
 		return nil, fmt.Errorf("error finding shop by user ID: %v", err)
 	}
 	return &shop, nil
+}
+
+func (repo *shopRepository) GetByShopCode(shopCode string) (*entities.ShopModel, error) {
+	var shop entities.ShopModel
+	filter := bson.M{"shop_code": shopCode}
+	if err := repo.Collection.FindOne(repo.Context, filter).Decode(&shop); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, mongo.ErrNoDocuments
+		}
+		return nil, fmt.Errorf("error finding shop by shop code: %v", err)
+	}
+	return &shop, nil
+}
+
+func (repo *shopRepository) ensureIndexes() {
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "shop_code", Value: 1},
+		},
+		Options: options.Index().SetUnique(true).SetSparse(true),
+	}
+
+	_, err := repo.Collection.Indexes().CreateOne(repo.Context, indexModel)
+	if err != nil {
+		fmt.Printf("Warning: Could not create shop_code index: %v\n", err)
+	}
 }
 
 func (repo *shopRepository) GetAll(page, limit int) (*[]entities.ShopModel, int64, error) {

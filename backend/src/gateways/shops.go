@@ -173,8 +173,12 @@ func (h *HTTPGateway) UpdateShop(ctx *fiber.Ctx) error {
 	closingTime := ctx.FormValue("closing_time")
 	latitudeStr := ctx.FormValue("latitude")
 	longitudeStr := ctx.FormValue("longitude")
+	shopCode := ctx.FormValue("shop_code")
 
 	var updateRequest entities.UpdateShopRequest
+	if shopCode != "" {
+		updateRequest.ShopCode = &shopCode
+	}
 	if name != "" {
 		updateRequest.Name = &name
 	}
@@ -261,4 +265,21 @@ func (h *HTTPGateway) DeleteShop(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(entities.ResponseModel{Message: "Shop deleted successfully"})
+}
+
+func (h *HTTPGateway) CheckShopCode(ctx *fiber.Ctx) error {
+	shopCode := ctx.Query("code")
+	if shopCode == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(entities.ResponseMessage{Message: "Shop code is required"})
+	}
+
+	isAvailable, err := h.ShopService.CheckShopCode(shopCode)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(entities.ResponseMessage{Message: err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"available": isAvailable,
+		"code":      shopCode,
+	})
 }

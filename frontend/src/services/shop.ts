@@ -184,4 +184,27 @@ const deleteShop = async (shopId: string): Promise<ResponseAPI> => {
   }
 }
 
-export { fetchShops, fetchShopById, fetchMyShop, createShop, updateShop, deleteShop }
+// Check shop code availability
+const checkShopCode = async (shopCode: string): Promise<{ available: boolean; code: string }> => {
+  try {
+    const apiUrl = import.meta.env.VITE_WEB_API
+    if (!apiUrl) {
+      console.error('API configuration error. Please check environment settings.')
+      throw new Error('API configuration error')
+    }
+
+    const response = await fetch(`${apiUrl}/api/shops/check-code?code=${shopCode}`)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error checking shop code:', error)
+    throw error
+  }
+}
+
+export { fetchShops, fetchShopById, fetchMyShop, createShop, updateShop, deleteShop, checkShopCode }

@@ -7,6 +7,7 @@ import (
 	"recycle-waste-management-backend/src/domain/entities"
 	"recycle-waste-management-backend/src/infrastructure/providers"
 	"recycle-waste-management-backend/src/repositories"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ type IShopService interface {
 	GetAllShops(page, limit int) (*[]entities.ShopModel, int64, error)
 	UpdateShop(shopID string, data entities.UpdateShopRequest, image []byte) error
 	DeleteShop(shopID string) error
+	CheckShopCode(shopCode string) (bool, error)
 }
 
 type ShopService struct {
@@ -40,12 +42,31 @@ func NewShopService(shopRepo repositories.IShopRepository, reviewRepo repositori
 
 func (s *ShopService) CreateShop(userID string, data entities.CreateShopRequest, image []byte) error {
 	// Validate required fields
-	if data.Name == "" || data.Address == "" {
-		return fmt.Errorf("name and address are required")
+	if data.Name == "" || data.Address == "" || data.ShopCode == "" {
+		return fmt.Errorf("name, address, and shop code are required")
+	}
+
+	// Validate shop_code length
+	if len(data.ShopCode) > 12 {
+		return fmt.Errorf("shop code must not exceed 12 characters")
+	}
+
+	// Validate shop_code format (only alphanumeric, -, _)
+	if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(data.ShopCode) {
+		return fmt.Errorf("shop code must contain only English letters, numbers, hyphens, and underscores")
+	}
+
+	// Check if shop_code already exists
+	existingShop, err := s.ShopRepository.GetByShopCode(data.ShopCode)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return err
+	}
+	if existingShop != nil {
+		return fmt.Errorf("shop code already exists")
 	}
 
 	// Check if user already has a shop
-	_, err := s.ShopRepository.GetByUserID(userID)
+	_, err = s.ShopRepository.GetByUserID(userID)
 	if err != nil {
 		// If there's an error and it's not "no document found", return the error
 		if err != mongo.ErrNoDocuments {
@@ -61,6 +82,7 @@ func (s *ShopService) CreateShop(userID string, data entities.CreateShopRequest,
 	shopModel := &entities.ShopModel{
 		ShopID:      generateRandomShopID(),
 		UserID:      userID,
+		ShopCode:    data.ShopCode,
 		Name:        data.Name,
 		Description: data.Description,
 		Address:     data.Address,
@@ -152,6 +174,30 @@ func (s *ShopService) UpdateShop(shopID string, data entities.UpdateShopRequest,
 		return err
 	}
 
+	// Check if shop_code is being updated and if it's unique
+	if data.ShopCode != nil {
+		// Validate shop_code length
+		if len(*data.ShopCode) > 12 {
+			return fmt.Errorf("shop code must not exceed 12 characters")
+		}
+
+		// Validate shop_code format (only alphanumeric, -, _)
+		if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(*data.ShopCode) {
+			return fmt.Errorf("shop code must contain only English letters, numbers, hyphens, and underscores")
+		}
+
+		// Check if shop_code already exists (but not the current shop)
+		shopWithCode, err := s.ShopRepository.GetByShopCode(*data.ShopCode)
+		if err != nil && err != mongo.ErrNoDocuments {
+			return err
+		}
+		// If found a shop with this code and it's not the current shop
+		if shopWithCode != nil && shopWithCode.ShopID != shopID {
+			return fmt.Errorf("shop code already exists")
+		}
+		existingShop.ShopCode = *data.ShopCode
+	}
+
 	// Update fields if provided
 	if data.Name != nil {
 		existingShop.Name = *data.Name
@@ -221,6 +267,20 @@ func (s *ShopService) DeleteShop(shopID string) error {
 	}
 
 	return nil
+}
+
+func (s *ShopService) CheckShopCode(shopCode string) (bool, error) {
+	shop, err := s.ShopRepository.GetByShopCode(shopCode)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return true, nil // Available
+		}
+		return false, err
+	}
+	if shop != nil {
+		return false, nil // Not available
+	}
+	return true, nil
 }
 
 func generateRandomShopID() string {

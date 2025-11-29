@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useShopStore } from '@/stores/shop';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import type { UpdateShopRequest } from '@/types/shop';
 import { useI18n } from 'vue-i18n';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import ReceiptDetailModal from '@/components/ReceiptDetailModal.vue';
+import EmployeeManagement from '@/components/shop/EmployeeManagement.vue';
+import type { ReceiptDetailData } from '@/components/ReceiptDetailModal.vue';
 
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const shopStore = useShopStore();
 
 // States
@@ -25,9 +29,18 @@ const walkInCustomerName = ref('');
 const walkInCustomerPhone = ref('');
 const isCreatingWalkIn = ref(false);
 
+// Receipt Detail Modal States
+const receiptModalRef = ref<InstanceType<typeof ReceiptDetailModal> | null>(null);
+const selectedReceiptData = ref<ReceiptDetailData | null>(null);
+const loadingReceiptDetail = ref(false);
+
 // Loading states
 const loadingStocks = ref(false);
 const loadingReceipts = ref(false);
+
+// Cache flags to prevent re-fetching
+const stocksFetched = ref(false);
+const receiptsFetched = ref(false);
 
 // Data สำหรับ Stock และ Receipts
 // Data สำหรับ Stock และ Receipts
@@ -94,6 +107,7 @@ const showModal = (type: 'success' | 'error', message: string) => {
 
 // Edit shop data - initialize with shop store data
 const editShopData = reactive<UpdateShopRequest>({
+  shop_code: shopStore.shop?.shop_code || '',
   name: shopStore.shop?.name || '',
   description: shopStore.shop?.description || '',
   address: shopStore.shop?.address || '',
@@ -105,9 +119,70 @@ const editShopData = reactive<UpdateShopRequest>({
   longitude: shopStore.shop?.longitude
 });
 
+import { checkShopCode } from '@/services/shop';
+
+// Shop Code Validation State
+const shopCodeStatus = reactive({
+  checking: false,
+  available: true,
+  message: ''
+});
+
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+// Watch for shop_code changes to validate
+watch(() => editShopData.shop_code, (newCode) => {
+  // Reset status
+  shopCodeStatus.message = '';
+  shopCodeStatus.available = true;
+
+  // Clear previous timer
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+
+  // If empty or same as current shop code, no need to check
+  if (!newCode || newCode === shopStore.shop?.shop_code) {
+    shopCodeStatus.checking = false;
+    return;
+  }
+
+  // Validate format (only alphanumeric, -, _)
+  const validFormat = /^[a-zA-Z0-9_-]+$/.test(newCode);
+  if (!validFormat) {
+    shopCodeStatus.available = false;
+    shopCodeStatus.message = 'ใช้ได้เฉพาะภาษาอังกฤษ ตัวเลข ขีดกลาง (-) และขีดล่าง (_) เท่านั้น';
+    shopCodeStatus.checking = false;
+    return;
+  }
+
+  // Set checking state
+  shopCodeStatus.checking = true;
+
+  // Set new timer (2 seconds debounce)
+  debounceTimer = setTimeout(async () => {
+    try {
+      const result = await checkShopCode(newCode);
+      shopCodeStatus.available = result.available;
+      if (!result.available) {
+        shopCodeStatus.message = 'รหัสร้านนี้ถูกใช้งานแล้ว';
+      } else {
+        shopCodeStatus.message = 'สามารถใช้รหัสนี้ได้';
+      }
+    } catch (error) {
+      console.error('Check shop code error:', error);
+      shopCodeStatus.available = false; // Assume unavailable on error to be safe
+      shopCodeStatus.message = 'เกิดข้อผิดพลาดในการตรวจสอบ';
+    } finally {
+      shopCodeStatus.checking = false;
+    }
+  }, 2000);
+});
+
 // Watch for changes in shop store to update edit form
 watch(() => shopStore.shop, (newShop) => {
   if (newShop) {
+    editShopData.shop_code = newShop.shop_code || '';
     editShopData.name = newShop.name || '';
     editShopData.description = newShop.description || '';
     editShopData.address = newShop.address || '';
@@ -261,8 +336,11 @@ watch(editMode, (newValue) => {
 });
 
 // Fetch stocks data
-const fetchStocks = async () => {
+const fetchStocks = async (forceFetch = false) => {
   if (!shopStore.shop?.shop_id) return;
+
+  // Skip if already fetched and not forcing refresh
+  if (stocksFetched.value && !forceFetch) return;
 
   loadingStocks.value = true;
   try {
@@ -271,6 +349,7 @@ const fetchStocks = async () => {
     console.log('fetchStocks response:', response);
     if (response.success && response.data) {
       stocks.value = response.data;
+      stocksFetched.value = true;
       // Update total pages from server response if available
       if (response.total_pages) {
         // totalStockPages will be recomputed automatically from stocks.value.length
@@ -288,8 +367,11 @@ const fetchStocks = async () => {
 };
 
 // Fetch receipts data
-const fetchReceipts = async () => {
+const fetchReceipts = async (forceFetch = false) => {
   if (!shopStore.shop?.shop_id) return;
+
+  // Skip if already fetched and not forcing refresh
+  if (receiptsFetched.value && !forceFetch) return;
 
   loadingReceipts.value = true;
   try {
@@ -298,6 +380,7 @@ const fetchReceipts = async () => {
     console.log('fetchReceipts response:', response);
     if (response.success && response.data) {
       receipts.value = response.data;
+      receiptsFetched.value = true;
     } else {
       console.error('Receipt fetch failed:', response.message);
       receipts.value = [];
@@ -312,6 +395,9 @@ const fetchReceipts = async () => {
 
 // Watch activeTab to fetch data when switching tabs
 watch(activeTab, (newTab) => {
+  // Update URL hash
+  router.replace({ hash: `#${newTab}` });
+
   if (newTab === 'stock') {
     fetchStocks();
   } else if (newTab === 'receipts') {
@@ -354,21 +440,66 @@ const handleCreateWalkIn = async () => {
   }
 };
 
+// Refresh data function
+const refreshData = () => {
+  if (activeTab.value === 'stock') {
+    stocksFetched.value = false;
+    fetchStocks(true);
+  } else if (activeTab.value === 'receipts') {
+    receiptsFetched.value = false;
+    fetchReceipts(true);
+  }
+};
+
 // Watch pagination changes
 watch(stockPage, () => {
   if (activeTab.value === 'stock') {
-    fetchStocks();
+    stocksFetched.value = false; // Reset cache for new page
+    fetchStocks(true);
   }
 });
 
 watch(receiptPage, () => {
   if (activeTab.value === 'receipts') {
-    fetchReceipts();
+    receiptsFetched.value = false; // Reset cache for new page
+    fetchReceipts(true);
   }
 });
 
+// Handle receipt row click
+const handleReceiptClick = async (receiptId: string) => {
+  loadingReceiptDetail.value = true;
+  selectedReceiptData.value = null;
+
+  // Open modal first
+  receiptModalRef.value?.openModal();
+
+  try {
+    const { fetchReceiptByID } = await import('@/services/manageShop');
+    const response = await fetchReceiptByID(receiptId);
+
+    if (response.success && response.data) {
+      selectedReceiptData.value = response.data;
+    } else {
+      console.error('Failed to fetch receipt details:', response.message);
+      selectedReceiptData.value = null;
+    }
+  } catch (error) {
+    console.error('Error fetching receipt details:', error);
+    selectedReceiptData.value = null;
+  } finally {
+    loadingReceiptDetail.value = false;
+  }
+};
+
 // Load shop data on component mount
 onMounted(async () => {
+  // Set active tab from hash if present
+  const hash = route.hash.replace('#', '')
+  if (hash && ['info', 'stock', 'receipts', 'employees'].includes(hash)) {
+    activeTab.value = hash;
+  }
+
   console.log('ManageShopView mounted');
   console.log('shopStore.checked:', shopStore.checked);
   console.log('shopStore.hasShop:', shopStore.hasShop);
@@ -380,11 +511,23 @@ onMounted(async () => {
     console.log('After check - hasShop:', shopStore.hasShop);
     console.log('After check - shop:', shopStore.shop);
   }
+
+  // Load initial data based on active tab
+  if (activeTab.value === 'stock') {
+    fetchStocks();
+  } else if (activeTab.value === 'receipts') {
+    fetchReceipts();
+  }
 });
 
 onUnmounted(() => {
   // Clean up map instance on component unmount
   cleanupMap();
+});
+
+// Expose refreshData for external use if needed
+defineExpose({
+  refreshData
 });
 </script>
 
@@ -464,6 +607,16 @@ onUnmounted(() => {
             </svg>
             ใบเสร็จ
           </button>
+          <button role="tab" :class="['tab', { 'tab-active': activeTab === 'employees' }]"
+            @click="activeTab = 'employees'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" fill="none">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"></path>
+              <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+            </svg>
+            พนักงาน
+          </button>
         </div>
 
         <div class="p-6 md:p-8">
@@ -486,6 +639,10 @@ onUnmounted(() => {
                 <div class="col-span-2 flex justify-center mb-4">
                   <img :src="shopStore.shop?.image_url || 'https://placehold.co/400x300'"
                     class="w-64 h-64 object-cover rounded-xl shadow-md" />
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-600">รหัสร้าน (Shop Code)</h3>
+                  <p class="text-lg font-mono bg-gray-100 px-3 py-2 rounded">{{ shopStore.shop?.shop_code || '-' }}</p>
                 </div>
                 <div>
                   <h3 class="font-semibold text-gray-600">ชื่อร้าน</h3>
@@ -533,6 +690,34 @@ onUnmounted(() => {
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-4">
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text">รหัสร้าน (Shop Code) *</span>
+                      <span class="label-text-alt text-gray-500">{{ editShopData.shop_code?.length || 0 }}/12</span>
+                    </label>
+                    <input v-model="editShopData.shop_code" type="text"
+                      :class="['input input-bordered', { 'input-error': !shopCodeStatus.available, 'input-success': shopCodeStatus.available && editShopData.shop_code && !shopCodeStatus.checking && editShopData.shop_code !== shopStore.shop?.shop_code }]"
+                      required maxlength="12" placeholder="เช่น SHOP001" />
+                    <label class="label" v-if="shopCodeStatus.checking || shopCodeStatus.message">
+                      <span class="label-text-alt flex items-center gap-1"
+                        :class="{ 'text-error': !shopCodeStatus.available, 'text-success': shopCodeStatus.available }">
+                        <span v-if="shopCodeStatus.checking" class="loading loading-spinner loading-xs"></span>
+                        <svg v-else-if="shopCodeStatus.available" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                          viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd" />
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                          fill="currentColor">
+                          <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clip-rule="evenodd" />
+                        </svg>
+                        {{ shopCodeStatus.checking ? 'กำลังตรวจสอบ...' : shopCodeStatus.message }}
+                      </span>
+                    </label>
+                  </div>
                   <div class="form-control"><label class="label"><span class="label-text">ชื่อร้าน
                         *</span></label><input v-model="editShopData.name" type="text" class="input input-bordered"
                       required /></div>
@@ -571,6 +756,14 @@ onUnmounted(() => {
               <h2 class="text-xl font-bold">วัสดุรีไซเคิลในคลัง</h2>
               <!-- Desktop Action Buttons (Hidden on mobile) -->
               <div class="hidden md:flex gap-2">
+                <button class="btn btn-ghost btn-sm" @click="refreshData" :disabled="loadingStocks"
+                  title="รีเฟรชข้อมูล">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-4 h-4" :class="{ 'animate-spin': loadingStocks }">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                </button>
                 <button class="btn btn-primary btn-sm text-white" @click="goToWastePurchase">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-4 h-4 mr-1">
@@ -592,6 +785,14 @@ onUnmounted(() => {
 
             <!-- Mobile Action Buttons (Visible only on mobile) -->
             <div class="grid grid-cols-1 gap-3 mb-6 md:hidden">
+              <button class="btn btn-ghost w-full" @click="refreshData" :disabled="loadingStocks">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-5 h-5 mr-2" :class="{ 'animate-spin': loadingStocks }">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                รีเฟรชข้อมูล
+              </button>
               <button class="btn btn-primary w-full text-white" @click="goToWastePurchase">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                   stroke="currentColor" class="w-5 h-5 mr-2">
@@ -637,7 +838,7 @@ onUnmounted(() => {
                     <td class="text-right">
                       <div class="flex flex-col items-end">
                         <span class="font-bold text-red-500">ซื้อเข้ามา: {{ formatCurrency(item.purchase_price)
-                          }}</span>
+                        }}</span>
                         <span class="font-bold text-green-600">ปัจจุบัน: {{ formatCurrency(item.current_price) }}</span>
                       </div>
                     </td>
@@ -671,7 +872,17 @@ onUnmounted(() => {
 
           <!-- Tab 3: Receipts -->
           <div v-show="activeTab === 'receipts'">
-            <h2 class="text-xl font-bold mb-6">ประวัติการทำรายการ</h2>
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-xl font-bold">ประวัติการทำรายการ</h2>
+              <button class="btn btn-ghost btn-sm" @click="refreshData" :disabled="loadingReceipts"
+                title="รีเฟรชข้อมูล">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-4 h-4" :class="{ 'animate-spin': loadingReceipts }">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </button>
+            </div>
             <!-- TODO: เชื่อม API GET /api/receipts/shop/:shop_id -->
             <div class="overflow-x-auto">
               <table class="table table-zebra">
@@ -686,7 +897,8 @@ onUnmounted(() => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="receipt in paginatedReceipts" :key="receipt.id">
+                  <tr v-for="receipt in paginatedReceipts" :key="receipt.id"
+                    class="cursor-pointer hover:bg-base-200 transition-colors" @click="handleReceiptClick(receipt.id)">
                     <td class="font-mono font-semibold text-xs">#{{ receipt.id.substring(0, 8) }}...</td>
                     <td class="text-sm">{{ new Date(receipt.created_at).toLocaleString('th-TH') }}</td>
                     <td>{{ receipt.customer_name }}</td>
@@ -718,6 +930,11 @@ onUnmounted(() => {
                   @click="receiptPage++">»</button>
               </div>
             </div>
+          </div>
+
+          <!-- Tab 4: Employees -->
+          <div v-show="activeTab === 'employees'">
+            <EmployeeManagement />
           </div>
         </div>
       </div>
@@ -810,6 +1027,9 @@ onUnmounted(() => {
         </div>
       </div>
     </dialog>
+
+    <!-- Receipt Detail Modal -->
+    <ReceiptDetailModal ref="receiptModalRef" :receipt-data="selectedReceiptData" :is-loading="loadingReceiptDetail" />
   </div>
 </template>
 

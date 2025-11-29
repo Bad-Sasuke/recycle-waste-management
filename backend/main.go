@@ -78,6 +78,12 @@ func main() {
 	stockGateway := gateways.NewStockGateway(stockSV)
 	gateways.RouteStock(stockGateway, app)
 
+	// Initialize Employee Gateway
+	employeeRepo := repo.NewEmployeeRepository(mongodb)
+	employeeSV := sv.NewEmployeeService(employeeRepo)
+	employeeGateway := gateways.NewEmployeeGateway(employeeSV, shopRepo)
+	gateways.RouteEmployee(employeeGateway, app)
+
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
 		PORT = "8080"

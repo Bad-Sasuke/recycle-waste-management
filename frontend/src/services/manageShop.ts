@@ -60,7 +60,31 @@ export const fetchReceiptsByShopID = async (
   }
 }
 
+// Get receipt by ID
+export const fetchReceiptByID = async (receiptId: string) => {
+  try {
+    const apiUrl = config.webAPI
+    if (!apiUrl) {
+      console.error('API configuration error')
+      return { success: false, message: 'API configuration error', data: null }
+    }
+
+    const response = await fetch(`${apiUrl}/api/receipts/${receiptId}`)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching receipt:', error)
+    return { success: false, message: 'Failed to fetch receipt', data: null }
+  }
+}
+
 export default {
   fetchStocksByShopID,
   fetchReceiptsByShopID,
+  fetchReceiptByID,
 }

@@ -1,6 +1,7 @@
 export interface Shop {
   shop_id?: string
   user_id?: string
+  shop_code?: string
   name?: string
   description?: string
   address?: string
@@ -18,6 +19,7 @@ export interface Shop {
 }
 
 export interface CreateShopRequest {
+  shop_code: string
   name: string
   description?: string
   address: string
@@ -30,6 +32,7 @@ export interface CreateShopRequest {
 }
 
 export interface UpdateShopRequest {
+  shop_code?: string
   name?: string
   description?: string
   address?: string

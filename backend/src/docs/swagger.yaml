@@ -492,7 +492,7 @@ paths:
           content:
             application/json:
               example:
-                message: Access denied: You don't own this shop
+                message: "Access denied: You don't own this shop"
         "404":
           description: Shop not found
           content:
@@ -539,7 +539,7 @@ paths:
           content:
             application/json:
               example:
-                message: Access denied: You don't own this shop
+                message: "Access denied: You don't own this shop"
         "404":
           description: Shop not found
           content:
@@ -719,7 +719,7 @@ paths:
           content:
             application/json:
               example:
-                message: invalid theme: dark_mode
+                message: "invalid theme: dark_mode"
 
     delete:
       tags:
@@ -748,6 +748,219 @@ paths:
               example:
                 message: cannot delete settings
 
+  /employees:
+    post:
+      tags:
+        - employees
+      security:
+        - bearerAuth: []
+      description: Create a new employee
+      summary: Create employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - shop_id
+                - first_name
+                - last_name
+                - username
+                - password
+              properties:
+                shop_id:
+                  type: string
+                  example: shop-abc123
+                first_name:
+                  type: string
+                  example: John
+                last_name:
+                  type: string
+                  example: Doe
+                username:
+                  type: string
+                  example: johndoe
+                password:
+                  type: string
+                  example: secret123
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              example:
+                message: Employee created successfully
+                data:
+                  employee_id: EMP_ABC123
+                  shop_id: shop-abc123
+                  first_name: John
+                  last_name: Doe
+                  username: johndoe
+                  created_at: "2024-01-01T00:00:00Z"
+                  updated_at: "2024-01-01T00:00:00Z"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                message: Invalid request body
+
+  /employees/shop/{shop_id}:
+    get:
+      tags:
+        - employees
+      security:
+        - bearerAuth: []
+      description: Get employees by shop ID with pagination
+      summary: Get employees by shop ID
+      parameters:
+        - in: path
+          name: shop_id
+          required: true
+          schema:
+            type: string
+          description: Shop ID
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                message: Employees retrieved successfully
+                data:
+                  - employee_id: EMP_ABC123
+                    shop_id: shop-abc123
+                    first_name: John
+                    last_name: Doe
+                    username: johndoe
+                    created_at: "2024-01-01T00:00:00Z"
+                    updated_at: "2024-01-01T00:00:00Z"
+                page: 1
+                limit: 10
+                total_pages: 1
+                total_items: 1
+
+  /employees/{employee_id}:
+    get:
+      tags:
+        - employees
+      security:
+        - bearerAuth: []
+      description: Get employee by ID
+      summary: Get employee by ID
+      parameters:
+        - in: path
+          name: employee_id
+          required: true
+          schema:
+            type: string
+          description: Employee ID
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                message: Employee retrieved successfully
+                data:
+                  employee_id: EMP_ABC123
+                  shop_id: shop-abc123
+                  first_name: John
+                  last_name: Doe
+                  username: johndoe
+                  created_at: "2024-01-01T00:00:00Z"
+                  updated_at: "2024-01-01T00:00:00Z"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              example:
+                message: Employee not found
+
+    put:
+      tags:
+        - employees
+      security:
+        - bearerAuth: []
+      description: Update employee
+      summary: Update employee
+      parameters:
+        - in: path
+          name: employee_id
+          required: true
+          schema:
+            type: string
+          description: Employee ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  example: John
+                last_name:
+                  type: string
+                  example: Smith
+                username:
+                  type: string
+                  example: johnsmith
+                password:
+                  type: string
+                  example: newsecret123
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                message: Employee updated successfully
+                data:
+                  employee_id: EMP_ABC123
+                  shop_id: shop-abc123
+                  first_name: John
+                  last_name: Smith
+                  username: johnsmith
+                  created_at: "2024-01-01T00:00:00Z"
+                  updated_at: "2024-01-02T00:00:00Z"
+
+    delete:
+      tags:
+        - employees
+      security:
+        - bearerAuth: []
+      description: Delete employee
+      summary: Delete employee
+      parameters:
+        - in: path
+          name: employee_id
+          required: true
+          schema:
+            type: string
+          description: Employee ID
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                message: Employee deleted successfully
+
 components:
   securitySchemes:
     bearerAuth:
@@ -766,3 +979,5 @@ tags:
     description: Recycling shops management endpoints
   - name: settings
     description: User settings management endpoints
+  - name: employees
+    description: Employee management endpoints

@@ -28,6 +28,7 @@ const showModal = (type: 'success' | 'error', message: string) => {
 
 // Shop data
 const shopData = reactive<CreateShopRequest>({
+  shop_code: '',
   name: '',
   description: '',
   address: '',
@@ -37,6 +38,67 @@ const shopData = reactive<CreateShopRequest>({
   closing_time: '',
   latitude: undefined,
   longitude: undefined
+});
+
+import { checkShopCode } from '@/services/shop';
+import { watch } from 'vue';
+
+// Shop Code Validation State
+const shopCodeStatus = reactive({
+  checking: false,
+  available: true,
+  message: ''
+});
+
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+// Watch for shop_code changes to validate
+watch(() => shopData.shop_code, (newCode) => {
+  // Reset status
+  shopCodeStatus.message = '';
+  shopCodeStatus.available = true;
+
+  // Clear previous timer
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+
+  // If empty, no need to check
+  if (!newCode) {
+    shopCodeStatus.checking = false;
+    return;
+  }
+
+  // Validate format (only alphanumeric, -, _)
+  const validFormat = /^[a-zA-Z0-9_-]+$/.test(newCode);
+  if (!validFormat) {
+    shopCodeStatus.available = false;
+    shopCodeStatus.message = 'ใช้ได้เฉพาะภาษาอังกฤษ ตัวเลข ขีดกลาง (-) และขีดล่าง (_) เท่านั้น';
+    shopCodeStatus.checking = false;
+    return;
+  }
+
+  // Set checking state
+  shopCodeStatus.checking = true;
+
+  // Set new timer (2 seconds debounce)
+  debounceTimer = setTimeout(async () => {
+    try {
+      const result = await checkShopCode(newCode);
+      shopCodeStatus.available = result.available;
+      if (!result.available) {
+        shopCodeStatus.message = 'รหัสร้านนี้ถูกใช้งานแล้ว';
+      } else {
+        shopCodeStatus.message = 'สามารถใช้รหัสนี้ได้';
+      }
+    } catch (error) {
+      console.error('Check shop code error:', error);
+      shopCodeStatus.available = false;
+      shopCodeStatus.message = 'เกิดข้อผิดพลาดในการตรวจสอบ';
+    } finally {
+      shopCodeStatus.checking = false;
+    }
+  }, 2000);
 });
 
 // Image handling
@@ -250,6 +312,36 @@ onUnmounted(() => {
                 </label>
                 <p class="text-sm text-gray-500 mt-2">{{ t('Shop.create.uploadImagePlaceholder') }}</p>
               </div>
+            </div>
+
+            <!-- Shop Code -->
+            <div class="form-control w-full">
+              <label class="label">
+                <span class="label-text font-semibold text-gray-700">รหัสร้าน (Shop Code) *</span>
+                <span class="label-text-alt text-gray-500">{{ shopData.shop_code?.length || 0 }}/12</span>
+              </label>
+              <input v-model="shopData.shop_code" type="text" placeholder="เช่น SHOP001"
+                :class="['input input-bordered w-full max-w-xs focus:ring-2 focus:ring-green-500', { 'input-error': !shopCodeStatus.available, 'input-success': shopCodeStatus.available && shopData.shop_code && !shopCodeStatus.checking }]"
+                required maxlength="12" />
+              <label class="label" v-if="shopCodeStatus.checking || shopCodeStatus.message">
+                <span class="label-text-alt flex items-center gap-1"
+                  :class="{ 'text-error': !shopCodeStatus.available, 'text-success': shopCodeStatus.available }">
+                  <span v-if="shopCodeStatus.checking" class="loading loading-spinner loading-xs"></span>
+                  <svg v-else-if="shopCodeStatus.available" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                    viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  {{ shopCodeStatus.checking ? 'กำลังตรวจสอบ...' : shopCodeStatus.message }}
+                </span>
+              </label>
             </div>
 
             <!-- Shop Name -->

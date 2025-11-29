@@ -12,6 +12,7 @@ import (
 type IReceiptService interface {
 	CreateReceipt(userID string, req CreateReceiptRequest) (*entities.Receipt, error)
 	GetReceiptByCustomerRequestID(requestID string) (*ReceiptWithItemsResponse, error)
+	GetReceiptByID(receiptID string) (*ReceiptWithItemsResponse, error)
 	GetReceiptsByShopID(shopID string) ([]entities.ReceiptWithDetails, error)
 }
 
@@ -168,6 +169,35 @@ func (s *ReceiptService) GetReceiptByCustomerRequestID(requestID string) (*Recei
 	}
 	if receipt == nil {
 		return nil, fmt.Errorf("receipt not found for request ID: %s", requestID)
+	}
+
+	// 2. Find receipt items
+	items, err := s.ReceiptItemRepo.FindByReceiptID(receipt.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Find shop information
+	shop, err := s.ShopRepo.GetByShopID(receipt.ShopID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching shop information: %v", err)
+	}
+
+	return &ReceiptWithItemsResponse{
+		Receipt: receipt,
+		Items:   items,
+		Shop:    shop,
+	}, nil
+}
+
+func (s *ReceiptService) GetReceiptByID(receiptID string) (*ReceiptWithItemsResponse, error) {
+	// 1. Find receipt by ID
+	receipt, err := s.ReceiptRepo.FindByID(receiptID)
+	if err != nil {
+		return nil, err
+	}
+	if receipt == nil {
+		return nil, fmt.Errorf("receipt not found for ID: %s", receiptID)
 	}
 
 	// 2. Find receipt items

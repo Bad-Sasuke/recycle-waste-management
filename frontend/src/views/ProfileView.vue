@@ -199,6 +199,26 @@ const handleDrop = (event: DragEvent) => {
 
 // Fetch user profile data
 const fetchUserProfile = async () => {
+  // Check if this is an employee
+  if (usersStore.isEmployee && usersStore.employee) {
+    // For employees, use employee data instead
+    userData.value = {
+      user_id: usersStore.employee.employee_id || '',
+      username: usersStore.employee.username || '',
+      email: '', // Employees don't have email
+      image_url: '', // Employees don't have profile image
+      created_at: usersStore.employee.created_at || '',
+      last_login: ''
+    }
+    editForm.value = {
+      username: usersStore.employee.username || '',
+      email: ''
+    }
+    imageLoadError.value = true // Don't show image for employees
+    return
+  }
+
+  // Regular user profile fetch
   isLoading.value = true
   error.value = ''
 
@@ -243,6 +263,12 @@ const fetchUserProfile = async () => {
 
 // Update user profile
 const updateProfile = async () => {
+  // Employees cannot update profile through this form
+  if (usersStore.isEmployee) {
+    error.value = 'Employees cannot update profile here'
+    return
+  }
+
   isLoading.value = true
   error.value = ''
   success.value = ''

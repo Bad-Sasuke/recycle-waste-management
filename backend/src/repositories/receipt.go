@@ -14,6 +14,7 @@ import (
 
 type IReceiptRepository interface {
 	Create(data *entities.Receipt) error
+	FindByID(receiptID string) (*entities.Receipt, error)
 	FindByCustomerRequestID(requestID string) (*entities.Receipt, error)
 	FindByShopID(shopID string) ([]entities.Receipt, error)
 }
@@ -36,6 +37,20 @@ func (repo *receiptRepository) Create(data *entities.Receipt) error {
 		return fmt.Errorf("error inserting receipt: %v", err)
 	}
 	return nil
+}
+
+func (repo *receiptRepository) FindByID(receiptID string) (*entities.Receipt, error) {
+	var receipt entities.Receipt
+	err := repo.Collection.FindOne(repo.Context, map[string]interface{}{
+		"_id": receiptID,
+	}).Decode(&receipt)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("error finding receipt: %v", err)
+	}
+	return &receipt, nil
 }
 
 func (repo *receiptRepository) FindByCustomerRequestID(requestID string) (*entities.Receipt, error) {

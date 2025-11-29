@@ -17,7 +17,9 @@ Before creating or modifying any page, ensure the following:
 
 1. **Design Tokens** — Use existing tokens from `frontend/src/assets/main.css` (based on TailwindCSS)
 2. **Components** — Check `src/components/` for reusable components → [Vue Best Practices](https://learnvue.co/articles/vue-best-practices)
-   - How to create a story book so that the paths must be in the same folder.
+- ทุกครั้งที่สร้าง component ใหม่ ให้สร้าง story book ด้วย
+- ทุกครั้งที่มีการแก้ไข component ให้แก้ story book ด้วย
+- How to create a story book so that the paths must be in the same folder.
 3. **State Management** — Use existing stores in `frontend/src/stores` → [Pinia Best Practices](https://masteringpinia.com/blog/5-best-practices-for-scalable-vuejs-state-management-with-pinia)
 4. **API Integration** — Follow the existing structure: `types/` (response/payload types) + `services/` (API calls)
 5 check and fixed wih command `npm run type-check` then `npm run lint` everytime 

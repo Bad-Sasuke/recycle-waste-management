@@ -79,6 +79,30 @@ func (h *ReceiptGateway) GetReceiptByRequestID(ctx *fiber.Ctx) error {
 	})
 }
 
+func (h *ReceiptGateway) GetReceiptByID(ctx *fiber.Ctx) error {
+	receiptID := ctx.Params("receipt_id")
+	if receiptID == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "Receipt ID is required",
+		})
+	}
+
+	receipt, err := h.ReceiptService.GetReceiptByID(receiptID)
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"message": "Receipt not found",
+			"error":   err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"data":    receipt,
+	})
+}
+
 func (h *ReceiptGateway) GetReceiptsByShopID(ctx *fiber.Ctx) error {
 	shopID := ctx.Params("shop_id")
 	if shopID == "" {

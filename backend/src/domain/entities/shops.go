@@ -5,6 +5,7 @@ import "time"
 type ShopModel struct {
 	ShopID      string    `json:"shop_id,omitempty" bson:"shop_id,omitempty"`
 	UserID      string    `json:"user_id,omitempty" bson:"user_id,omitempty"`
+	ShopCode    string    `json:"shop_code,omitempty" bson:"shop_code,omitempty"`
 	Name        string    `json:"name,omitempty" bson:"name,omitempty"`
 	Description string    `json:"description,omitempty" bson:"description,omitempty"`
 	Address     string    `json:"address,omitempty" bson:"address,omitempty"`
@@ -20,6 +21,7 @@ type ShopModel struct {
 }
 
 type CreateShopRequest struct {
+	ShopCode    string  `json:"shop_code" validate:"required,max=12"`
 	Name        string  `json:"name" validate:"required"`
 	Description string  `json:"description"`
 	Address     string  `json:"address" validate:"required"`
@@ -32,6 +34,7 @@ type CreateShopRequest struct {
 }
 
 type UpdateShopRequest struct {
+	ShopCode    *string  `json:"shop_code,omitempty" validate:"omitempty,max=12"`
 	Name        *string  `json:"name,omitempty"`
 	Description *string  `json:"description,omitempty"`
 	Address     *string  `json:"address,omitempty"`
