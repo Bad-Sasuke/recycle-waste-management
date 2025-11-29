@@ -1,23 +1,25 @@
 <script setup lang="ts">
-import { ref, shallowRef, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { ref, shallowRef, computed, onMounted, onUnmounted, nextTick, watch, render, h } from 'vue';
 import { useShopStore } from '@/stores/shop';
 import { IconCurrentLocation, IconSend } from '@tabler/icons-vue';
+import LiquidMarker from '@/components/map/LiquidMarker.vue';
+import CustomerPopup from '@/components/map/CustomerPopup.vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { CustomerRequest } from '@/types/customer_request';
 
-// Fix Leaflet marker icons
-// @ts-ignore
+
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-// @ts-ignore
+
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
-// @ts-ignore
+
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import { useCustomerRequestStore } from '@/stores/customer_request';
 import { useChatStore } from '@/stores/chat';
 import { useUsersStore } from '../stores/users';
 import { storeToRefs } from 'pinia';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl,
@@ -143,8 +145,8 @@ const initMap = () => {
   // Add distance radius circle
   radiusCircle.value = L.circle([defaultLat, defaultLng], {
     radius: maxDistance.value * 1000, // Convert km to meters
-    color: '#10b981',
-    fillColor: '#10b981',
+    color: 'var(--color-success)',
+    fillColor: 'var(--color-success)',
     fillOpacity: 0.1,
     weight: 2,
     opacity: 0.5,
@@ -155,7 +157,7 @@ const initMap = () => {
   const shopIcon = L.divIcon({
     className: 'custom-customer-marker',
     html: `
-        <div class="marker-pin" style="background: #7c3aed; z-index: 1000;">
+        <div class="marker-pin bg-violet-600 z-[1000]">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20">
             <path d="M18.36 9l.6 3H5.04l.6-3h12.72M20 4H4v2h16V4zm0 3H4l-1 5v2h1v6h10v-6h4v6h2v-6h1l-1-5H20zM6 18v-4h6v4H6z"/>
           </svg>
@@ -189,19 +191,13 @@ const updateMapMarkers = (shouldFitBounds = false) => {
       return;
     }
 
+    // Create custom icon with liquid glass style
+    const iconDiv = document.createElement('div');
+    render(h(LiquidMarker, { colorClass: getMarkerColor(request.status) }), iconDiv);
+
     const icon = L.divIcon({
       className: 'custom-customer-marker',
-      html: `
-        <div class="liquid-marker">
-          <div class="liquid-pin" style="background: ${getMarkerColor(request.status)}">
-            <div class="liquid-glow"></div>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20" style="position: relative; z-index: 2;">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-          </div>
-          <div class="liquid-pulse" style="background: ${getMarkerColor(request.status)}"></div>
-        </div>
-      `,
+      html: iconDiv.innerHTML,
       iconSize: [40, 40],
       iconAnchor: [20, 40],
     });
@@ -210,76 +206,13 @@ const updateMapMarkers = (shouldFitBounds = false) => {
       .addTo(map.value!);
 
     // Create Popup Content
-    const popupContent = document.createElement('div');
-    popupContent.innerHTML = `
-            <div class="glass-card">
-                <div class="glass-card-content">
-                    <div class="shop-image-container shop-placeholder">
-                        <span class="shop-icon">👤</span>
-                    </div>
-                    <h3 class="shop-name">คำขอรับขยะ #${request.customer_request_id.substring(0, 8)}</h3>
-                    <p class="shop-address">
-                        <span class="px-2 py-0.5 rounded-full text-xs ${request.status === 'pending' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}">
-                            ${getStatusText(request.status)}
-                        </span>
-                    </p>
+    const popupDiv = document.createElement('div');
+    render(h(CustomerPopup, {
+      request: request,
+      distance: getDistanceFromShop(request)
+    }), popupDiv);
 
-                    <div class="shop-hours">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                        </svg>
-                        <span>${request.description || 'ไม่มีรายละเอียด'}</span>
-                    </div>
-
-                    <div class="shop-phone">
-                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        </svg>
-                        <span>${getDistanceFromShop(request).toFixed(1)} km</span>
-                    </div>
-
-                    <div class="shop-phone">
-                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>${formatDateTime(request.created_at)}</span>
-                    </div>
-
-
-                    ${request.status === 'pending' ? `
-                        <button id="btn-navigate-${request.customer_request_id}" class="navigate-btn" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
-                            <svg class="w-4 h-4" style="display: inline-block; margin-right: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                            </svg>
-                            ดูเส้นทาง
-                        </button>
-                        <button id="btn-accept-${request.customer_request_id}" class="navigate-btn">
-                            รับงาน
-                        </button>
-                        <button id="btn-reject-${request.customer_request_id}" class="navigate-btn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); margin-top: 6px; margin-bottom: 0;">
-                            ปฏิเสธ
-                        </button>
-                    ` : ''}
-
-                    ${request.status === 'accepted' ? `
-                        <button id="btn-navigate-${request.customer_request_id}" class="navigate-btn" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
-                            <svg class="w-4 h-4" style="display: inline-block; margin-right: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                            </svg>
-                            นำทาง
-                        </button>
-                        <button id="btn-chat-${request.customer_request_id}" class="navigate-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); margin-bottom: 0;">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            แชท
-                        </button>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-
-    marker.bindPopup(popupContent, {
+    marker.bindPopup(popupDiv.innerHTML, {
       maxWidth: 280,
       className: 'glass-popup'
     });
@@ -328,21 +261,14 @@ const updateMapMarkers = (shouldFitBounds = false) => {
 
 const getMarkerColor = (status: string) => {
   switch (status) {
-    case 'pending': return '#3b82f6'; // blue
-    case 'accepted': return '#10b981'; // green
-    case 'rejected': return '#ef4444'; // red
-    default: return '#6b7280'; // gray
+    case 'pending': return 'bg-info'; // blue
+    case 'accepted': return 'bg-success'; // green
+    case 'rejected': return 'bg-danger'; // red
+    default: return 'bg-text-muted'; // gray
   }
 };
 
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'pending': return 'รอดำเนินการ';
-    case 'accepted': return 'รับงานแล้ว';
-    case 'rejected': return 'ปฏิเสธ';
-    default: return '-';
-  }
-};
+
 
 // Calculate distance between two coordinates using Haversine formula (in km)
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -680,7 +606,7 @@ onUnmounted(() => {
                 <div
                   class="bg-green-100 text-green-600 rounded-full w-10 group-hover:bg-green-600 group-hover:text-white transition-colors shadow-sm">
                   <span class="text-sm font-bold">#{{ request.customer_request_id.substring(0, 2).toUpperCase()
-                  }}</span>
+                    }}</span>
                 </div>
               </div>
               <div class="flex-1 min-w-0">
@@ -765,7 +691,7 @@ onUnmounted(() => {
                   <div class="avatar placeholder">
                     <div class="bg-green-100 text-green-600 rounded-full w-10 shadow-sm">
                       <span class="text-sm font-bold">#{{ activeChat.customer_request_id?.substring(0, 2).toUpperCase()
-                        }}</span>
+                      }}</span>
                     </div>
                   </div>
                   <div class="text-white">

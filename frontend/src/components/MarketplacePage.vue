@@ -102,7 +102,7 @@ const filteredItems = computed(() => {
     return []
   }
 
-  let result = originalGroupedWastes.value.filter((item) => {
+  const result = originalGroupedWastes.value.filter((item) => {
     const matchesSearch = item.name
       ? item.name.toLowerCase().includes(searchQuery.value.toLowerCase())
       : false

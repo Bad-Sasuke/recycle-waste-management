@@ -11,6 +11,7 @@ import iconUrl from 'leaflet/dist/images/marker-icon.png';
 // @ts-ignore
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl,
@@ -33,13 +34,36 @@ const map = shallowRef<L.Map | null>(null);
 const marker = shallowRef<L.Marker | null>(null);
 
 // Request States
-const currentRequest = ref<any>(null);
+// Request States
+interface LocationRequest {
+  id: string;
+  latitude: number;
+  longitude: number;
+  wasteAmount: string;
+  wasteTypes: string[];
+  notes: string;
+  phone: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: Date;
+  shopResponse?: {
+    shopName: string;
+    message: string;
+  };
+}
+
+const currentRequest = ref<LocationRequest | null>(null);
 const isSubmitting = ref(false);
 const isCanceling = ref(false);
 
 // Chat
+interface ChatMessage {
+  sender: 'me' | 'shop';
+  text: string;
+  timestamp: Date;
+}
+
 const showChat = ref(false);
-const chatMessages = ref<any[]>([]);
+const chatMessages = ref<ChatMessage[]>([]);
 const newMessage = ref('');
 
 // Mock current request (remove when integrating with backend)
@@ -105,7 +129,7 @@ const initMap = () => {
   }).addTo(map.value);
 
   // Click to set location
-  map.value.on('click', (e: any) => {
+  map.value.on('click', (e: L.LeafletMouseEvent) => {
     formData.value.latitude = e.latlng.lat;
     formData.value.longitude = e.latlng.lng;
 
@@ -279,7 +303,7 @@ onUnmounted(() => {
               <div class="mb-4">
                 <label class="label">
                   <span class="label-text font-semibold">{{ $t('ShareLocation.selectLocation')
-                  }}</span>
+                    }}</span>
                 </label>
                 <div id="location-map" class="w-full h-[300px] rounded-lg border-2 border-green-200">
                 </div>
@@ -335,7 +359,7 @@ onUnmounted(() => {
               <div class="form-control">
                 <label class="label">
                   <span class="label-text font-semibold">{{ $t('ShareLocation.additionalNotes')
-                  }}</span>
+                    }}</span>
                 </label>
                 <textarea v-model="formData.notes" class="textarea textarea-bordered h-24"
                   :placeholder="$t('ShareLocation.notesPlaceholder')"></textarea>

@@ -1,6 +1,6 @@
 interface ResponseAPI {
   message: string
-  data?: any
+  data?: unknown
   page?: number
   limit?: number
   total_pages?: number

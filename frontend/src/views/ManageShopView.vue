@@ -1,3 +1,394 @@
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useShopStore } from '@/stores/shop';
+import { useRouter } from 'vue-router';
+import type { UpdateShopRequest } from '@/types/shop';
+import { useI18n } from 'vue-i18n';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+const { t } = useI18n();
+const router = useRouter();
+const shopStore = useShopStore();
+
+// States
+const activeTab = ref('info');
+const editMode = ref(false);
+const isSubmitting = ref(false);
+const showDeleteModal = ref(false);
+const modalType = ref<'success' | 'error'>('success');
+const modalMessage = ref('');
+
+// Walk-in Modal States
+const showWalkInModal = ref(false);
+const walkInCustomerName = ref('');
+const walkInCustomerPhone = ref('');
+const isCreatingWalkIn = ref(false);
+
+// Loading states
+const loadingStocks = ref(false);
+const loadingReceipts = ref(false);
+
+// Data สำหรับ Stock และ Receipts
+// Data สำหรับ Stock และ Receipts
+interface StockItem {
+  id: string;
+  updated_at: string;
+  category: string;
+  name: string;
+  quantity: number;
+  purchase_price: number;
+  current_price: number;
+  profit: number;
+}
+
+interface Receipt {
+  id: string;
+  created_at: string;
+  customer_name: string;
+  items_count: number;
+  net_total: number;
+  status: string;
+}
+
+const stocks = ref<StockItem[]>([]);
+const receipts = ref<Receipt[]>([]);
+
+// Pagination for Stock
+const stockPage = ref(1);
+const stockPageSize = 5;
+const totalStockPages = computed(() => Math.ceil(stocks.value.length / stockPageSize));
+const paginatedStocks = computed(() => stocks.value); // ใช้ข้อมูลจาก server โดยตรง
+
+// Pagination for Receipts
+const receiptPage = ref(1);
+const receiptPageSize = 5;
+const totalReceiptPages = computed(() => Math.ceil(receipts.value.length / receiptPageSize));
+const paginatedReceipts = computed(() => receipts.value); // ใช้ข้อมูลจาก server โดยตรง
+
+// Helper to format currency
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('th-TH', {
+    style: 'currency',
+    currency: 'THB',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+};
+
+// Image handling
+const shopImage = ref<File | null>(null);
+const previewImage = ref<string | null>(null);
+
+// Map handling
+let map: L.Map | null = null;
+let marker: L.Marker | null = null;
+
+// Show modal function
+const showModal = (type: 'success' | 'error', message: string) => {
+  modalType.value = type;
+  modalMessage.value = message;
+  const modal = document.getElementById('result-modal') as HTMLDialogElement;
+  modal?.showModal();
+};
+
+// Edit shop data - initialize with shop store data
+const editShopData = reactive<UpdateShopRequest>({
+  name: shopStore.shop?.name || '',
+  description: shopStore.shop?.description || '',
+  address: shopStore.shop?.address || '',
+  phone: shopStore.shop?.phone || '',
+  email: shopStore.shop?.email || '',
+  opening_time: shopStore.shop?.opening_time || '',
+  closing_time: shopStore.shop?.closing_time || '',
+  latitude: shopStore.shop?.latitude,
+  longitude: shopStore.shop?.longitude
+});
+
+// Watch for changes in shop store to update edit form
+watch(() => shopStore.shop, (newShop) => {
+  if (newShop) {
+    editShopData.name = newShop.name || '';
+    editShopData.description = newShop.description || '';
+    editShopData.address = newShop.address || '';
+    editShopData.phone = newShop.phone || '';
+    editShopData.email = newShop.email || '';
+    editShopData.opening_time = newShop.opening_time || '';
+    editShopData.closing_time = newShop.closing_time || '';
+    editShopData.latitude = newShop.latitude;
+    editShopData.longitude = newShop.longitude;
+  }
+}, { immediate: true });
+
+const handleImageChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    const file = target.files[0];
+    shopImage.value = file;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImage.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const initMap = () => {
+  // Get shop location or use default (Thailand - Bangkok)
+  const lat = editShopData.latitude || 13.7563;
+  const lng = editShopData.longitude || 100.5018;
+
+  // Initialize map
+  map = L.map('edit-map').setView([lat, lng], 13);
+
+  // Add OpenStreetMap tile layer
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Add existing marker if shop has location
+  if (editShopData.latitude && editShopData.longitude) {
+    marker = L.marker([editShopData.latitude, editShopData.longitude]).addTo(map);
+    marker.bindPopup(`<b>${t('Shop.create.selectedLocation')}</b><br>Lat: ${editShopData.latitude.toFixed(6)}<br>Lng: ${editShopData.longitude.toFixed(6)}`).openPopup();
+  }
+
+  // Add click event to map
+  map.on('click', (e: L.LeafletMouseEvent) => {
+    const { lat, lng } = e.latlng;
+
+    // Update shop data
+    editShopData.latitude = lat;
+    editShopData.longitude = lng;
+
+    // Remove existing marker if any
+    if (marker) {
+      map?.removeLayer(marker);
+    }
+
+    // Add new marker
+    marker = L.marker([lat, lng]).addTo(map!);
+    marker.bindPopup(`<b>${t('Shop.create.selectedLocation')}</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
+  });
+};
+
+const cleanupMap = () => {
+  if (map) {
+    map.remove();
+    map = null;
+    marker = null;
+  }
+};
+
+const updateShop = async () => {
+  if (!shopStore.shop?.shop_id) return;
+
+  isSubmitting.value = true;
+
+  try {
+    const formData = new FormData();
+
+    // Add text fields to form data
+    Object.entries(editShopData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, value.toString());
+      }
+    });
+
+    // Add image if provided
+    if (shopImage.value) {
+      formData.append('image', shopImage.value);
+    }
+
+    const result = await shopStore.updateShop(shopStore.shop.shop_id, formData);
+
+    if (result.success) {
+      editMode.value = false;
+      showModal('success', t('Shop.manage.updateSuccess'));
+    } else {
+      showModal('error', result.message);
+    }
+  } catch (error) {
+    console.error('Error updating shop:', error);
+    showModal('error', t('Shop.manage.updateError'));
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const confirmDelete = () => {
+  showDeleteModal.value = true;
+};
+
+const deleteShop = async () => {
+  if (!shopStore.shop?.shop_id) return;
+
+  try {
+    const result = await shopStore.deleteShop(shopStore.shop.shop_id);
+
+    if (result.success) {
+      showDeleteModal.value = false;
+      // Redirect to create shop page since user no longer has a shop
+      // But check if there's a redirect query parameter to go back to intended destination
+      const redirectPath = router.currentRoute.value.query.redirect as string | undefined;
+      if (redirectPath) {
+        await router.push(redirectPath);
+      } else {
+        await router.push({ name: 'create-shop' });
+      }
+    } else {
+      showModal('error', result.message);
+    }
+  } catch (error) {
+    console.error('Error deleting shop:', error);
+    showModal('error', t('Shop.manage.deleteError'));
+  }
+};
+
+// Watch edit mode to initialize/cleanup map
+watch(editMode, (newValue) => {
+  if (newValue) {
+    // When entering edit mode, initialize map after a short delay
+    setTimeout(() => {
+      initMap();
+    }, 100);
+  } else {
+    // When exiting edit mode, cleanup map
+    cleanupMap();
+  }
+});
+
+// Fetch stocks data
+const fetchStocks = async () => {
+  if (!shopStore.shop?.shop_id) return;
+
+  loadingStocks.value = true;
+  try {
+    const { fetchStocksByShopID } = await import('@/services/manageShop');
+    const response = await fetchStocksByShopID(shopStore.shop.shop_id, stockPage.value, stockPageSize);
+    console.log('fetchStocks response:', response);
+    if (response.success && response.data) {
+      stocks.value = response.data;
+      // Update total pages from server response if available
+      if (response.total_pages) {
+        // totalStockPages will be recomputed automatically from stocks.value.length
+      }
+    } else {
+      console.error('Stock fetch failed:', response.message);
+      stocks.value = [];
+    }
+  } catch (error) {
+    console.error('Error fetching stocks:', error);
+    stocks.value = [];
+  } finally {
+    loadingStocks.value = false;
+  }
+};
+
+// Fetch receipts data
+const fetchReceipts = async () => {
+  if (!shopStore.shop?.shop_id) return;
+
+  loadingReceipts.value = true;
+  try {
+    const { fetchReceiptsByShopID } = await import('@/services/manageShop');
+    const response = await fetchReceiptsByShopID(shopStore.shop.shop_id, receiptPage.value, receiptPageSize);
+    console.log('fetchReceipts response:', response);
+    if (response.success && response.data) {
+      receipts.value = response.data;
+    } else {
+      console.error('Receipt fetch failed:', response.message);
+      receipts.value = [];
+    }
+  } catch (error) {
+    console.error('Error fetching receipts:', error);
+    receipts.value = [];
+  } finally {
+    loadingReceipts.value = false;
+  }
+};
+
+// Watch activeTab to fetch data when switching tabs
+watch(activeTab, (newTab) => {
+  if (newTab === 'stock') {
+    fetchStocks();
+  } else if (newTab === 'receipts') {
+    fetchReceipts();
+  }
+});
+
+const goToWastePurchase = () => {
+  // Reset form and open modal
+  walkInCustomerName.value = '';
+  walkInCustomerPhone.value = '';
+  showWalkInModal.value = true;
+};
+
+const handleCreateWalkIn = async () => {
+  if (!shopStore.shop?.shop_id) return;
+
+  isCreatingWalkIn.value = true;
+  try {
+    // Dynamic import to avoid circular dependencies if any, or just good practice
+    const { createWalkInRequest } = await import('@/services/customer_request');
+
+    const response = await createWalkInRequest(walkInCustomerName.value, walkInCustomerPhone.value);
+
+    if (response.success && response.customer_request_id) {
+      showWalkInModal.value = false;
+      router.push({
+        path: '/waste-purchase',
+        query: { customer_request_id: response.customer_request_id }
+      });
+    } else {
+      showModal('error', response.message || 'เกิดข้อผิดพลาดในการสร้างรายการ');
+    }
+  } catch (error) {
+    console.error('Error creating walk-in request:', error);
+    const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างรายการ';
+    showModal('error', errorMessage);
+  } finally {
+    isCreatingWalkIn.value = false;
+  }
+};
+
+// Watch pagination changes
+watch(stockPage, () => {
+  if (activeTab.value === 'stock') {
+    fetchStocks();
+  }
+});
+
+watch(receiptPage, () => {
+  if (activeTab.value === 'receipts') {
+    fetchReceipts();
+  }
+});
+
+// Load shop data on component mount
+onMounted(async () => {
+  console.log('ManageShopView mounted');
+  console.log('shopStore.checked:', shopStore.checked);
+  console.log('shopStore.hasShop:', shopStore.hasShop);
+  console.log('shopStore.shop:', shopStore.shop);
+
+  if (!shopStore.checked) {
+    console.log('Checking user shop...');
+    await shopStore.checkUserShop();
+    console.log('After check - hasShop:', shopStore.hasShop);
+    console.log('After check - shop:', shopStore.shop);
+  }
+});
+
+onUnmounted(() => {
+  // Clean up map instance on component unmount
+  cleanupMap();
+});
+</script>
+
+
 <template>
   <div class="min-h-screen bg-gradient-to-br from-green-50 to-cyan-50 py-8 px-4 sm:px-6">
     <!-- Loading State -->
@@ -422,374 +813,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useShopStore } from '@/stores/shop';
-import { useRouter } from 'vue-router';
-import type { UpdateShopRequest } from '@/types/shop';
-import { useI18n } from 'vue-i18n';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-const { t } = useI18n();
-const router = useRouter();
-const shopStore = useShopStore();
-
-// States
-const activeTab = ref('info');
-const editMode = ref(false);
-const isSubmitting = ref(false);
-const showDeleteModal = ref(false);
-const modalType = ref<'success' | 'error'>('success');
-const modalMessage = ref('');
-
-// Walk-in Modal States
-const showWalkInModal = ref(false);
-const walkInCustomerName = ref('');
-const walkInCustomerPhone = ref('');
-const isCreatingWalkIn = ref(false);
-
-// Loading states
-const loadingStocks = ref(false);
-const loadingReceipts = ref(false);
-
-// Data สำหรับ Stock และ Receipts
-const stocks = ref<any[]>([]);
-const receipts = ref<any[]>([]);
-
-// Pagination for Stock
-const stockPage = ref(1);
-const stockPageSize = 5;
-const totalStockPages = computed(() => Math.ceil(stocks.value.length / stockPageSize));
-const paginatedStocks = computed(() => stocks.value); // ใช้ข้อมูลจาก server โดยตรง
-
-// Pagination for Receipts
-const receiptPage = ref(1);
-const receiptPageSize = 5;
-const totalReceiptPages = computed(() => Math.ceil(receipts.value.length / receiptPageSize));
-const paginatedReceipts = computed(() => receipts.value); // ใช้ข้อมูลจาก server โดยตรง
-
-// Helper to format currency
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value);
-};
-
-// Image handling
-const shopImage = ref<File | null>(null);
-const previewImage = ref<string | null>(null);
-
-// Map handling
-let map: L.Map | null = null;
-let marker: L.Marker | null = null;
-
-// Show modal function
-const showModal = (type: 'success' | 'error', message: string) => {
-  modalType.value = type;
-  modalMessage.value = message;
-  const modal = document.getElementById('result-modal') as HTMLDialogElement;
-  modal?.showModal();
-};
-
-// Edit shop data - initialize with shop store data
-const editShopData = reactive<UpdateShopRequest>({
-  name: shopStore.shop?.name || '',
-  description: shopStore.shop?.description || '',
-  address: shopStore.shop?.address || '',
-  phone: shopStore.shop?.phone || '',
-  email: shopStore.shop?.email || '',
-  opening_time: shopStore.shop?.opening_time || '',
-  closing_time: shopStore.shop?.closing_time || '',
-  latitude: shopStore.shop?.latitude,
-  longitude: shopStore.shop?.longitude
-});
-
-// Watch for changes in shop store to update edit form
-watch(() => shopStore.shop, (newShop) => {
-  if (newShop) {
-    editShopData.name = newShop.name || '';
-    editShopData.description = newShop.description || '';
-    editShopData.address = newShop.address || '';
-    editShopData.phone = newShop.phone || '';
-    editShopData.email = newShop.email || '';
-    editShopData.opening_time = newShop.opening_time || '';
-    editShopData.closing_time = newShop.closing_time || '';
-    editShopData.latitude = newShop.latitude;
-    editShopData.longitude = newShop.longitude;
-  }
-}, { immediate: true });
-
-const handleImageChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files[0]) {
-    const file = target.files[0];
-    shopImage.value = file;
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImage.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const initMap = () => {
-  // Get shop location or use default (Thailand - Bangkok)
-  const lat = editShopData.latitude || 13.7563;
-  const lng = editShopData.longitude || 100.5018;
-
-  // Initialize map
-  map = L.map('edit-map').setView([lat, lng], 13);
-
-  // Add OpenStreetMap tile layer
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-
-  // Add existing marker if shop has location
-  if (editShopData.latitude && editShopData.longitude) {
-    marker = L.marker([editShopData.latitude, editShopData.longitude]).addTo(map);
-    marker.bindPopup(`<b>${t('Shop.create.selectedLocation')}</b><br>Lat: ${editShopData.latitude.toFixed(6)}<br>Lng: ${editShopData.longitude.toFixed(6)}`).openPopup();
-  }
-
-  // Add click event to map
-  map.on('click', (e: L.LeafletMouseEvent) => {
-    const { lat, lng } = e.latlng;
-
-    // Update shop data
-    editShopData.latitude = lat;
-    editShopData.longitude = lng;
-
-    // Remove existing marker if any
-    if (marker) {
-      map?.removeLayer(marker);
-    }
-
-    // Add new marker
-    marker = L.marker([lat, lng]).addTo(map!);
-    marker.bindPopup(`<b>${t('Shop.create.selectedLocation')}</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
-  });
-};
-
-const cleanupMap = () => {
-  if (map) {
-    map.remove();
-    map = null;
-    marker = null;
-  }
-};
-
-const updateShop = async () => {
-  if (!shopStore.shop?.shop_id) return;
-
-  isSubmitting.value = true;
-
-  try {
-    const formData = new FormData();
-
-    // Add text fields to form data
-    Object.entries(editShopData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        formData.append(key, value.toString());
-      }
-    });
-
-    // Add image if provided
-    if (shopImage.value) {
-      formData.append('image', shopImage.value);
-    }
-
-    const result = await shopStore.updateShop(shopStore.shop.shop_id, formData);
-
-    if (result.success) {
-      editMode.value = false;
-      showModal('success', t('Shop.manage.updateSuccess'));
-    } else {
-      showModal('error', result.message);
-    }
-  } catch (error) {
-    console.error('Error updating shop:', error);
-    showModal('error', t('Shop.manage.updateError'));
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-
-const confirmDelete = () => {
-  showDeleteModal.value = true;
-};
-
-const deleteShop = async () => {
-  if (!shopStore.shop?.shop_id) return;
-
-  try {
-    const result = await shopStore.deleteShop(shopStore.shop.shop_id);
-
-    if (result.success) {
-      showDeleteModal.value = false;
-      // Redirect to create shop page since user no longer has a shop
-      // But check if there's a redirect query parameter to go back to intended destination
-      const redirectPath = router.currentRoute.value.query.redirect as string | undefined;
-      if (redirectPath) {
-        await router.push(redirectPath);
-      } else {
-        await router.push({ name: 'create-shop' });
-      }
-    } else {
-      showModal('error', result.message);
-    }
-  } catch (error) {
-    console.error('Error deleting shop:', error);
-    showModal('error', t('Shop.manage.deleteError'));
-  }
-};
-
-// Watch edit mode to initialize/cleanup map
-watch(editMode, (newValue) => {
-  if (newValue) {
-    // When entering edit mode, initialize map after a short delay
-    setTimeout(() => {
-      initMap();
-    }, 100);
-  } else {
-    // When exiting edit mode, cleanup map
-    cleanupMap();
-  }
-});
-
-// Fetch stocks data
-const fetchStocks = async () => {
-  if (!shopStore.shop?.shop_id) return;
-
-  loadingStocks.value = true;
-  try {
-    const { fetchStocksByShopID } = await import('@/services/manageShop');
-    const response = await fetchStocksByShopID(shopStore.shop.shop_id, stockPage.value, stockPageSize);
-    console.log('fetchStocks response:', response);
-    if (response.success && response.data) {
-      stocks.value = response.data;
-      // Update total pages from server response if available
-      if (response.total_pages) {
-        // totalStockPages will be recomputed automatically from stocks.value.length
-      }
-    } else {
-      console.error('Stock fetch failed:', response.message);
-      stocks.value = [];
-    }
-  } catch (error) {
-    console.error('Error fetching stocks:', error);
-    stocks.value = [];
-  } finally {
-    loadingStocks.value = false;
-  }
-};
-
-// Fetch receipts data
-const fetchReceipts = async () => {
-  if (!shopStore.shop?.shop_id) return;
-
-  loadingReceipts.value = true;
-  try {
-    const { fetchReceiptsByShopID } = await import('@/services/manageShop');
-    const response = await fetchReceiptsByShopID(shopStore.shop.shop_id, receiptPage.value, receiptPageSize);
-    console.log('fetchReceipts response:', response);
-    if (response.success && response.data) {
-      receipts.value = response.data;
-    } else {
-      console.error('Receipt fetch failed:', response.message);
-      receipts.value = [];
-    }
-  } catch (error) {
-    console.error('Error fetching receipts:', error);
-    receipts.value = [];
-  } finally {
-    loadingReceipts.value = false;
-  }
-};
-
-// Watch activeTab to fetch data when switching tabs
-watch(activeTab, (newTab) => {
-  if (newTab === 'stock') {
-    fetchStocks();
-  } else if (newTab === 'receipts') {
-    fetchReceipts();
-  }
-});
-
-const goToWastePurchase = () => {
-  // Reset form and open modal
-  walkInCustomerName.value = '';
-  walkInCustomerPhone.value = '';
-  showWalkInModal.value = true;
-};
-
-const handleCreateWalkIn = async () => {
-  if (!shopStore.shop?.shop_id) return;
-
-  isCreatingWalkIn.value = true;
-  try {
-    // Dynamic import to avoid circular dependencies if any, or just good practice
-    const { createWalkInRequest } = await import('@/services/customer_request');
-
-    const response = await createWalkInRequest(walkInCustomerName.value, walkInCustomerPhone.value);
-
-    if (response.success && response.customer_request_id) {
-      showWalkInModal.value = false;
-      router.push({
-        path: '/waste-purchase',
-        query: { customer_request_id: response.customer_request_id }
-      });
-    } else {
-      showModal('error', response.message || 'เกิดข้อผิดพลาดในการสร้างรายการ');
-    }
-  } catch (error) {
-    console.error('Error creating walk-in request:', error);
-    const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างรายการ';
-    showModal('error', errorMessage);
-  } finally {
-    isCreatingWalkIn.value = false;
-  }
-};
-
-// Watch pagination changes
-watch(stockPage, () => {
-  if (activeTab.value === 'stock') {
-    fetchStocks();
-  }
-});
-
-watch(receiptPage, () => {
-  if (activeTab.value === 'receipts') {
-    fetchReceipts();
-  }
-});
-
-// Load shop data on component mount
-onMounted(async () => {
-  console.log('ManageShopView mounted');
-  console.log('shopStore.checked:', shopStore.checked);
-  console.log('shopStore.hasShop:', shopStore.hasShop);
-  console.log('shopStore.shop:', shopStore.shop);
-
-  if (!shopStore.checked) {
-    console.log('Checking user shop...');
-    await shopStore.checkUserShop();
-    console.log('After check - hasShop:', shopStore.hasShop);
-    console.log('After check - shop:', shopStore.shop);
-  }
-});
-
-onUnmounted(() => {
-  // Clean up map instance on component unmount
-  cleanupMap();
-});
-</script>
 
 <style scoped>
 /* Fix Leaflet marker icons */

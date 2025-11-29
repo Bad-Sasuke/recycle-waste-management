@@ -1,3 +1,205 @@
+<script setup lang="ts">
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
+import { useShopStore } from '@/stores/shop';
+import { useUsersStore } from '@/stores/users';
+import { useRouter } from 'vue-router';
+import type { CreateShopRequest } from '@/types/shop';
+import { useI18n } from 'vue-i18n';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+const { t } = useI18n();
+const router = useRouter();
+const shopStore = useShopStore();
+const usersStore = useUsersStore();
+
+// Loading states
+const isSubmitting = ref(false);
+const modalType = ref<'success' | 'error'>('success');
+const modalMessage = ref('');
+
+// Show modal function
+const showModal = (type: 'success' | 'error', message: string) => {
+  modalType.value = type;
+  modalMessage.value = message;
+  const modal = document.getElementById('create-result-modal') as HTMLDialogElement;
+  modal?.showModal();
+};
+
+// Shop data
+const shopData = reactive<CreateShopRequest>({
+  name: '',
+  description: '',
+  address: '',
+  phone: '',
+  email: '',
+  opening_time: '',
+  closing_time: '',
+  latitude: undefined,
+  longitude: undefined
+});
+
+// Image handling
+const shopImage = ref<File | null>(null);
+const previewImage = ref<string | null>(null);
+
+// Map handling
+let map: L.Map | null = null;
+let marker: L.Marker | null = null;
+
+const handleImageChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    const file = target.files[0];
+    shopImage.value = file;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImage.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const initMap = () => {
+  // Default center (Thailand - Bangkok)
+  const defaultLat = 13.7563;
+  const defaultLng = 100.5018;
+
+  // Initialize map
+  map = L.map('map').setView([defaultLat, defaultLng], 13);
+
+  // Add OpenStreetMap tile layer
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Add click event to map
+  map.on('click', (e: L.LeafletMouseEvent) => {
+    const { lat, lng } = e.latlng;
+
+    // Update shop data
+    shopData.latitude = lat;
+    shopData.longitude = lng;
+
+    // Remove existing marker if any
+    if (marker) {
+      map?.removeLayer(marker);
+    }
+
+    // Add new marker
+    marker = L.marker([lat, lng]).addTo(map!);
+    marker.bindPopup(`<b>${t('Shop.create.selectedLocation')}</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
+  });
+
+  // Try to get user's current location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        map?.setView([latitude, longitude], 13);
+
+        // Set initial marker at user's location
+        shopData.latitude = latitude;
+        shopData.longitude = longitude;
+        marker = L.marker([latitude, longitude]).addTo(map!);
+        marker.bindPopup(`<b>${t('Shop.create.yourLocation')}</b>`).openPopup();
+      },
+      () => {
+        // If geolocation fails, use default location
+        console.log('Geolocation not available, using default location');
+      }
+    );
+  }
+};
+
+const submitShop = async () => {
+  isSubmitting.value = true;
+
+  try {
+    const formData = new FormData();
+
+    // Add text fields to form data
+    Object.entries(shopData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, value.toString());
+      }
+    });
+
+    // Add image if provided
+    if (shopImage.value) {
+      formData.append('image', shopImage.value);
+    }
+
+    const result = await shopStore.createShop(formData);
+
+    if (result.success) {
+      // Check if there's a redirect query parameter to go back to intended destination
+      const redirectPath = router.currentRoute.value.query.redirect as string | undefined;
+      if (redirectPath) {
+        await router.push(redirectPath);
+      } else {
+        // Redirect to shop management page after successful creation
+        await router.push({ name: 'manage-shop' });
+      }
+    } else {
+      showModal('error', result.message);
+    }
+  } catch (error) {
+    console.error('Error creating shop:', error);
+    showModal('error', t('Shop.create.createError'));
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const cancel = () => {
+  router.push({ name: 'home' });
+};
+
+onMounted(async () => {
+  // Guard: Check if user is moderator and doesn't have a shop yet
+  const user = usersStore.user;
+
+  // Check if user role is moderator
+  if (!user || user.role !== 'moderator') {
+    console.warn('Access denied: User is not a moderator');
+    await router.push({ name: 'home' });
+    return;
+  }
+
+  // Check if user already has a shop using shopStore
+  await shopStore.checkUserShop();
+  if (shopStore.hasShop) {
+    console.warn('Access denied: User already has a shop');
+    // Redirect to manage shop instead
+    await router.push({ name: 'manage-shop' });
+    return;
+  }
+
+  // Reset any previous shop data
+  Object.keys(shopData).forEach(key => {
+    (shopData as Record<string, string | number | undefined>)[key] = key === 'latitude' || key === 'longitude' ? undefined : '';
+  });
+
+  // Initialize map after component is mounted
+  setTimeout(() => {
+    initMap();
+  }, 100);
+});
+
+onUnmounted(() => {
+  // Clean up map instance
+  if (map) {
+    map.remove();
+    map = null;
+  }
+});
+</script>
+
+
 <template>
   <div class="min-h-screen bg-gradient-to-br from-green-50 to-cyan-50 py-8 px-4 sm:px-6">
     <div class="max-w-4xl mx-auto">
@@ -206,206 +408,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
-import { useShopStore } from '@/stores/shop';
-import { useUsersStore } from '@/stores/users';
-import { useRouter } from 'vue-router';
-import type { CreateShopRequest } from '@/types/shop';
-import { useI18n } from 'vue-i18n';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-const { t } = useI18n();
-const router = useRouter();
-const shopStore = useShopStore();
-const usersStore = useUsersStore();
-
-// Loading states
-const isSubmitting = ref(false);
-const modalType = ref<'success' | 'error'>('success');
-const modalMessage = ref('');
-
-// Show modal function
-const showModal = (type: 'success' | 'error', message: string) => {
-  modalType.value = type;
-  modalMessage.value = message;
-  const modal = document.getElementById('create-result-modal') as HTMLDialogElement;
-  modal?.showModal();
-};
-
-// Shop data
-const shopData = reactive<CreateShopRequest>({
-  name: '',
-  description: '',
-  address: '',
-  phone: '',
-  email: '',
-  opening_time: '',
-  closing_time: '',
-  latitude: undefined,
-  longitude: undefined
-});
-
-// Image handling
-const shopImage = ref<File | null>(null);
-const previewImage = ref<string | null>(null);
-
-// Map handling
-let map: L.Map | null = null;
-let marker: L.Marker | null = null;
-
-const handleImageChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files[0]) {
-    const file = target.files[0];
-    shopImage.value = file;
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImage.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const initMap = () => {
-  // Default center (Thailand - Bangkok)
-  const defaultLat = 13.7563;
-  const defaultLng = 100.5018;
-
-  // Initialize map
-  map = L.map('map').setView([defaultLat, defaultLng], 13);
-
-  // Add OpenStreetMap tile layer
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-
-  // Add click event to map
-  map.on('click', (e: L.LeafletMouseEvent) => {
-    const { lat, lng } = e.latlng;
-
-    // Update shop data
-    shopData.latitude = lat;
-    shopData.longitude = lng;
-
-    // Remove existing marker if any
-    if (marker) {
-      map?.removeLayer(marker);
-    }
-
-    // Add new marker
-    marker = L.marker([lat, lng]).addTo(map!);
-    marker.bindPopup(`<b>${t('Shop.create.selectedLocation')}</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
-  });
-
-  // Try to get user's current location
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        map?.setView([latitude, longitude], 13);
-
-        // Set initial marker at user's location
-        shopData.latitude = latitude;
-        shopData.longitude = longitude;
-        marker = L.marker([latitude, longitude]).addTo(map!);
-        marker.bindPopup(`<b>${t('Shop.create.yourLocation')}</b>`).openPopup();
-      },
-      () => {
-        // If geolocation fails, use default location
-        console.log('Geolocation not available, using default location');
-      }
-    );
-  }
-};
-
-const submitShop = async () => {
-  isSubmitting.value = true;
-
-  try {
-    const formData = new FormData();
-
-    // Add text fields to form data
-    Object.entries(shopData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        formData.append(key, value.toString());
-      }
-    });
-
-    // Add image if provided
-    if (shopImage.value) {
-      formData.append('image', shopImage.value);
-    }
-
-    const result = await shopStore.createShop(formData);
-
-    if (result.success) {
-      // Check if there's a redirect query parameter to go back to intended destination
-      const redirectPath = router.currentRoute.value.query.redirect as string | undefined;
-      if (redirectPath) {
-        await router.push(redirectPath);
-      } else {
-        // Redirect to shop management page after successful creation
-        await router.push({ name: 'manage-shop' });
-      }
-    } else {
-      showModal('error', result.message);
-    }
-  } catch (error) {
-    console.error('Error creating shop:', error);
-    showModal('error', t('Shop.create.createError'));
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-
-const cancel = () => {
-  router.push({ name: 'home' });
-};
-
-onMounted(async () => {
-  // Guard: Check if user is moderator and doesn't have a shop yet
-  const user = usersStore.user;
-
-  // Check if user role is moderator
-  if (!user || user.role !== 'moderator') {
-    console.warn('Access denied: User is not a moderator');
-    await router.push({ name: 'home' });
-    return;
-  }
-
-  // Check if user already has a shop using shopStore
-  await shopStore.checkUserShop();
-  if (shopStore.hasShop) {
-    console.warn('Access denied: User already has a shop');
-    // Redirect to manage shop instead
-    await router.push({ name: 'manage-shop' });
-    return;
-  }
-
-  // Reset any previous shop data
-  Object.keys(shopData).forEach(key => {
-    (shopData as Record<string, string | number | undefined>)[key] = key === 'latitude' || key === 'longitude' ? undefined : '';
-  });
-
-  // Initialize map after component is mounted
-  setTimeout(() => {
-    initMap();
-  }, 100);
-});
-
-onUnmounted(() => {
-  // Clean up map instance
-  if (map) {
-    map.remove();
-    map = null;
-  }
-});
-</script>
 
 <style scoped>
 /* Fix Leaflet marker icons */

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import type { Component } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   IconScale,
@@ -105,8 +106,25 @@ const closeSuccessModal = () => {
 
 
 // Edit Modal State
+interface WasteType {
+  id: string;
+  waste_id?: string;
+  name: string;
+  icon: string;
+  price?: number;
+  category?: string;
+  color: string;
+  iconComponent: Component;
+}
+
+interface WasteItem extends WasteType {
+  expression: string;
+  totalWeight: number;
+  waste_id: string;
+}
+
 const showEditModal = ref(false);
-const editingItem = ref<any>(null);
+const editingItem = ref<WasteItem | null>(null);
 const reduceWeight = ref('');
 
 const remainingWeight = computed(() => {
@@ -115,7 +133,7 @@ const remainingWeight = computed(() => {
   return Math.max(0, editingItem.value.totalWeight - reduce);
 });
 
-const openEditModal = (item: any) => {
+const openEditModal = (item: WasteItem) => {
   editingItem.value = item;
   reduceWeight.value = '';
   showEditModal.value = true;
@@ -154,24 +172,24 @@ const confirmEdit = () => {
 
 
 // Helper to map category/name to icon and color
-const getWasteStyle = (name: string, category: string) => {
+const getWasteStyle = (name: string, category: string): { color: string; iconComponent: Component; icon: string } => {
   const n = name.toLowerCase();
   const c = category?.toLowerCase() || '';
 
   if (n.includes('กระดาษ') || c.includes('paper')) {
-    return { color: 'bg-amber-100 text-amber-800', iconComponent: IconFileText };
+    return { color: 'bg-amber-100 text-amber-800', iconComponent: IconFileText, icon: '📄' };
   } else if (n.includes('ลัง') || c.includes('cardboard')) {
-    return { color: 'bg-orange-100 text-orange-800', iconComponent: IconBox };
+    return { color: 'bg-orange-100 text-orange-800', iconComponent: IconBox, icon: '📦' };
   } else if (n.includes('pet') || n.includes('ขวดใส') || c.includes('plastic')) {
-    return { color: 'bg-blue-100 text-blue-800', iconComponent: IconBottle };
+    return { color: 'bg-blue-100 text-blue-800', iconComponent: IconBottle, icon: '🧴' };
   } else if (n.includes('แก้ว') || c.includes('glass')) {
-    return { color: 'bg-emerald-100 text-emerald-800', iconComponent: IconGlass };
+    return { color: 'bg-emerald-100 text-emerald-800', iconComponent: IconGlass, icon: '🍷' };
   } else if (n.includes('กระป๋อง') || c.includes('can') || c.includes('aluminium')) {
-    return { color: 'bg-gray-100 text-gray-800', iconComponent: IconBarrel };
+    return { color: 'bg-gray-100 text-gray-800', iconComponent: IconBarrel, icon: '🥫' };
   } else if (n.includes('เหล็ก') || c.includes('metal') || c.includes('iron')) {
-    return { color: 'bg-red-100 text-red-800', iconComponent: IconTool };
+    return { color: 'bg-red-100 text-red-800', iconComponent: IconTool, icon: '🔧' };
   } else {
-    return { color: 'bg-green-100 text-green-800', iconComponent: IconRecycle };
+    return { color: 'bg-green-100 text-green-800', iconComponent: IconRecycle, icon: '♻️' };
   }
 };
 
@@ -185,10 +203,10 @@ const wasteTypes = computed(() => {
   return wastes.value.map(w => {
     const style = getWasteStyle(w.name || '', w.category || '');
     return {
-      id: w.waste_id,
-      name: w.name,
-      price: w.price,
-      category: w.category,
+      id: w.waste_id || '',
+      name: w.name || '',
+      price: w.price || 0,
+      category: w.category || '',
       ...style
     };
   });
@@ -281,7 +299,7 @@ watch([searchQuery, selectedCategory], () => {
   loadWastes(1);
 });
 
-const selectedType = ref<any>(null);
+const selectedType = ref<WasteType | null>(null);
 const weightInput = ref('');
 
 onMounted(async () => {
@@ -303,7 +321,7 @@ onMounted(async () => {
   await loadWastes(1);
 });
 
-const openWeighing = (type: any) => {
+const openWeighing = (type: WasteType) => {
   selectedType.value = type;
   weightInput.value = '';
 };
@@ -326,10 +344,6 @@ const calculateTotal = (expression: string) => {
 };
 
 const currentTotal = computed(() => calculateTotal(weightInput.value));
-const currentPrice = computed(() => {
-  if (!selectedType.value || !selectedType.value.price) return 0;
-  return currentTotal.value * selectedType.value.price;
-});
 
 const addItem = () => {
   if (!selectedType.value || currentTotal.value <= 0) return;
@@ -391,9 +405,7 @@ const confirmPayment = async () => {
   }
 };
 
-const removeItem = (id: string) => {
-  wastePurchaseStore.removeItem(id);
-};
+
 
 // Pagination controls
 const nextPage = async () => {
@@ -745,7 +757,7 @@ const goToPage = async (page: number) => {
         </div>
 
         <div class="flex gap-3">
-          <button @click="wastePurchaseStore.removeItem(editingItem.id); closeEditModal()"
+          <button @click="editingItem && wastePurchaseStore.removeItem(editingItem.id); closeEditModal()"
             class="btn btn-error btn-outline flex-none">
             <IconTrash :size="20" />
           </button>

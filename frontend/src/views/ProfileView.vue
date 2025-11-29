@@ -141,7 +141,8 @@ const uploadImage = async () => {
     xhr.send(formData)
 
     // Wait for upload to complete
-    const result: any = await uploadPromise
+    // Wait for upload to complete
+    const result = await uploadPromise as { data: { image_url: string } }
 
     // Update user data with new image URL
     userData.value.image_url = result.data.image_url
@@ -150,9 +151,10 @@ const uploadImage = async () => {
     // Reset image error state
     imageLoadError.value = false
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Image upload error:', err)
-    error.value = `Failed to upload image: ${err.message}`
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    error.value = `Failed to upload image: ${message}`
   } finally {
     isUploadingImage.value = false
     uploadProgress.value = 0
@@ -231,8 +233,9 @@ const fetchUserProfile = async () => {
     } else {
       error.value = `Failed to fetch profile data: ${response.status} ${response.statusText}`
     }
-  } catch (err: any) {
-    error.value = `Network error: ${err.message || 'Cannot connect to server'}`
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Cannot connect to server'
+    error.value = `Network error: ${message}`
   } finally {
     isLoading.value = false
   }
@@ -269,8 +272,9 @@ const updateProfile = async () => {
     } else {
       error.value = `Failed to update profile: ${response.status} ${response.statusText}`
     }
-  } catch (err: any) {
-    error.value = `Network error: ${err.message || 'Cannot connect to server'}`
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Cannot connect to server'
+    error.value = `Network error: ${message}`
   } finally {
     isLoading.value = false
   }
@@ -318,51 +322,35 @@ onMounted(() => {
             <div class="avatar relative group">
               <div
                 class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative transition-all duration-200"
-                :class="{ 'ring-2 ring-blue-500 ring-offset-2': isDragging }"
-                @dragover="handleDragOver"
-                @dragleave="handleDragLeave"
-                @drop="handleDrop"
-              >
-                <img
-                  v-if="userData.image_url && userData.image_url.trim() !== '' && !imageLoadError"
-                  :src="userData.image_url"
-                  :alt="userData.username || 'Profile'"
-                  class="w-full h-full object-cover"
-                  @error="handleImageError"
-                  @load="handleImageLoad"
-                />
-                <IconUserCircle
-                  v-else
-                  size="64"
-                  class="text-gray-400"
-                />
+                :class="{ 'ring-2 ring-blue-500 ring-offset-2': isDragging }" @dragover="handleDragOver"
+                @dragleave="handleDragLeave" @drop="handleDrop">
+                <img v-if="userData.image_url && userData.image_url.trim() !== '' && !imageLoadError"
+                  :src="userData.image_url" :alt="userData.username || 'Profile'" class="w-full h-full object-cover"
+                  @error="handleImageError" @load="handleImageLoad" />
+                <IconUserCircle v-else size="64" class="text-gray-400" />
 
                 <!-- Upload overlay -->
-                <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer rounded-full"
-                     @click="triggerFileUpload"
-                     v-if="!isUploadingImage">
+                <div
+                  class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer rounded-full"
+                  @click="triggerFileUpload" v-if="!isUploadingImage">
                   <IconEdit size="24" class="text-white" />
                 </div>
 
                 <!-- Upload progress -->
-                <div v-if="isUploadingImage" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
+                <div v-if="isUploadingImage"
+                  class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
                   <div class="text-white text-xs font-semibold">{{ uploadProgress }}%</div>
                 </div>
 
                 <!-- Drag overlay -->
-                <div v-if="isDragging" class="absolute inset-0 bg-blue-500 bg-opacity-75 flex items-center justify-center rounded-full">
+                <div v-if="isDragging"
+                  class="absolute inset-0 bg-blue-500 bg-opacity-75 flex items-center justify-center rounded-full">
                   <div class="text-white text-xs font-semibold">Drop here</div>
                 </div>
               </div>
 
               <!-- Hidden file input -->
-              <input
-                id="imageUpload"
-                type="file"
-                accept="image/*"
-                @change="handleFileSelect"
-                class="hidden"
-              />
+              <input id="imageUpload" type="file" accept="image/*" @change="handleFileSelect" class="hidden" />
             </div>
             <div>
               <h1 class="text-3xl font-bold text-gray-800">{{ $t('Profile.title') }}</h1>
@@ -372,11 +360,7 @@ onMounted(() => {
           </div>
 
           <!-- Edit Button -->
-          <button
-            v-if="!isEditing"
-            @click="isEditing = true"
-            class="btn btn-outline btn-primary"
-          >
+          <button v-if="!isEditing" @click="isEditing = true" class="btn btn-outline btn-primary">
             <IconEdit size="20" />
             {{ $t('Profile.edit') }}
           </button>
@@ -411,13 +395,8 @@ onMounted(() => {
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 {{ $t('Profile.username') }}
               </label>
-              <input
-                v-if="isEditing"
-                v-model="editForm.username"
-                type="text"
-                class="input input-bordered w-full"
-                :placeholder="$t('Profile.usernamePlaceholder')"
-              />
+              <input v-if="isEditing" v-model="editForm.username" type="text" class="input input-bordered w-full"
+                :placeholder="$t('Profile.usernamePlaceholder')" />
               <p v-else class="text-gray-900 font-medium">{{ userData.username || 'N/A' }}</p>
             </div>
 
@@ -426,13 +405,8 @@ onMounted(() => {
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 {{ $t('Profile.email') }}
               </label>
-              <input
-                v-if="isEditing"
-                v-model="editForm.email"
-                type="email"
-                class="input input-bordered w-full"
-                :placeholder="$t('Profile.emailPlaceholder')"
-              />
+              <input v-if="isEditing" v-model="editForm.email" type="email" class="input input-bordered w-full"
+                :placeholder="$t('Profile.emailPlaceholder')" />
               <p v-else class="text-gray-900 font-medium">{{ userData.email || 'N/A' }}</p>
             </div>
 
@@ -447,18 +421,11 @@ onMounted(() => {
 
           <!-- Edit Actions -->
           <div v-if="isEditing" class="flex gap-2 mt-6">
-            <button
-              @click="updateProfile"
-              :disabled="isLoading"
-              class="btn btn-primary"
-            >
+            <button @click="updateProfile" :disabled="isLoading" class="btn btn-primary">
               <IconCheck size="20" />
               {{ $t('Profile.save') }}
             </button>
-            <button
-              @click="cancelEdit"
-              class="btn btn-outline"
-            >
+            <button @click="cancelEdit" class="btn btn-outline">
               <IconX size="20" />
               {{ $t('Profile.cancel') }}
             </button>
@@ -494,19 +461,10 @@ onMounted(() => {
               <div class="flex items-center gap-4">
                 <div class="avatar">
                   <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                    <img
-                      v-if="userData.image_url && userData.image_url.trim() !== '' && !imageLoadError"
-                      :src="userData.image_url"
-                      :alt="userData.username || 'Profile'"
-                      class="w-full h-full object-cover"
-                      @error="handleImageError"
-                      @load="handleImageLoad"
-                    />
-                    <IconUserCircle
-                      v-else
-                      size="48"
-                      class="text-gray-400"
-                    />
+                    <img v-if="userData.image_url && userData.image_url.trim() !== '' && !imageLoadError"
+                      :src="userData.image_url" :alt="userData.username || 'Profile'" class="w-full h-full object-cover"
+                      @error="handleImageError" @load="handleImageLoad" />
+                    <IconUserCircle v-else size="48" class="text-gray-400" />
                   </div>
                 </div>
                 <p class="text-sm text-gray-600">

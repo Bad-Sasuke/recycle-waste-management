@@ -292,9 +292,8 @@ const handleLogout = () => {
 
 <style scoped>
 .navbar {
-  background-color: #f0fdf4;
+  @apply bg-navbar border-b-2 border-navbar;
   /* สีเขียวอ่อน */
-  border-bottom: 2px solid #bbf7d0;
   /* ขอบด้านล่าง */
 }
 </style>

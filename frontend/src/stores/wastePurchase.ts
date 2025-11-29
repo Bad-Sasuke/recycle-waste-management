@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+import type { Component } from 'vue'
+
 export interface WastePurchaseItem {
   id: string
   waste_id: string
   name: string
   icon: string
-  iconComponent: any
+  iconComponent: Component
   color: string
   totalWeight: number
   expression: string

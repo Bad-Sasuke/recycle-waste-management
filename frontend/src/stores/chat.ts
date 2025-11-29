@@ -40,11 +40,12 @@ export const useChatStore = defineStore('chat', {
       }
 
       const userStore = useUsersStore()
+      const user = userStore.user
       const token = getCookie('token')
       const apiUrl = import.meta.env.VITE_WEB_API || 'http://localhost:8080'
       const wsUrl = apiUrl.replace(/^http/, 'ws')
 
-      if (!userStore.user || !token) {
+      if (!user || !token) {
         this.error = 'User not authenticated'
         return
       }
@@ -54,8 +55,7 @@ export const useChatStore = defineStore('chat', {
       this.isPartnerOnline = false
 
       // Construct WebSocket URL
-      // Construct WebSocket URL
-      const url = `${wsUrl}/ws/chat?user_id=${userStore.user.user_id}&request_id=${requestId}`
+      const url = `${wsUrl}/ws/chat?user_id=${user.user_id}&request_id=${requestId}`
 
       console.log('Connecting to WebSocket:', url)
 
@@ -122,9 +122,13 @@ export const useChatStore = defineStore('chat', {
           this.error = 'Connection error'
           this.isConnected = false
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('Failed to create WebSocket connection:', e)
-        this.error = e.message
+        if (e instanceof Error) {
+          this.error = e.message
+        } else {
+          this.error = 'Unknown error occurred'
+        }
       }
     },
 

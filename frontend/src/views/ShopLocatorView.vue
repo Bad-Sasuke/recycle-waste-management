@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { ref, shallowRef, onMounted, computed, watch, onUnmounted, h, render, nextTick } from 'vue';
-import { IconSearch, IconCurrentLocation, IconHourglass, IconList, IconSend, IconStar, IconStarFilled, IconFileText, IconX, IconCheck, IconDownload, IconNavigation, IconClock, IconPhone, IconBuildingStore, IconInfoCircle } from '@tabler/icons-vue';
+import { IconSearch, IconCurrentLocation, IconList, IconSend, IconStar, IconStarFilled, IconFileText } from '@tabler/icons-vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet marker icons
-// @ts-ignore
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-// @ts-ignore
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
-// @ts-ignore
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import { useShopStore } from '../stores/shop';
 import { useCustomerRequestStore } from '../stores/customer_request';
@@ -17,12 +14,17 @@ import { useChatStore } from '../stores/chat';
 import { useUsersStore } from '../stores/users';
 import { storeToRefs } from 'pinia';
 import AlertModal from '../components/AlertModal.vue';
+import LiquidMarker from '../components/map/LiquidMarker.vue';
+import ShopPopup from '../components/map/ShopPopup.vue';
+import UserLocationPopup from '../components/map/UserLocationPopup.vue';
 import config from '../config';
 import type { Shop } from '../types/shop';
+import type { CustomerRequest } from '../types/customer_request';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 // Fix for default marker icon
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl,
@@ -73,13 +75,36 @@ const currentMessage = ref('');
 const reviewModal = ref<HTMLDialogElement | null>(null);
 const rating = ref(5);
 const reviewComment = ref('');
-const messageCount = ref(0);
 const alertModal = ref<InstanceType<typeof AlertModal> | null>(null);
 const requestsModal = ref<HTMLDialogElement | null>(null);
 const receiptModal = ref<HTMLDialogElement | null>(null);
 const refreshIntervalId = ref<number | null>(null);
-const currentReviewRequest = ref<any | null>(null);
-const receiptData = ref<any | null>(null);
+interface ReceiptItem {
+  name: string;
+  category: string;
+  weight: number;
+  unit_price: number;
+  price: number;
+}
+
+interface Receipt {
+  id: string;
+  created_at: string;
+  payment_method: string;
+  total_amount: number;
+  vat_rate: number;
+  vat: number;
+  net_total: number;
+}
+
+interface ReceiptData {
+  receipt: Receipt;
+  items: ReceiptItem[];
+  shop: Shop;
+}
+
+const currentReviewRequest = ref<CustomerRequest | null>(null);
+const receiptData = ref<ReceiptData | null>(null);
 const isLoadingReceipt = ref(false);
 const reviewedRequests = ref<Map<string, boolean>>(new Map()); // Track which requests have been reviewed
 
@@ -187,7 +212,7 @@ const downloadPDF = () => {
   }
 
   // Items Table
-  const tableData = items.map((item: any) => [
+  const tableData = items.map((item) => [
     item.name,
     item.category,
     item.weight.toFixed(2),
@@ -204,6 +229,7 @@ const downloadPDF = () => {
   });
 
   // Summary
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const finalY = (doc as any).lastAutoTable.finalY + 10;
   doc.setFontSize(10);
   doc.text(`Subtotal: ฿${receipt.total_amount.toFixed(2)}`, 140, finalY, { align: 'right' });
@@ -229,57 +255,11 @@ const filteredShops = computed(() => {
 });
 
 // Generate popup content based on share status
+// Generate popup content based on share status
 const getUserPopupContent = computed(() => {
-  const baseContent = `
-    <div class="glass-card">
-      <div class="glass-card-content" style="padding: 16px; text-align: center;">
-        <div style="width: 48px; height: 48px; margin: 0 auto 12px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-          <svg style="width: 24px; height: 24px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-        </div>
-        <h3 class="shop-name" style="margin-bottom: 4px;">คุณอยู่ที่นี่</h3>
-        <p class="shop-address" style="font-size: 0.75rem; margin-bottom: 12px;">ตำแหน่งปัจจุบันของคุณ</p>`;
-
-  if (shareStatus.value === 'idle') {
-    // ปุ่มแชร์ตำแหน่งปกติ (สีเขียว)
-    return baseContent + `
-        <button id="share-location-btn" style="width: 100%; padding: 8px 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-          แชร์ตำแหน่งของคุณ
-        </button>
-      </div>
-    </div>`;
-  } else if (shareStatus.value === 'pending') {
-    // Render icon to HTML string
-    const div = document.createElement('div');
-    render(h(IconHourglass, { size: 16, class: 'animate-spin' }), div);
-    const iconHtml = div.innerHTML;
-
-    // สถานะรอร้าน: ปุ่มรอ (สีเขียวแต่ disabled)
-    return baseContent + `
-        <p style="font-size: 0.75rem; color: #f59e0b; margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
-          ${iconHtml}
-          รอร้านค้าใกล้เคียง
-        </p>
-        <button disabled style="width: 100%; padding: 8px 16px; background: linear-gradient(135deg, #cccccc 0%, #cccccc 100%); color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: not-allowed; opacity: 0.7; transition: all 0.2s;">
-          แชร์ตำแหน่งของคุณ
-        </button>
-      </div>
-    </div>`;
-  } else {
-    // สถานะร้านรับแล้ว: ปุ่มแชท + ปุ่มยกเลิก (disabled)
-    return baseContent + `
-        <p style="font-size: 0.75rem; color: #10b981; margin-bottom: 8px; font-weight: 600;">✓ ร้านรับคำขอแล้ว</p>
-        <button id="chat-btn" style="width: 100%; padding: 8px 16px; margin-bottom: 8px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-          💬 แชทกับร้าน
-        </button>
-        <button disabled style="width: 100%; padding: 8px 16px; background: #9ca3af; color: white; font-weight: 600; font-size: 0.875rem; border: none; border-radius: 8px; cursor: not-allowed; opacity: 0.6;">
-          ยกเลิก
-        </button>
-      </div>
-    </div>`;
-  }
+  const div = document.createElement('div');
+  render(h(UserLocationPopup, { status: shareStatus.value }), div);
+  return div.innerHTML;
 });
 
 // Initialize map
@@ -307,71 +287,26 @@ const updateMarkers = () => {
   filteredShops.value.forEach(shop => {
     if (shop.latitude && shop.longitude) {
       // Create custom icon with liquid glass style
+      // Create custom icon with liquid glass style
+      const iconDiv = document.createElement('div');
+      render(h(LiquidMarker, { colorClass: 'bg-primary' }), iconDiv);
+
       const customIcon = L.divIcon({
         className: 'custom-shop-marker',
-        html: `
-          <div class="liquid-marker">
-            <div class="liquid-pin" style="background: #10b981;">
-              <div class="liquid-glow"></div>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20" style="position: relative; z-index: 2;">
-                <path d="M21 13.242V20H22V22H2V20H3V13.242L1.515 9.583C1.195 8.772 1.633 7.862 2.444 7.541C2.626 7.466 2.821 7.428 3.018 7.428H20.982C21.889 7.428 22.623 8.163 22.623 9.07C22.623 9.267 22.585 9.462 22.51 9.644L21 13.242ZM19 13.972L20.234 10.428H3.766L5 13.972V20H19V13.972ZM14 10H10V12C10 13.105 10.895 14 12 14C13.105 14 14 13.105 14 12V10Z"/>
-              </svg>
-            </div>
-            <div class="liquid-pulse" style="background: #10b981;"></div>
-          </div>
-        `,
+        html: iconDiv.innerHTML,
         iconSize: [40, 40],
         iconAnchor: [20, 40],
         popupAnchor: [0, -40]
       });
 
+      const popupDiv = document.createElement('div');
+      render(h(ShopPopup, { shop: shop }), popupDiv);
+
       const marker = L.marker([shop.latitude, shop.longitude], {
         icon: customIcon
       })
         .addTo(map.value!)
-        .bindPopup(`
-          <div class="glass-card">
-            <div class="glass-card-content">
-              ${shop.image_url
-            ? `<div class="shop-image-container">
-                     <img src="${shop.image_url}" alt="${shop.name}" class="shop-image" />
-                   </div>`
-            : `<div class="shop-image-container shop-placeholder">
-                     <span class="shop-icon">🏪</span>
-                   </div>`
-          }
-              <h3 class="shop-name">${shop.name}</h3>
-              <p class="shop-address">${shop.address}</p>
-              ${shop.opening_time ? `
-                <div class="shop-hours">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
-                  <span>${shop.opening_time} - ${shop.closing_time}</span>
-                </div>
-              ` : ''}
-              ${shop.phone ? `
-                <div class="shop-phone">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-phone"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" /></svg>
-                  <span>${shop.phone}</span>
-                </div>
-              ` : ''}
-              <div class="flex flex-col gap-2 mt-4">
-                <a href="/shop/${shop.shop_id}"
-                   class="btn btn-sm border-none bg-gradient-to-r from-primary to-secondary hover:from-primary-focus hover:to-secondary-focus text-white w-full gap-2 shadow-md rounded-lg"
-                   style="text-decoration: none;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" color="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-building-store"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2 -4h14l2 4" /><path d="M5 21l0 -10.15" /><path d="M19 21l0 -10.15" /><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" /></svg>
-                  <span class="text-white">ดูโปรไฟล์ร้านค้า</span>
-                </a>
-                <a href="https://www.google.com/maps/dir/?api=1&destination=${shop.latitude},${shop.longitude}"
-                   target="_blank"
-                   class="btn btn-sm btn-outline btn-primary w-full gap-2 hover:bg-primary hover:text-white shadow-sm rounded-lg"
-                   style="text-decoration: none;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-navigation"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3l5.5 18l-5.5 -2.5l-5.5 2.5z" /></svg>
-                  นำทางไปยังร้าน
-                </a>
-              </div>
-            </div>
-          </div>
-        `, {
+        .bindPopup(popupDiv.innerHTML, {
           maxWidth: 280,
           className: 'glass-popup'
         });
@@ -386,7 +321,7 @@ const updateMarkers = () => {
 };
 
 // Focus map on specific request
-const focusOnRequest = (req: any) => {
+const focusOnRequest = (req: CustomerRequest) => {
   if (!map.value) return;
 
   closeRequestsModal();
@@ -444,7 +379,7 @@ const locateUser = () => {
     // Add user marker with glassmorphism popup
     userMarker.value = L.circleMarker(e.latlng, {
       radius: 8,
-      fillColor: '#3b82f6',
+      fillColor: 'var(--color-info)',
       color: '#fff',
       weight: 2,
       opacity: 1,
@@ -583,13 +518,9 @@ const handleChatKeyPress = (event: KeyboardEvent) => {
   }
 };
 
-const openReviewModal = () => {
-  if (reviewModal.value) {
-    reviewModal.value.showModal();
-  }
-};
 
-const openReviewModalForRequest = (request: any) => {
+
+const openReviewModalForRequest = (request: CustomerRequest) => {
   currentReviewRequest.value = request;
   rating.value = 5;
   reviewComment.value = '';
@@ -1234,260 +1165,10 @@ onUnmounted(() => {
   display: none;
 }
 
-/* Glass Card */
-:deep(.glass-card) {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-    0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  position: relative;
-}
-
-:deep(.glass-card::before) {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg,
-      transparent,
-      rgba(255, 255, 255, 0.8),
-      transparent);
-}
-
-:deep(.glass-card-content) {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Shop Image */
-:deep(.shop-image-container) {
-  width: 100%;
-  height: 140px;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-:deep(.shop-image) {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-:deep(.shop-placeholder) {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.shop-icon) {
-  font-size: 3.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-}
-
-/* Shop Info */
-:deep(.shop-name) {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-  line-height: 1.4;
-}
-
-:deep(.shop-address) {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Info Row with Icons */
-:deep(.shop-hours),
-:deep(.shop-phone) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: #4b5563;
-  padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.08);
-  border-radius: 8px;
-  border: 1px solid rgba(16, 185, 129, 0.15);
-}
-
-:deep(.shop-hours .icon),
-:deep(.shop-phone .icon) {
-  width: 14px;
-  height: 14px;
-  color: #10b981;
-  flex-shrink: 0;
-}
-
-/* Navigate Button */
-:deep(.navigate-btn) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  font-weight: 600;
-  font-size: 0.875rem;
-  border-radius: 12px;
-  text-decoration: none;
-  margin-top: 8px;
-  box-shadow:
-    0 4px 12px rgba(16, 185, 129, 0.3),
-    0 1px 3px rgba(0, 0, 0, 0.1) inset;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-:deep(.navigate-btn::before) {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
-}
-
-:deep(.navigate-btn:hover) {
-  transform: translateY(-2px);
-  box-shadow:
-    0 6px 20px rgba(16, 185, 129, 0.4),
-    0 2px 6px rgba(0, 0, 0, 0.15) inset;
-}
-
-:deep(.navigate-btn:hover::before) {
-  left: 100%;
-}
-
-:deep(.navigate-btn:active) {
-  transform: translateY(0);
-  box-shadow:
-    0 2px 8px rgba(16, 185, 129, 0.4),
-    0 1px 2px rgba(0, 0, 0, 0.1) inset;
-}
-
-:deep(.navigate-btn .icon) {
-  width: 16px;
-  height: 16px;
-}
-
 /* Custom Shop Marker Styles */
 :deep(.custom-shop-marker) {
   background: transparent !important;
   border: none !important;
-}
-
-/* Liquid Marker Styles */
-:deep(.liquid-marker) {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.liquid-pin) {
-  width: 40px;
-  height: 40px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.2),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  z-index: 2;
-  animation: float 3s ease-in-out infinite;
-}
-
-:deep(.liquid-pin svg) {
-  transform: rotate(45deg);
-}
-
-:deep(.liquid-glow) {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  width: 15px;
-  height: 15px;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent);
-  border-radius: 50%;
-  z-index: 3;
-}
-
-:deep(.liquid-pulse) {
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%) rotateX(60deg);
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  opacity: 0.5;
-  filter: blur(4px);
-  animation: pulse-shadow 3s ease-in-out infinite;
-  z-index: 1;
-}
-
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0) rotate(-45deg);
-  }
-
-  50% {
-    transform: translateY(-6px) rotate(-45deg);
-  }
-}
-
-@keyframes pulse-shadow {
-
-  0%,
-  100% {
-    transform: translateX(-50%) rotateX(60deg) scale(1);
-    opacity: 0.5;
-  }
-
-  50% {
-    transform: translateX(-50%) rotateX(60deg) scale(0.8);
-    opacity: 0.2;
-  }
-}
-
-/* Share Location Button Styles */
-:deep(#share-location-btn:hover) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-}
-
-:deep(#share-location-btn:active) {
-  transform: translateY(0);
 }
 
 /* Global Styles for Leaflet Popups (Non-scoped) */
@@ -1505,131 +1186,5 @@ onUnmounted(() => {
 
 .glass-popup .leaflet-popup-tip-container {
   display: none;
-}
-
-/* Liquid Glass Card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-    0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  position: relative;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.glass-card:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 12px 40px 0 rgba(31, 38, 135, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-}
-
-.glass-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -50%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(to right,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent);
-  transform: skewX(-25deg);
-  animation: shine 6s infinite;
-  pointer-events: none;
-}
-
-@keyframes shine {
-  0% {
-    transform: translateX(-100%) skewX(-25deg);
-  }
-
-  20% {
-    transform: translateX(100%) skewX(-25deg);
-  }
-
-  100% {
-    transform: translateX(100%) skewX(-25deg);
-  }
-}
-
-.glass-card-content {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Shop Image */
-.shop-image-container {
-  width: 100%;
-  height: 140px;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.shop-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.shop-placeholder {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.shop-icon {
-  font-size: 3.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-}
-
-/* Shop Info */
-.shop-name {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.shop-address {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Info Row with Icons */
-.shop-hours,
-.shop-phone {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: #4b5563;
-  padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.08);
-  border-radius: 8px;
-  border: 1px solid rgba(16, 185, 129, 0.15);
-}
-
-.shop-hours .icon,
-.shop-phone .icon {
-  width: 14px;
-  height: 14px;
-  color: #10b981;
-  flex-shrink: 0;
 }
 </style>

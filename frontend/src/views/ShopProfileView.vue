@@ -1,3 +1,108 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import config from '../config';
+import { fetchShopById } from '@/services/shop';
+import type { Shop } from '@/types/shop';
+
+const route = useRoute();
+const webAPI = config.webAPI;
+
+const shop = ref<Shop | null>(null);
+
+interface Review {
+    review_id: string;
+    user_id: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+}
+
+const reviews = ref<Review[]>([]);
+const isLoading = ref(true);
+const currentPage = ref(1);
+const pageSize = 10;
+const totalReviews = ref(0);
+const totalPages = ref(0);
+
+const averageRating = computed(() => {
+    if (shop.value && shop.value.average_rating !== undefined) {
+        return shop.value.average_rating;
+    }
+    return 0;
+});
+
+const displayPages = computed(() => {
+    const pages = [];
+    const maxDisplay = 5;
+    let start = Math.max(1, currentPage.value - Math.floor(maxDisplay / 2));
+    const end = Math.min(totalPages.value, start + maxDisplay - 1);
+
+    if (end - start + 1 < maxDisplay) {
+        start = Math.max(1, end - maxDisplay + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    return pages;
+});
+
+const fetchShop = async () => {
+    try {
+        const shopId = route.params.shop_id as string;
+        const response = await fetchShopById(shopId);
+
+        if (response.data) {
+            shop.value = response.data;
+            // Use total reviews from shop data if available
+            if (shop.value.total_reviews !== undefined) {
+                totalReviews.value = shop.value.total_reviews;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching shop:', error);
+    }
+};
+
+const fetchReviews = async () => {
+    try {
+        const shopId = route.params.shop_id as string;
+        const response = await fetch(`${webAPI}/api/reviews/shop/${shopId}?page=${currentPage.value}&page_size=${pageSize}`);
+        const data = await response.json();
+
+        if (data.reviews) {
+            reviews.value = data.reviews;
+            totalReviews.value = data.total_count;
+            totalPages.value = data.total_pages;
+        }
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+    }
+};
+
+const changePage = async (page: number) => {
+    currentPage.value = page;
+    await fetchReviews();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+};
+
+onMounted(async () => {
+    isLoading.value = true;
+    await Promise.all([fetchShop(), fetchReviews()]);
+    isLoading.value = false;
+});
+</script>
+
+
 <template>
     <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300">
         <!-- Loading State -->
@@ -19,7 +124,7 @@
                                         class="w-full h-full object-cover" />
                                     <div v-else
                                         class="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-4xl font-bold text-white">
-                                        {{ shop.name.charAt(0) }}
+                                        {{ (shop.name || '?').charAt(0) }}
                                     </div>
                                 </div>
                             </div>
@@ -27,7 +132,7 @@
 
                         <!-- Shop Info -->
                         <div class="flex-grow">
-                            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ shop.name }}</h1>
+                            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ shop.name || 'Unknown Shop' }}</h1>
                             <p v-if="shop.description" class="text-gray-600 mb-4">{{ shop.description }}</p>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -184,97 +289,3 @@
         </div>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import config from '../config';
-import { fetchShopById } from '@/services/shop';
-
-const route = useRoute();
-const webAPI = config.webAPI;
-
-const shop = ref<any>(null);
-const reviews = ref<any[]>([]);
-const isLoading = ref(true);
-const currentPage = ref(1);
-const pageSize = 10;
-const totalReviews = ref(0);
-const totalPages = ref(0);
-
-const averageRating = computed(() => {
-    if (shop.value && shop.value.average_rating !== undefined) {
-        return shop.value.average_rating;
-    }
-    return 0;
-});
-
-const displayPages = computed(() => {
-    const pages = [];
-    const maxDisplay = 5;
-    let start = Math.max(1, currentPage.value - Math.floor(maxDisplay / 2));
-    let end = Math.min(totalPages.value, start + maxDisplay - 1);
-
-    if (end - start + 1 < maxDisplay) {
-        start = Math.max(1, end - maxDisplay + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-        pages.push(i);
-    }
-    return pages;
-});
-
-const fetchShop = async () => {
-    try {
-        const shopId = route.params.shop_id as string;
-        const response = await fetchShopById(shopId);
-
-        if (response.data) {
-            shop.value = response.data;
-            // Use total reviews from shop data if available
-            if (shop.value.total_reviews !== undefined) {
-                totalReviews.value = shop.value.total_reviews;
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching shop:', error);
-    }
-};
-
-const fetchReviews = async () => {
-    try {
-        const shopId = route.params.shop_id as string;
-        const response = await fetch(`${webAPI}/api/reviews/shop/${shopId}?page=${currentPage.value}&page_size=${pageSize}`);
-        const data = await response.json();
-
-        if (data.reviews) {
-            reviews.value = data.reviews;
-            totalReviews.value = data.total_count;
-            totalPages.value = data.total_pages;
-        }
-    } catch (error) {
-        console.error('Error fetching reviews:', error);
-    }
-};
-
-const changePage = async (page: number) => {
-    currentPage.value = page;
-    await fetchReviews();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-};
-
-onMounted(async () => {
-    isLoading.value = true;
-    await Promise.all([fetchShop(), fetchReviews()]);
-    isLoading.value = false;
-});
-</script>

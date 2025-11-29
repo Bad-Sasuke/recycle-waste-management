@@ -8,41 +8,23 @@
       <form class="py-4 flex flex-col gap-2">
         <label class="input input-bordered flex items-center gap-2">
           ชื่อขยะ
-          <input
-            type="text"
-            class="grow"
-            placeholder="เช่น ขวดพลาสติก"
-            v-model="formDataWaste.name"
-            :disabled="isUpdatingWaste"
-          />
+          <input type="text" class="grow" placeholder="เช่น ขวดพลาสติก" v-model="formDataWaste.name"
+            :disabled="isUpdatingWaste" />
         </label>
         <ErrorText :message="errName" />
         <label class="input input-bordered flex items-center gap-2">
           ราคา
-          <input
-            type="number"
-            class="grow"
-            placeholder="เช่น 100"
-            v-model="formDataWaste.price"
-            :disabled="isUpdatingWaste"
-          />
+          <input type="number" class="grow" placeholder="เช่น 100" v-model="formDataWaste.price"
+            :disabled="isUpdatingWaste" />
         </label>
         <ErrorText :message="errPrice" />
 
         <label class="flex items-center justify-between w-full gap-2">
           <p class="px-2">หมวดหมู่</p>
         </label>
-        <select
-          class="select select-bordered w-full"
-          v-model="formDataWaste.category"
-          :disabled="isUpdatingWaste"
-        >
+        <select class="select select-bordered w-full" v-model="formDataWaste.category" :disabled="isUpdatingWaste">
           <option disabled selected>เลือกหมวดหมู่</option>
-          <option
-            v-for="category in categoryWasteStore.category"
-            :key="category.id"
-            :value="category.name"
-          >
+          <option v-for="category in categoryWasteStore.category" :key="category.id" :value="category.name">
             {{ category.name }}
           </option>
         </select>
@@ -52,26 +34,18 @@
         </label>
         <div class="flex justify-center items-center border-2 border-dashed border-gray-300/50 p-2">
           <label class="block">
-            <input
-              type="file"
-              @change="loadFile"
+            <input type="file" @change="loadFile"
               class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
-              accept="image/*"
-              :class="{
+              accept="image/*" :class="{
                 'cursor-not-allowed': isUpdatingWaste,
                 'file:text-gray-700 hover:file:bg-gray-100': isUpdatingWaste,
-              }"
-              :disabled="isUpdatingWaste"
-            />
+              }" :disabled="isUpdatingWaste" />
           </label>
           <img :src="previewImage" class="h-32 rounded" alt="Current profile photo" />
         </div>
       </form>
-      <button
-        class="mt-4 btn bg-green-700 hover:bg-green-600 text-white w-full"
-        @click="updateWaste"
-        :disabled="isUpdatingWaste"
-      >
+      <button class="mt-4 btn bg-green-700 hover:bg-green-600 text-white w-full" @click="updateWaste"
+        :disabled="isUpdatingWaste">
         <span class="loading loading-spinner loading-sm" v-if="isUpdatingWaste"></span>
         <p v-if="!isUpdatingWaste">อัปเดตขยะ</p>
       </button>
@@ -84,7 +58,6 @@ import { ref, reactive, watch } from 'vue'
 import { useCategoryWasteStore } from '../stores/category_waste'
 import { useWastesStore } from '../stores/wastes'
 import ErrorText from './ErrorText.vue'
-import type RecycleWaste from '../types/recycle_waste'
 
 interface FormDataWaste {
   name: string
@@ -144,7 +117,7 @@ const validateForm = (): boolean => {
   errName.value = ''
   errPrice.value = ''
   errCategory.value = ''
-  
+
   if (!formDataWaste.name) {
     errName.value = 'กรุณากรอกชื่อขยะรีไซเคิล'
     return false
@@ -157,12 +130,12 @@ const validateForm = (): boolean => {
     errPrice.value = 'กรุณากรอกราคาขยะรีไซเคิลให้ถูกต้อง'
     return false
   }
-  
+
   if (!formDataWaste.category || formDataWaste.category === 'เลือกหมวดหมู่') {
     errCategory.value = 'กรุณาเลือกหมวดหมู่ขยะรีไซเคิล'
     return false
   }
-  
+
   return true
 }
 
@@ -171,14 +144,14 @@ const updateWaste = async () => {
   if (!validateForm()) {
     return
   }
-  
+
   if (!wastesStore.wasteToEdit) {
     console.error('No waste ID provided for update')
     return
   }
-  
+
   isUpdatingWaste.value = true
-  
+
   // Prepare form data for API request
   const updateData = {
     name: formDataWaste.name,
@@ -186,14 +159,14 @@ const updateWaste = async () => {
     category: formDataWaste.category,
     imageFile: formDataWaste.imageFile
   }
-  
+
   try {
     // Call the update function in the wastes store
     await wastesStore.updateWaste(wastesStore.wasteToEdit.id, updateData)
-    
+
     // Reset form and clear waste to edit
     resetForm()
-    
+
     // Close modal
     const modal = document.getElementById('modal-edit-waste') as HTMLDialogElement
     if (modal) {
