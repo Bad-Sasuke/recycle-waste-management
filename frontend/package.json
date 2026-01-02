@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@tabler/icons-vue": "^3.23.0",
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs": "^4.22.0",
     "animejs": "^4.2.2",
     "caniuse-lite": "^1.0.30001745",
     "chart.js": "^4.5.1",

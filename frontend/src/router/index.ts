@@ -84,6 +84,12 @@ const router = createRouter({
       component: () => import('../views/WastePurchaseView.vue'),
     },
     {
+      path: '/waste-scanner',
+      name: 'waste-scanner',
+      component: () => import('../views/AIWasteScannerView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/shop/:shop_id',
       name: 'shop-profile',
       component: () => import('../views/ShopProfileView.vue'),

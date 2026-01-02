@@ -9,8 +9,10 @@ import ProductDetailModal from './ProductDetailModal.vue'
 import { useWastesStore } from '../stores/wastes'
 import { useCategoryWasteStore } from '../stores/category_waste'
 import type { GroupedRecyclableItem } from '../types/recycle_waste'
-import { IconTagPlus, IconTagMinus, IconCalendar, IconPlus, IconSearch, IconCategory, IconSortAscending, IconSortDescending, IconArrowsSort, IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight } from '@tabler/icons-vue'
+import { IconTagPlus, IconTagMinus, IconCalendar, IconPlus, IconSearch, IconCategory, IconSortAscending, IconSortDescending, IconArrowsSort, IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight, IconCamera } from '@tabler/icons-vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const searchQuery = ref('')
 const selectedCategory = ref<string[]>([])
 
@@ -260,6 +262,13 @@ const openProductDetailModal = (item: GroupedRecyclableItem) => {
             <input type="text" v-model="searchQuery" class="input input-bordered w-full md:w-80"
               :placeholder="$t('Marketplace.search')" />
           </div>
+        </div>
+        <div>
+          <button class="btn bg-teal-600 hover:bg-teal-500 text-white flex items-center gap-2"
+            @click="router.push('/waste-scanner')">
+            <IconCamera stroke="2" />
+            <span>AI Scanner</span>
+          </button>
         </div>
         <div v-if="canAddProduct">
           <button class="btn bg-green-700 hover:bg-green-600 text-white flex items-center gap-2"
