@@ -158,3 +158,27 @@ func (h *ReceiptGateway) GetReceiptsByShopID(ctx *fiber.Ctx) error {
 		"total_pages": totalPages,
 	})
 }
+
+func (h *ReceiptGateway) GetUserAnalytics(ctx *fiber.Ctx) error {
+	tokenDetails, err := middlewares.DecodeJWTToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+	userID := tokenDetails.UserID
+
+	analytics, err := h.ReceiptService.GetUserAnalytics(userID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Failed to get analytics",
+			"error":   err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"data":    analytics,
+	})
+}

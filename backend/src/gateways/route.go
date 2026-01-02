@@ -120,6 +120,7 @@ func RouteReceipt(receiptGateway *ReceiptGateway, app *fiber.App) {
 	protected := api.Group("", middlewares.SetJWtHeaderHandler())
 	protected.Post("", receiptGateway.CreateReceipt)
 	protected.Get("/by-request/:request_id", receiptGateway.GetReceiptByRequestID)
+	protected.Get("/analytics/me", receiptGateway.GetUserAnalytics)
 }
 
 func RouteStock(stockGateway *StockGateway, app *fiber.App) {

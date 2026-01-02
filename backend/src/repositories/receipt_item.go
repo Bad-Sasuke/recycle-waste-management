@@ -7,6 +7,7 @@ import (
 	ds "recycle-waste-management-backend/src/domain/datasources"
 	"recycle-waste-management-backend/src/domain/entities"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -14,6 +15,7 @@ type IReceiptItemRepository interface {
 	Create(data *entities.ReceiptItem) error
 	CreateMany(data []interface{}) error
 	FindByReceiptID(receiptID string) (*[]entities.ReceiptItem, error)
+	FindByReceiptIDs(receiptIDs []string) (*[]entities.ReceiptItem, error)
 }
 
 type receiptItemRepository struct {
@@ -58,5 +60,24 @@ func (repo *receiptItemRepository) FindByReceiptID(receiptID string) (*[]entitie
 		return nil, fmt.Errorf("error decoding receipt items: %v", err)
 	}
 
+	return &items, nil
+}
+
+func (repo *receiptItemRepository) FindByReceiptIDs(receiptIDs []string) (*[]entities.ReceiptItem, error) {
+	filter := bson.M{
+		"receipt_id": bson.M{
+			"$in": receiptIDs,
+		},
+	}
+	cursor, err := repo.Collection.Find(repo.Context, filter)
+	if err != nil {
+		return nil, fmt.Errorf("error finding receipt items: %v", err)
+	}
+	defer cursor.Close(repo.Context)
+
+	var items []entities.ReceiptItem
+	if err := cursor.All(repo.Context, &items); err != nil {
+		return nil, fmt.Errorf("error decoding receipt items: %v", err)
+	}
 	return &items, nil
 }

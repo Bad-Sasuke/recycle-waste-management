@@ -502,6 +502,31 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Features Card (Analytics, etc) -->
+      <div v-if="usersStore.user?.role !== 'employee'" class="bg-white rounded-lg shadow-md p-6 mt-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">My Activities</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <router-link to="/analytics"
+            class="card bg-base-100 shadow-sm hover:shadow-md border border-gray-100 transition-all duration-200 group">
+            <div class="card-body flex-row items-center gap-4 p-4">
+              <div
+                class="p-3 bg-green-100 text-green-600 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-gray-800">Recycling Analytics</h3>
+                <p class="text-sm text-gray-500">View your contribution stats</p>
+              </div>
+            </div>
+          </router-link>
+
+        </div>
+      </div>
 
     </div>
   </div>

@@ -32,3 +32,22 @@ type ReceiptWithDetails struct {
 	CustomerName string `json:"customer_name"`
 	ItemsCount   int    `json:"items_count"`
 }
+
+type UserAnalyticsResponse struct {
+	TotalWeightThisMonth   float64               `json:"total_weight_this_month"`
+	TotalWeightLastMonth   float64               `json:"total_weight_last_month"`
+	WeightDiffPercent      float64               `json:"weight_diff_percent"`
+	TotalEarningsThisMonth float64               `json:"total_earnings_this_month"`
+	MonthlyCategoryStats   []MonthlyCategoryStat `json:"monthly_category_stats"`
+	DailyStats             []DailyStat           `json:"daily_stats"`
+}
+
+type MonthlyCategoryStat struct {
+	Category string  `json:"category"`
+	Weight   float64 `json:"weight"`
+}
+
+type DailyStat struct {
+	Date   string  `json:"date"`
+	Weight float64 `json:"weight"`
+}

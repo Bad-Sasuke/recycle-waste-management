@@ -17,6 +17,7 @@ type IReceiptRepository interface {
 	FindByID(receiptID string) (*entities.Receipt, error)
 	FindByCustomerRequestID(requestID string) (*entities.Receipt, error)
 	FindByShopID(shopID string) ([]entities.Receipt, error)
+	FindByCustomerRequestIDs(requestIDs []string) (*[]entities.Receipt, error)
 }
 
 type receiptRepository struct {
@@ -83,4 +84,23 @@ func (repo *receiptRepository) FindByShopID(shopID string) ([]entities.Receipt, 
 	}
 
 	return receipts, nil
+}
+
+func (repo *receiptRepository) FindByCustomerRequestIDs(requestIDs []string) (*[]entities.Receipt, error) {
+	filter := bson.M{
+		"customer_request_id": bson.M{
+			"$in": requestIDs,
+		},
+	}
+	cursor, err := repo.Collection.Find(repo.Context, filter)
+	if err != nil {
+		return nil, fmt.Errorf("error finding receipts: %v", err)
+	}
+	defer cursor.Close(repo.Context)
+
+	var receipts []entities.Receipt
+	if err := cursor.All(repo.Context, &receipts); err != nil {
+		return nil, fmt.Errorf("error decoding receipts: %v", err)
+	}
+	return &receipts, nil
 }
