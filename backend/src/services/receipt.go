@@ -346,7 +346,7 @@ func (s *ReceiptService) GetUserAnalytics(userID string) (*entities.UserAnalytic
 	}
 
 	// Prepare lists
-	var monthlyCategoryStats []entities.MonthlyCategoryStat
+	monthlyCategoryStats := make([]entities.MonthlyCategoryStat, 0)
 	for cat, weight := range categoryStatsMap {
 		monthlyCategoryStats = append(monthlyCategoryStats, entities.MonthlyCategoryStat{
 			Category: cat,
@@ -354,7 +354,7 @@ func (s *ReceiptService) GetUserAnalytics(userID string) (*entities.UserAnalytic
 		})
 	}
 
-	var dailyStats []entities.DailyStat
+	dailyStats := make([]entities.DailyStat, 0)
 	// We might want to fill gaps with 0, but for now just returning existing data points
 	// Or better, sort them. Map iteration is random.
 	// For simplicity in this step, let's just return unsorted and sort in frontend or sort here.
