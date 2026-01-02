@@ -3,7 +3,8 @@
 import { useRouter } from 'vue-router'
 import { useUsersStore } from '@/stores/users'
 import PopupLogin from './PopupLogin.vue'
-import { IconRecycle, IconChartBar, IconCheck, IconStar, IconBuildingWarehouse, IconMapPin, IconBuildingStore } from '@tabler/icons-vue'
+import { IconRecycle, IconChartBar, IconCheck, IconStar, IconBuildingWarehouse, IconMapPin, IconBuildingStore, IconCalculator, IconTrash, IconFile, IconGlassFull, IconBox } from '@tabler/icons-vue'
+import { ref, computed } from 'vue'
 
 
 const router = useRouter()
@@ -33,6 +34,23 @@ const testimonials = [
   { id: 2, name: 'Sarah Chen', role: 'City Planner', content: 'Incredible visibility into our recycling metrics. A must-have for any smart city initiative.', avatar: 'https://ui-avatars.com/api/?name=Sarah+Chen&background=10B981&color=fff' },
   { id: 3, name: 'James Wilson', role: 'Sustainability Director', content: 'Efficiency increased by 40% within the first month. The marketplace feature is brilliant.', avatar: 'https://ui-avatars.com/api/?name=James+Wilson&background=F59E0B&color=fff' },
 ]
+
+// --- Impact Calculator Logic ---
+const calculatorItems = ref([
+  { id: 1, name: 'Plastic Bottles', value: 10, unit: 'kg', icon: IconTrash, iconColor: 'text-blue-500', bgColor: 'bg-blue-100', factor: 1.5 }, // 1kg plastic ~ 1.5kg CO2 saved
+  { id: 2, name: 'Paper & Cardboard', value: 5, unit: 'kg', icon: IconFile, iconColor: 'text-yellow-600', bgColor: 'bg-yellow-100', factor: 0.9 }, // 1kg paper ~ 0.9kg CO2
+  { id: 3, name: 'Glass Containers', value: 2, unit: 'kg', icon: IconGlassFull, iconColor: 'text-green-500', bgColor: 'bg-green-100', factor: 0.3 }, // 1kg glass ~ 0.3kg CO2
+  { id: 4, name: 'Aluminum Cans', value: 1, unit: 'kg', icon: IconBox, iconColor: 'text-red-500', bgColor: 'bg-red-100', factor: 9.0 }, // 1kg aluminum ~ 9kg CO2 (high impact!)
+])
+
+const totalCO2 = computed(() => {
+  return calculatorItems.value.reduce((acc, item) => acc + (item.value * item.factor), 0)
+})
+
+const totalTrees = computed(() => {
+  // Rough estimate: 20kg CO2 absorption per tree per year
+  return totalCO2.value / 20
+})
 
 
 </script>
@@ -199,6 +217,76 @@ const testimonials = [
           <h3 class="text-xl font-bold text-slate-900 mb-3">Shop Management</h3>
           <p class="text-slate-600 leading-relaxed">Shop owners can manage inventory, update pricing, and connect with
             nearby customers for pickups.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Impact Calculator Section -->
+  <section class="py-24 bg-slate-50 relative overflow-hidden">
+    <div class="container mx-auto px-6 relative z-10">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <h2 class="text-3xl md:text-5xl font-bold text-slate-900 mb-6">Calculate Your Potential Impact</h2>
+        <p class="text-lg text-slate-600">See how much you can contribute to the planet by recycling your daily waste.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <!-- Calculator Inputs -->
+        <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+          <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <IconCalculator class="text-primary" /> Weekly Recycling
+          </h3>
+          <div class="space-y-6">
+            <div v-for="item in calculatorItems" :key="item.id" class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" :class="item.bgColor">
+                <component :is="item.icon" :class="item.iconColor" size="24" />
+              </div>
+              <div class="flex-1">
+                <label class="text-sm font-medium text-slate-700 block mb-1">{{ item.name }}</label>
+                <input type="number" v-model.number="item.value" min="0"
+                  class="input input-bordered w-full bg-slate-50 focus:border-primary focus:ring-primary h-10"
+                  placeholder="0" />
+              </div>
+              <div class="text-sm text-slate-400 font-medium pt-6 w-8">{{ item.unit }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculator Results -->
+        <div class="relative">
+          <!-- Decorative blobs -->
+          <div class="absolute -top-10 -right-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+          <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"
+            style="animation-delay: 1s;"></div>
+
+          <div class="bg-slate-900 text-white p-8 rounded-3xl shadow-2xl relative overflow-hidden text-center">
+            <div class="relative z-10">
+              <h3 class="text-2xl font-bold mb-8">Estimated Annual Impact</h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                  <div class="text-4xl font-bold text-emerald-400 mb-2">{{ (totalCO2 * 52).toFixed(0) }}</div>
+                  <div class="text-slate-400 text-sm">kg CO₂ Saved / Year</div>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                  <div class="text-4xl font-bold text-emerald-400 mb-2">{{ (totalTrees * 52).toFixed(1) }}</div>
+                  <div class="text-slate-400 text-sm">Trees Planted Equivalent</div>
+                </div>
+              </div>
+
+              <p class="text-slate-400 text-xs mb-6 px-4">
+                *Estimates based on weekly input projected over a year. Standard conversion factors applied: 1.5kg
+                CO2/kg plastic, 0.9kg/kg paper, 9kg/kg aluminum.
+              </p>
+
+              <button
+                class="btn btn-primary w-full text-lg normal-case border-0 hover:scale-[1.02] transition-transform"
+                @click="handleGetStarted">
+                Start Making an Impact
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
