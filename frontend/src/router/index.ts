@@ -67,6 +67,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/my-forest',
+      name: 'gamification',
+      component: () => import('../views/GamificationView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/waste-purchase',
       name: 'waste-purchase',
       component: () => import('../views/WastePurchaseView.vue'),
