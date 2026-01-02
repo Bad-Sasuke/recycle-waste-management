@@ -1,0 +1,994 @@
+[
+    {
+        "id": "basic",
+        "name": "Basic Recycler",
+        "material": "Standard Cotton",
+        "icon": "👕",
+        "colorClass": "bg-gray-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 10
+            },
+            {
+                "label": "Style",
+                "value": 30
+            }
+        ],
+        "materialProp": {
+            "color": "0xeeeeee",
+            "roughness": 0.8,
+            "metalness": 0.1
+        }
+    },
+    {
+        "id": "plastic",
+        "name": "Ocean Guardian",
+        "material": "Recycled Plastic Bottles",
+        "icon": "🌊",
+        "colorClass": "bg-blue-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 85
+            },
+            {
+                "label": "Style",
+                "value": 70
+            }
+        ],
+        "materialProp": {
+            "color": "0x4f86f7",
+            "transparent": true,
+            "opacity": 0.8,
+            "roughness": 0.2,
+            "metalness": 0.1,
+            "transmission": 0.5,
+            "thickness": 1.0,
+            "clearcoat": 1.0
+        },
+        "hat": {
+            "type": "sphere",
+            "color": "0x4f86f7",
+            "scale": [
+                0.25,
+                0.15,
+                0.25
+            ],
+            "position": [
+                0,
+                1.55,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "cylinder",
+            "color": "0x4f86f7",
+            "scale": [
+                0.15,
+                0.4,
+                0.15
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.25
+            ]
+        }
+    },
+    {
+        "id": "cardboard",
+        "name": "Box Warrior",
+        "material": "Recycled Cardboard",
+        "icon": "📦",
+        "colorClass": "bg-amber-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 95
+            },
+            {
+                "label": "Style",
+                "value": 50
+            }
+        ],
+        "materialProp": {
+            "color": "0x8d6e63",
+            "roughness": 1.0,
+            "metalness": 0.0
+        },
+        "hat": {
+            "type": "box",
+            "color": "0x8d6e63",
+            "scale": [
+                0.5,
+                0.3,
+                0.5
+            ],
+            "position": [
+                0,
+                1.55,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "box",
+            "color": "0xa1887f",
+            "scale": [
+                0.4,
+                0.5,
+                0.2
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "can",
+        "name": "Aluminum Ace",
+        "material": "Recycled Cans",
+        "icon": "🥫",
+        "colorClass": "bg-gray-200",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 90
+            },
+            {
+                "label": "Style",
+                "value": 95
+            }
+        ],
+        "materialProp": {
+            "color": "0xc0c0c0",
+            "roughness": 0.3,
+            "metalness": 1.0,
+            "clearcoat": 0.5
+        },
+        "hat": {
+            "type": "cylinder",
+            "color": "0xc0c0c0",
+            "scale": [
+                0.3,
+                0.25,
+                0.3
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "cylinder",
+            "color": "0xd4d4d4",
+            "scale": [
+                0.12,
+                0.35,
+                0.12
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "glass",
+        "name": "Glass Golem",
+        "material": "Recycled Glass Bottles",
+        "icon": "🍾",
+        "colorClass": "bg-green-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 88
+            },
+            {
+                "label": "Style",
+                "value": 85
+            }
+        ],
+        "materialProp": {
+            "color": "0x2e8b57",
+            "transparent": true,
+            "opacity": 0.6,
+            "roughness": 0.1,
+            "metalness": 0.1,
+            "transmission": 0.6,
+            "thickness": 1.5,
+            "clearcoat": 1.0
+        },
+        "hat": {
+            "type": "sphere",
+            "color": "0x2e8b57",
+            "scale": [
+                0.25,
+                0.25,
+                0.25
+            ],
+            "position": [
+                0,
+                1.55,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "cone",
+            "color": "0x2e8b57",
+            "scale": [
+                0.15,
+                0.4,
+                0.15
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.22
+            ]
+        }
+    },
+    {
+        "id": "denim",
+        "name": "Denim Dream",
+        "material": "Upcycled Jeans",
+        "icon": "👖",
+        "colorClass": "bg-indigo-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 75
+            },
+            {
+                "label": "Style",
+                "value": 90
+            }
+        ],
+        "materialProp": {
+            "color": "0x1a237e",
+            "roughness": 0.9,
+            "metalness": 0.05
+        },
+        "hat": {
+            "type": "cylinder",
+            "color": "0x1a237e",
+            "scale": [
+                0.35,
+                0.15,
+                0.35
+            ],
+            "position": [
+                0,
+                1.48,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "box",
+            "color": "0x303f9f",
+            "scale": [
+                0.35,
+                0.4,
+                0.15
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.18
+            ]
+        }
+    },
+    {
+        "id": "bioplastic",
+        "name": "Bio-Plastic Scout",
+        "material": "Corn Starch Plastic",
+        "icon": "🌽",
+        "colorClass": "bg-yellow-50",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 100
+            },
+            {
+                "label": "Style",
+                "value": 65
+            }
+        ],
+        "materialProp": {
+            "color": "0xf1f8e9",
+            "transparent": true,
+            "opacity": 0.8,
+            "roughness": 0.4,
+            "metalness": 0.0,
+            "transmission": 0.3
+        },
+        "hat": {
+            "type": "cone",
+            "color": "0xffc107",
+            "scale": [
+                0.25,
+                0.35,
+                0.25
+            ],
+            "position": [
+                0,
+                1.55,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "sphere",
+            "color": "0xcddc39",
+            "scale": [
+                0.2,
+                0.2,
+                0.15
+            ],
+            "position": [
+                0,
+                0.6,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "solar",
+        "name": "Solar Sentinel",
+        "material": "Recycled Panels",
+        "icon": "☀️",
+        "colorClass": "bg-gray-900 text-white",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 98
+            },
+            {
+                "label": "Style",
+                "value": 100
+            }
+        ],
+        "materialProp": {
+            "color": "0x111111",
+            "roughness": 0.2,
+            "metalness": 0.8,
+            "clearcoat": 1.0
+        },
+        "hat": {
+            "type": "box",
+            "color": "0x1a237e",
+            "scale": [
+                0.5,
+                0.05,
+                0.4
+            ],
+            "position": [
+                0,
+                1.55,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "box",
+            "color": "0x0d47a1",
+            "scale": [
+                0.5,
+                0.5,
+                0.08
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "copper",
+        "name": "Copper Knight",
+        "material": "Scrap Wire Copper",
+        "icon": "🔌",
+        "colorClass": "bg-orange-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 92
+            },
+            {
+                "label": "Style",
+                "value": 88
+            }
+        ],
+        "materialProp": {
+            "color": "0xb87333",
+            "roughness": 0.4,
+            "metalness": 1.0,
+            "clearcoat": 0.3
+        },
+        "hat": {
+            "type": "torus",
+            "color": "0xb87333",
+            "scale": [
+                0.25,
+                0.25,
+                0.25
+            ],
+            "position": [
+                0,
+                1.55,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "cylinder",
+            "color": "0xcd7f32",
+            "scale": [
+                0.1,
+                0.5,
+                0.1
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "newspaper",
+        "name": "Newsprint Ninja",
+        "material": "Old Newspapers",
+        "icon": "📰",
+        "colorClass": "bg-gray-50",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 96
+            },
+            {
+                "label": "Style",
+                "value": 40
+            }
+        ],
+        "materialProp": {
+            "color": "0xe0e0e0",
+            "roughness": 1.0,
+            "metalness": 0.0
+        },
+        "hat": {
+            "type": "cone",
+            "color": "0xfafafa",
+            "scale": [
+                0.3,
+                0.25,
+                0.3
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "box",
+            "color": "0xeeeeee",
+            "scale": [
+                0.3,
+                0.4,
+                0.08
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.15
+            ]
+        }
+    },
+    {
+        "id": "tire",
+        "name": "Rubber Rebel",
+        "material": "Recycled Tires",
+        "icon": "🚗",
+        "colorClass": "bg-gray-800 text-white",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 85
+            },
+            {
+                "label": "Style",
+                "value": 75
+            }
+        ],
+        "materialProp": {
+            "color": "0x212121",
+            "roughness": 0.9,
+            "metalness": 0.0
+        },
+        "hat": {
+            "type": "torus",
+            "color": "0x212121",
+            "scale": [
+                0.3,
+                0.3,
+                0.1
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "torus",
+            "color": "0x424242",
+            "scale": [
+                0.25,
+                0.25,
+                0.1
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "bamboo",
+        "name": "Bamboo Monk",
+        "material": "Organic Bamboo",
+        "icon": "🎋",
+        "colorClass": "bg-green-50",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 99
+            },
+            {
+                "label": "Style",
+                "value": 80
+            }
+        ],
+        "materialProp": {
+            "color": "0xdcedc8",
+            "roughness": 0.6,
+            "metalness": 0.0
+        },
+        "hat": {
+            "type": "cone",
+            "color": "0x8bc34a",
+            "scale": [
+                0.4,
+                0.2,
+                0.4
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "cylinder",
+            "color": "0x689f38",
+            "scale": [
+                0.08,
+                0.6,
+                0.08
+            ],
+            "position": [
+                0.1,
+                0.5,
+                -0.15
+            ]
+        }
+    },
+    {
+        "id": "cork",
+        "name": "Cork Commander",
+        "material": "Wine Corks",
+        "icon": "🍷",
+        "colorClass": "bg-amber-50",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 94
+            },
+            {
+                "label": "Style",
+                "value": 60
+            }
+        ],
+        "materialProp": {
+            "color": "0xa1887f",
+            "roughness": 1.0,
+            "metalness": 0.0
+        },
+        "hat": {
+            "type": "cylinder",
+            "color": "0xa1887f",
+            "scale": [
+                0.2,
+                0.25,
+                0.2
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "sphere",
+            "color": "0x6d4c41",
+            "scale": [
+                0.2,
+                0.25,
+                0.15
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "ewaste",
+        "name": "Circuit Cyborg",
+        "material": "E-Waste PCB",
+        "icon": "💾",
+        "colorClass": "bg-emerald-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 80
+            },
+            {
+                "label": "Style",
+                "value": 95
+            }
+        ],
+        "materialProp": {
+            "color": "0x004d40",
+            "roughness": 0.3,
+            "metalness": 0.7,
+            "emissive": "0x004d40",
+            "emissiveIntensity": 0.1
+        },
+        "hat": {
+            "type": "box",
+            "color": "0x00796b",
+            "scale": [
+                0.35,
+                0.1,
+                0.35
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "box",
+            "color": "0x004d40",
+            "scale": [
+                0.4,
+                0.3,
+                0.1
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.18
+            ]
+        }
+    },
+    {
+        "id": "hemp",
+        "name": "Hemp Hero",
+        "material": "Natural Hemp",
+        "icon": "🌿",
+        "colorClass": "bg-lime-50",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 100
+            },
+            {
+                "label": "Style",
+                "value": 55
+            }
+        ],
+        "materialProp": {
+            "color": "0x8d6e63",
+            "roughness": 0.9,
+            "metalness": 0.0
+        },
+        "hat": {
+            "type": "cylinder",
+            "color": "0x558b2f",
+            "scale": [
+                0.35,
+                0.12,
+                0.35
+            ],
+            "position": [
+                0,
+                1.48,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "box",
+            "color": "0x795548",
+            "scale": [
+                0.35,
+                0.4,
+                0.12
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.18
+            ]
+        }
+    },
+    {
+        "id": "tetra",
+        "name": "Tetra Tech",
+        "material": "Beverage Cartons",
+        "icon": "🧃",
+        "colorClass": "bg-gray-300",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 88
+            },
+            {
+                "label": "Style",
+                "value": 72
+            }
+        ],
+        "materialProp": {
+            "color": "0x90a4ae",
+            "roughness": 0.5,
+            "metalness": 0.4
+        },
+        "hat": {
+            "type": "box",
+            "color": "0x78909c",
+            "scale": [
+                0.3,
+                0.3,
+                0.3
+            ],
+            "position": [
+                0,
+                1.55,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "box",
+            "color": "0xb0bec5",
+            "scale": [
+                0.25,
+                0.35,
+                0.15
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.18
+            ]
+        }
+    },
+    {
+        "id": "net",
+        "name": "Ghost Net",
+        "material": "Fishing Nets",
+        "icon": "🎣",
+        "colorClass": "bg-teal-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 97
+            },
+            {
+                "label": "Style",
+                "value": 68
+            }
+        ],
+        "materialProp": {
+            "color": "0x006064",
+            "transparent": true,
+            "opacity": 0.7,
+            "roughness": 0.6
+        },
+        "hat": {
+            "type": "sphere",
+            "color": "0x00838f",
+            "scale": [
+                0.3,
+                0.15,
+                0.3
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "sphere",
+            "color": "0x004d40",
+            "scale": [
+                0.25,
+                0.25,
+                0.2
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "coffee",
+        "name": "Coffee Commando",
+        "material": "Coffee Grounds",
+        "icon": "☕",
+        "colorClass": "bg-amber-900",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 93
+            },
+            {
+                "label": "Style",
+                "value": 82
+            }
+        ],
+        "materialProp": {
+            "color": "0x3e2723",
+            "roughness": 1.0,
+            "metalness": 0.0
+        },
+        "hat": {
+            "type": "cylinder",
+            "color": "0x5d4037",
+            "scale": [
+                0.25,
+                0.2,
+                0.25
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "cylinder",
+            "color": "0x4e342e",
+            "scale": [
+                0.15,
+                0.35,
+                0.15
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "mushroom",
+        "name": "Mushroom Mage",
+        "material": "Mycelium Leather",
+        "icon": "🍄",
+        "colorClass": "bg-stone-100",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 99
+            },
+            {
+                "label": "Style",
+                "value": 88
+            }
+        ],
+        "materialProp": {
+            "color": "0xd7ccc8",
+            "roughness": 0.7,
+            "metalness": 0.0
+        },
+        "hat": {
+            "type": "sphere",
+            "color": "0xef5350",
+            "scale": [
+                0.35,
+                0.2,
+                0.35
+            ],
+            "position": [
+                0,
+                1.5,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "cylinder",
+            "color": "0xbcaaa4",
+            "scale": [
+                0.12,
+                0.4,
+                0.12
+            ],
+            "position": [
+                0,
+                0.4,
+                -0.2
+            ]
+        }
+    },
+    {
+        "id": "vinyl",
+        "name": "Vinyl Viper",
+        "material": "Old Records",
+        "icon": "🎵",
+        "colorClass": "bg-gray-900 text-white",
+        "stats": [
+            {
+                "label": "Eco Impact",
+                "value": 82
+            },
+            {
+                "label": "Style",
+                "value": 98
+            }
+        ],
+        "materialProp": {
+            "color": "0x111111",
+            "roughness": 0.1,
+            "metalness": 0.2,
+            "clearcoat": 1.0
+        },
+        "hat": {
+            "type": "cylinder",
+            "color": "0x212121",
+            "scale": [
+                0.35,
+                0.05,
+                0.35
+            ],
+            "position": [
+                0,
+                1.52,
+                0
+            ]
+        },
+        "backObject": {
+            "type": "torus",
+            "color": "0x1a1a1a",
+            "scale": [
+                0.25,
+                0.25,
+                0.05
+            ],
+            "position": [
+                0,
+                0.5,
+                -0.18
+            ]
+        }
+    }
+]

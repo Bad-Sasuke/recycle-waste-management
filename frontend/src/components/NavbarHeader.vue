@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser, IconMapPin, IconMapPinShare, IconUsers, IconLeaf } from '@tabler/icons-vue'
+import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser, IconMapPin, IconMapPinShare, IconUsers, IconLeaf, IconShirt } from '@tabler/icons-vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { ref, onBeforeMount, onMounted, watch, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
@@ -113,6 +113,14 @@ const handleLogout = () => {
               :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
               <IconLeaf stroke="1.5" size="20" />
               My Forest
+            </RouterLink>
+          </li>
+          <li class="mr-2" v-if="usersStore.isLogin">
+            <RouterLink to="/avatar-customization"
+              class="flex items-center gap-2 text-base font-medium transition-colors"
+              :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
+              <IconShirt stroke="1.5" size="20" />
+              Avatar
             </RouterLink>
           </li>
           <li v-if="usersStore.isLogin && shopStore.hasShop" class="mr-2">
@@ -266,6 +274,13 @@ const handleLogout = () => {
           <RouterLink to="/my-forest" @click="closeDrawer" class="flex items-center gap-3 text-base font-medium">
             <IconLeaf stroke="1.5" size="20" />
             <span>My Forest</span>
+          </RouterLink>
+        </li>
+        <li class="py-2" v-if="usersStore.isLogin">
+          <RouterLink to="/avatar-customization" @click="closeDrawer"
+            class="flex items-center gap-3 text-base font-medium">
+            <IconShirt stroke="1.5" size="20" />
+            <span>Avatar</span>
           </RouterLink>
         </li>
         <li class="py-2" v-if="usersStore.isLogin && shopStore.hasShop">

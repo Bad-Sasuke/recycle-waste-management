@@ -84,8 +84,9 @@ func (sv *usersService) GetAllUser() (*[]entities.UserDataFormat, error) {
 
 func (sv *usersService) UpdateUser(userID string, data *entities.NewUserBody) error {
 	updateData := &entities.UserDataFormat{
-		Username: data.Username,
-		Email:    data.Email,
+		Username:     data.Username,
+		Email:        data.Email,
+		AvatarConfig: data.AvatarConfig,
 	}
 
 	err := sv.UsersRepository.UpdateUser(userID, updateData)

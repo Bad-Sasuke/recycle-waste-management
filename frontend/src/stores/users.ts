@@ -11,6 +11,7 @@ interface User {
   last_login: string
   role?: string
   shop_id?: string
+  avatar_config?: string
 }
 
 interface Employee {
@@ -174,6 +175,36 @@ export const useUsersStore = defineStore('users', {
         return false
       } catch (error) {
         console.error('Error updating user role:', error)
+        return false
+      }
+    },
+
+    async updateAvatar(config: string) {
+      if (!this.isLogin || !this.jwt) return false
+
+      try {
+        const apiUrl = import.meta.env.VITE_WEB_API
+        // Use the existing generic update endpoint since backend was modified to accept AvatarConfig there
+        const response = await fetch(`${apiUrl}/api/user/profile`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${this.jwt}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: this.user?.username,
+            email: this.user?.email,
+            avatar_config: config,
+          }),
+        })
+
+        if (response.ok) {
+          await this.fetchUserProfile()
+          return true
+        }
+        return false
+      } catch (error) {
+        console.error('Error updating avatar:', error)
         return false
       }
     },

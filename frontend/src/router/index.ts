@@ -90,6 +90,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/avatar-customization',
+      name: 'avatar-customization',
+      component: () => import('../views/AvatarCustomizationView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/shop/:shop_id',
       name: 'shop-profile',
       component: () => import('../views/ShopProfileView.vue'),
