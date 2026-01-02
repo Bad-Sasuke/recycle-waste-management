@@ -10,7 +10,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Landing page component showcasing the recycle waste management platform features and call-to-actions.',
+          'Premium SaaS Landing Page for the Recycle Waste Management platform. Features a dark-mode hero, pricing plans, testimonials, and animated elements.',
       },
     },
   },

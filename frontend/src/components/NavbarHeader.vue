@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser, IconMapPin, IconMapPinShare, IconUsers } from '@tabler/icons-vue'
-import { RouterLink } from 'vue-router'
-import { ref, onBeforeMount, onMounted, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import { ref, onBeforeMount, onMounted, watch, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { useUsersStore } from '@/stores/users'
 import { useShopStore } from '@/stores/shop'
 import PopupLogin from './PopupLogin.vue'
 import SwitchLangDesktop from './switchLang/SwitchLangDesktop.vue'
 import SwitchLangMobile from './switchLang/SwitchLangMobile.vue'
+
+const route = useRoute()
+const isHomePage = computed(() => route.path === '/')
 
 const isDrawerOpen = ref(false)
 
@@ -56,17 +59,22 @@ const handleLogout = () => {
 
 <template>
   <PopupLogin />
-  <div class="navbar bg-green-100 shadow-md">
+  <div :class="[
+    'navbar transition-colors duration-300',
+    isHomePage ? 'bg-slate-900 border-b border-slate-800 text-slate-100' : 'bg-navbar border-b-2 border-navbar text-base-content'
+  ]">
+
     <!-- เมนูสำหรับ Mobile -->
     <div class="flex-none md:hidden">
-      <label for="menu-mobile" class="btn btn-ghost btn-circle">
+      <label for="menu-mobile" class="btn btn-ghost btn-circle" :class="{ 'text-white': isHomePage }">
         <IconMenu stroke="1.5" size="24" />
       </label>
     </div>
 
     <!-- โลโก้และชื่อเว็บ -->
     <div class="flex-1">
-      <RouterLink to="/" class="btn btn-ghost normal-case text-xl md:text-2xl font-bold text-green-700">
+      <RouterLink to="/" class="btn btn-ghost normal-case text-xl md:text-2xl font-bold"
+        :class="isHomePage ? 'text-white' : 'text-green-700'">
         ♻️ Recycle Waste
       </RouterLink>
       <!-- เมนูหลัก -->
@@ -74,31 +82,35 @@ const handleLogout = () => {
         <ul class="menu menu-horizontal px-1">
           <li class="mr-2">
             <RouterLink v-if="usersStore.isLogin" to="/marketplace"
-              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
+              class="flex items-center gap-2 text-base font-medium transition-colors"
+              :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
               <IconBuildingWarehouse stroke="1.5" size="20" />
               {{ $t('Navbar.menu.marketplace') }}
             </RouterLink>
             <a v-else @click="handleLogin"
-              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors cursor-pointer">
+              class="flex items-center gap-2 text-base font-medium transition-colors cursor-pointer"
+              :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
               <IconBuildingWarehouse stroke="1.5" size="20" />
               {{ $t('Navbar.menu.marketplace') }}
             </a>
           </li>
           <li class="mr-2" v-if="usersStore.user?.role !== 'moderator'">
             <RouterLink v-if="usersStore.isLogin" to="/shop-locator"
-              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
+              class="flex items-center gap-2 text-base font-medium transition-colors"
+              :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
               <IconMapPin stroke="1.5" size="20" />
               {{ $t('ShopLocator.title') }}
             </RouterLink>
             <a v-else @click="handleLogin"
-              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors cursor-pointer">
+              class="flex items-center gap-2 text-base font-medium transition-colors cursor-pointer"
+              :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
               <IconMapPin stroke="1.5" size="20" />
               {{ $t('ShopLocator.title') }}
             </a>
           </li>
           <li v-if="usersStore.isLogin && shopStore.hasShop" class="mr-2">
-            <RouterLink to="/nearby-customers"
-              class="flex items-center gap-2 text-base font-medium hover:text-green-800 transition-colors">
+            <RouterLink to="/nearby-customers" class="flex items-center gap-2 text-base font-medium transition-colors"
+              :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
               <IconUsers stroke="1.5" size="20" />
               {{ $t('NearbyCustomers.title') }}
             </RouterLink>
@@ -110,13 +122,13 @@ const handleLogout = () => {
     <div class="flex-none gap-4">
       <!-- ปุ่มแจ้งเตือน -->
       <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar" :class="{ 'text-white': isHomePage }">
           <div class="rounded-full">
             <IconBell stroke="1.5" size="24" />
           </div>
         </div>
         <ul tabindex="0"
-          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-72 p-2 shadow h-64 flex flex-col">
+          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-72 p-2 shadow h-64 flex flex-col text-base-content">
           <span class="flex justify-between mx-2 py-4 border-b border-gray-200">
             <p class="text-lg font-semibold text-gray-800">{{ $t('Navbar.notif.title') }}</p>
             <div class="flex justify-between items-center gap-2">
@@ -133,21 +145,7 @@ const handleLogout = () => {
             <p class="text-base text-gray-500 font-medium">{{ $t('Navbar.notif.empty') }}</p>
           </div>
           <div class="flex flex-col overflow-auto h-38">
-            <!-- <li>
-              <a>ไปหน้ากล่องข้อความ</a>
-            </li>
-            <li>
-              <a>ไปหน้ากล่องข้อความ</a>
-            </li>
-            <li>
-              <a>ไปหน้ากล่องข้อความ</a>
-            </li>
-            <li>
-              <a>ไปหน้ากล่องข้อหมู</a>
-            </li>
-            <li>
-              <a>ไปหน้ากล่องข้อความ</a>
-            </li> -->
+            <!-- Notifications content -->
           </div>
           <li class="flex items-center justify-center w-full mt-auto py-3">
             <a class="text-center text-base font-medium text-green-600 hover:text-green-700">{{
@@ -161,7 +159,7 @@ const handleLogout = () => {
       <!-- โปรไฟล์ผู้ใช้งาน -->
       <div class="dropdown dropdown-end" style="z-index: 999;"
         @click="usersStore.isLogin !== true ? handleLogin() : ''">
-        <div tabindex="0" role="button" class="flex items-center">
+        <div tabindex="0" role="button" class="flex items-center" :class="{ 'text-white': isHomePage }">
           <div v-if="usersStore.isLogin && usersStore.profileImage" class="avatar placeholder">
             <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
               <img :src="usersStore.profileImage" alt="Profile" class="rounded-full" />
@@ -169,7 +167,8 @@ const handleLogout = () => {
           </div>
           <IconUserCircle v-else stroke="1.3" size="32" class="bg-neutral rounded-full text-base-100" />
         </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+        <ul tabindex="0"
+          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow text-base-content"
           v-if="usersStore.isLogin">
           <span v-if="usersStore.isLogin">
             <li class="py-1">
@@ -291,9 +290,5 @@ const handleLogout = () => {
 </template>
 
 <style scoped>
-.navbar {
-  @apply bg-navbar border-b-2 border-navbar;
-  /* สีเขียวอ่อน */
-  /* ขอบด้านล่าง */
-}
+/* Removed strict @apply to allow dynamic class switching */
 </style>
