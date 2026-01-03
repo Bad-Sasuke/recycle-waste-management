@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { IconUserCircle, IconEdit, IconCheck, IconX } from '@tabler/icons-vue'
+import MiniAvatar3D from '@/components/MiniAvatar3D.vue'
 import { useUsersStore } from '@/stores/users'
 import { getCookie } from '@/stores/cookie'
 
@@ -345,8 +346,13 @@ onMounted(() => {
       <!-- Profile Header Card -->
       <div class="bg-white rounded-3xl shadow-lg border border-white/60 p-0 mb-8 overflow-hidden relative group">
         <!-- Cover Gradient -->
-        <div class="h-32 bg-gradient-to-r from-green-400 to-emerald-600 relative">
+        <div class="h-32 bg-gradient-to-r from-green-400 to-emerald-600 relative overflow-visible">
           <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10">
+          </div>
+
+          <!-- Mini 3D Avatar Walking -->
+          <div class="absolute right-4 bottom-0 w-28 h-32 z-10 pointer-events-none hidden md:block">
+            <MiniAvatar3D :outfitId="usersStore.user?.avatar_config" />
           </div>
         </div>
 
@@ -498,7 +504,7 @@ onMounted(() => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label class="label text-sm font-semibold text-gray-500 mb-1 pl-1">{{ $t('Profile.memberSince')
-                  }}</label>
+                }}</label>
                 <div class="p-3 bg-white border border-gray-100 rounded-xl text-gray-700 flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
