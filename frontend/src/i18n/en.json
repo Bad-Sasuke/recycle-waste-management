@@ -159,13 +159,30 @@
         "comingSoon": "Coming soon",
         "success": "Success",
         "error": "Error",
-        "close": "Close"
+        "close": "Close",
+        "clear": "Clear Filters"
     },
     "Marketplace": {
         "add": "Add Product",
+        "add_product": "Add Product",
         "title": "Recycling Waste Price",
         "category": "Category",
         "search": "Search e.g plastic, metal",
+        "hero": {
+            "tagline": "🌿 Join us in creating a greener world",
+            "title": "Find the best recycling prices near you",
+            "subtitle": "Compare prices, choose the best shop, and help reduce environmental impact",
+            "search_placeholder": "Search recyclable materials e.g. plastic, paper, metal...",
+            "ai_scan": "AI Scanner",
+            "stats": {
+                "items": "Total Items",
+                "shops": "Shops",
+                "co2_saved": "Tons CO2 Saved"
+            }
+        },
+        "quickCategories": {
+            "hot": "Hot"
+        },
         "filter_date": {
             "title": "Date Updated",
             "lastest": "Latest to Oldest",
@@ -177,12 +194,13 @@
             "desc": "High to Low"
         },
         "pagination": {
-            "page_info": "Page {{current}} of {{total}} ({{items}} items)",
+            "page_info": "Page {current} of {total} ({items} items)",
             "first": "First",
             "last": "Last",
             "prev": "Previous",
             "next": "Next",
-            "of": "of"
+            "of": "of",
+            "page": "Page"
         }
     },
     "PopupLogin": {

@@ -66,35 +66,56 @@ export const LongName: Story = {
   },
 }
 
+export const WithLongContent: Story = {
+  args: {
+    id: '5',
+    name: 'พลาสติก PET ใส สะอาด ไม่มีฉลาก (อัดก้อน) เกรด A+',
+    price: 12.5,
+    category: 'พลาสติก',
+    last_update: '2024-11-29T14:20:00Z',
+    url: 'https://images.unsplash.com/photo-1595278069441-2cf29f8005e4?w=400&h=300',
+  },
+}
+
 export const MultipleCards: Story = {
   render: () => ({
     components: { CardComponent },
     template: `
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: 20px; padding: 20px;">
-        <CardComponent
-          id="1"
-          name="ขวดพลาสติก"
-          :price="8"
-          category="พลาสติก"
-          last_update="2024-11-29T10:00:00Z"
-          url="https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=400&h=300"
-        />
-        <CardComponent
-          id="2"
-          name="เศษอลูมิเนียม"
-          :price="50"
-          category="โลหะ"
-          last_update="2024-11-28T15:30:00Z"
-          url="https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=400&h=300"
-        />
-        <CardComponent
-          id="3"
-          name="กระดาษหนังสือพิมพ์"
-          :price="2"
-          category="กระดาษ"
-          last_update="2024-11-27T08:00:00Z"
-          url="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&h=300"
-        />
+      <div class="bg-gray-50 p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <CardComponent
+            id="1"
+            name="ขวดพลาสติก"
+            :price="8"
+            category="พลาสติก"
+            last_update="2024-11-29T10:00:00Z"
+            url="https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=400&h=300"
+          />
+          <CardComponent
+            id="2"
+            name="เศษอลูมิเนียม"
+            :price="50"
+            category="โลหะ"
+            last_update="2024-11-28T15:30:00Z"
+            url="https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=400&h=300"
+          />
+          <CardComponent
+            id="3"
+            name="กระดาษหนังสือพิมพ์"
+            :price="2"
+            category="กระดาษ"
+            last_update="2024-11-27T08:00:00Z"
+            url="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&h=300"
+          />
+           <CardComponent
+            id="4"
+            name="ขวดแก้วสีใสขนาดใหญ่พิเศษ"
+            :price="15"
+            category="แก้ว"
+            last_update="2024-11-29T12:00:00Z"
+            url="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=400&h=300"
+          />
+        </div>
       </div>
     `,
   }),
