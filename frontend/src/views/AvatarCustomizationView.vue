@@ -132,8 +132,6 @@ let rightEyebrow: THREE.Mesh
 let mouth: THREE.Mesh
 let lastBlinkTime = 0
 let isBlinking = false
-let mouthState: 'smile' | 'neutral' | 'happy' = 'smile'
-let lastMouthChangeTime = 0
 
 // Setup Scene
 const initScene = () => {
@@ -664,27 +662,7 @@ const animate = () => {
     rightEyebrow.rotation.z = -0.15 - Math.sin(time * 0.4) * 0.05
   }
 
-  // Mouth expression changes (every 3-6 seconds)
-  if (mouth) {
-    if (time - lastMouthChangeTime > 3 + Math.random() * 3) {
-      const states: Array<'smile' | 'neutral' | 'happy'> = ['smile', 'neutral', 'happy']
-      mouthState = states[Math.floor(Math.random() * states.length)]
-      lastMouthChangeTime = time
-    }
-
-    // Animate mouth based on state
-    const targetScaleX = mouthState === 'happy' ? 1.3 : mouthState === 'smile' ? 1.0 : 0.7
-    const targetScaleY = mouthState === 'happy' ? 1.2 : mouthState === 'smile' ? 1.0 : 0.8
-    const targetPosY = mouthState === 'happy' ? 1.06 : mouthState === 'smile' ? 1.08 : 1.09
-
-    // Smooth transition
-    mouth.scale.x += (targetScaleX - mouth.scale.x) * 0.05
-    mouth.scale.y += (targetScaleY - mouth.scale.y) * 0.05
-    mouth.position.y += (targetPosY - mouth.position.y) * 0.05
-
-    // Subtle mouth movement (talking/breathing)
-    mouth.scale.x += Math.sin(time * 3) * 0.02
-  }
+  // Mouth - static smile (no animation)
 
   // Walking arm swing - natural swing forward/back
   const armSwingAmount = Math.sin(time * 4) * 0.5 * walkingIntensity
