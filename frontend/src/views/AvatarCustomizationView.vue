@@ -122,6 +122,21 @@ let hatMesh: THREE.Mesh | null = null
 let backObjectMesh: THREE.Mesh | null = null
 let animationFrameId: number
 
+// Facial feature meshes for animation
+let leftEyeWhite: THREE.Mesh
+let rightEyeWhite: THREE.Mesh
+let leftPupil: THREE.Mesh
+let rightPupil: THREE.Mesh
+let leftEyebrow: THREE.Mesh
+let rightEyebrow: THREE.Mesh
+let mouth: THREE.Mesh
+
+// Animation state
+let lastBlinkTime = 0
+let isBlinking = false
+const blinkDuration = 0.15
+let nextBlinkInterval = 3
+
 // Setup Scene
 const initScene = () => {
   if (!container.value) return
@@ -336,6 +351,86 @@ const createAvatar = () => {
   head.castShadow = true
   avatarGroup.add(head)
 
+  // === ANIME-STYLE FACE ===
+
+  // Eyes (white sclera)
+  const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff })
+  const eyeWhiteGeo = new THREE.SphereGeometry(0.08, 16, 16)
+
+  leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat)
+  leftEyeWhite.position.set(-0.12, 1.25, 0.28)
+  leftEyeWhite.scale.set(1, 1.2, 0.6) // Slightly tall anime-style
+  avatarGroup.add(leftEyeWhite)
+
+  rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat)
+  rightEyeWhite.position.set(0.12, 1.25, 0.28)
+  rightEyeWhite.scale.set(1, 1.2, 0.6)
+  avatarGroup.add(rightEyeWhite)
+
+  // Pupils (dark iris + pupil)
+  const pupilMat = new THREE.MeshStandardMaterial({ color: 0x2d1b4e }) // Dark purple/black
+  const irisGeo = new THREE.SphereGeometry(0.045, 16, 16)
+
+  leftPupil = new THREE.Mesh(irisGeo, pupilMat)
+  leftPupil.position.set(-0.12, 1.24, 0.33)
+  leftPupil.scale.set(1, 1.1, 0.5)
+  avatarGroup.add(leftPupil)
+
+  rightPupil = new THREE.Mesh(irisGeo, pupilMat)
+  rightPupil.position.set(0.12, 1.24, 0.33)
+  rightPupil.scale.set(1, 1.1, 0.5)
+  avatarGroup.add(rightPupil)
+
+  // Eye Highlights (anime sparkle)
+  const highlightMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.3 })
+  const highlightGeo = new THREE.SphereGeometry(0.015, 8, 8)
+
+  const leftHighlight = new THREE.Mesh(highlightGeo, highlightMat)
+  leftHighlight.position.set(-0.10, 1.27, 0.35)
+  avatarGroup.add(leftHighlight)
+
+  const rightHighlight = new THREE.Mesh(highlightGeo, highlightMat)
+  rightHighlight.position.set(0.14, 1.27, 0.35)
+  avatarGroup.add(rightHighlight)
+
+  // Eyebrows
+  const eyebrowMat = new THREE.MeshStandardMaterial({ color: 0x4a3728 }) // Dark brown
+  const eyebrowGeo = new THREE.BoxGeometry(0.08, 0.015, 0.02)
+
+  leftEyebrow = new THREE.Mesh(eyebrowGeo, eyebrowMat)
+  leftEyebrow.position.set(-0.12, 1.38, 0.30)
+  leftEyebrow.rotation.z = 0.15 // Slight angle
+  avatarGroup.add(leftEyebrow)
+
+  rightEyebrow = new THREE.Mesh(eyebrowGeo, eyebrowMat)
+  rightEyebrow.position.set(0.12, 1.38, 0.30)
+  rightEyebrow.rotation.z = -0.15
+  avatarGroup.add(rightEyebrow)
+
+  // Mouth (cute smile - half torus)
+  const mouthMat = new THREE.MeshStandardMaterial({ color: 0xe88a9a }) // Soft pink
+  const mouthGeo = new THREE.TorusGeometry(0.06, 0.015, 8, 16, Math.PI) // Half circle
+
+  mouth = new THREE.Mesh(mouthGeo, mouthMat)
+  mouth.position.set(0, 1.08, 0.32)
+  mouth.rotation.x = 0.2 // Tilt to face forward
+  mouth.rotation.z = Math.PI // Flip to smile shape
+  avatarGroup.add(mouth)
+
+  // Blush marks (optional cute detail)
+  const blushMat = new THREE.MeshStandardMaterial({ color: 0xffb6c1, transparent: true, opacity: 0.5 })
+  const blushGeo = new THREE.CircleGeometry(0.04, 16)
+
+  const leftBlush = new THREE.Mesh(blushGeo, blushMat)
+  leftBlush.position.set(-0.22, 1.15, 0.28)
+  leftBlush.rotation.y = 0.4
+  avatarGroup.add(leftBlush)
+
+  const rightBlush = new THREE.Mesh(blushGeo, blushMat)
+  rightBlush.position.set(0.22, 1.15, 0.28)
+  rightBlush.rotation.y = -0.4
+  avatarGroup.add(rightBlush)
+
   // Body (Outfit)
   const bodyGeo = new THREE.CylinderGeometry(0.3, 0.25, 1, 32)
   body = new THREE.Mesh(bodyGeo, outfitMat)
@@ -537,6 +632,75 @@ const animate = () => {
     body.rotation.x = Math.sin(time * 2) * 0.02 // Slight forward lean
     body.scale.x = 1 + Math.sin(time * 2.5) * 0.01
     body.scale.z = 1 + Math.sin(time * 2.5) * 0.01
+  }
+
+  // === FACIAL IDLE ANIMATIONS ===
+
+  // Eye Blinking
+  if (leftEyeWhite && rightEyeWhite && leftPupil && rightPupil) {
+    // Check if it's time to blink
+    if (time - lastBlinkTime > nextBlinkInterval) {
+      isBlinking = true
+      lastBlinkTime = time
+      nextBlinkInterval = 2 + Math.random() * 4 // Random interval 2-6 seconds
+    }
+
+    // Blink animation (squash eyes vertically)
+    if (isBlinking) {
+      const blinkProgress = (time - lastBlinkTime) / blinkDuration
+      if (blinkProgress < 0.5) {
+        // Closing eyes
+        const closeAmount = blinkProgress * 2
+        const scaleY = 1.2 - closeAmount * 1.1 // 1.2 -> 0.1
+        leftEyeWhite.scale.y = Math.max(0.1, scaleY)
+        rightEyeWhite.scale.y = Math.max(0.1, scaleY)
+        leftPupil.scale.y = Math.max(0.1, 1.1 - closeAmount * 1.0)
+        rightPupil.scale.y = Math.max(0.1, 1.1 - closeAmount * 1.0)
+      } else if (blinkProgress < 1) {
+        // Opening eyes
+        const openAmount = (blinkProgress - 0.5) * 2
+        leftEyeWhite.scale.y = 0.1 + openAmount * 1.1
+        rightEyeWhite.scale.y = 0.1 + openAmount * 1.1
+        leftPupil.scale.y = 0.1 + openAmount * 1.0
+        rightPupil.scale.y = 0.1 + openAmount * 1.0
+      } else {
+        // Blink complete
+        isBlinking = false
+        leftEyeWhite.scale.y = 1.2
+        rightEyeWhite.scale.y = 1.2
+        leftPupil.scale.y = 1.1
+        rightPupil.scale.y = 1.1
+      }
+    }
+
+    // Subtle eye movement (looking around slightly)
+    const eyeLookX = Math.sin(time * 0.3) * 0.02
+    const eyeLookY = Math.sin(time * 0.5) * 0.01
+    leftPupil.position.x = -0.12 + eyeLookX
+    rightPupil.position.x = 0.12 + eyeLookX
+    leftPupil.position.y = 1.24 + eyeLookY
+    rightPupil.position.y = 1.24 + eyeLookY
+  }
+
+  // Eyebrow subtle movement
+  if (leftEyebrow && rightEyebrow) {
+    const browRaise = Math.sin(time * 0.7) * 0.008
+    leftEyebrow.position.y = 1.38 + browRaise
+    rightEyebrow.position.y = 1.38 + browRaise
+    // Slight angle change for expression
+    leftEyebrow.rotation.z = 0.15 + Math.sin(time * 0.4) * 0.05
+    rightEyebrow.rotation.z = -0.15 - Math.sin(time * 0.4) * 0.05
+  }
+
+  // Mouth expression cycling (smile <-> neutral)
+  if (mouth) {
+    // Cycle between smile and neutral every ~5 seconds
+    const mouthCycle = (Math.sin(time * 0.4) + 1) / 2 // 0 to 1
+    // Scale X affects smile width, scale Y affects openness
+    mouth.scale.x = 0.8 + mouthCycle * 0.4 // 0.8 to 1.2
+    mouth.scale.y = 0.8 + mouthCycle * 0.3
+    // Slight position adjustment
+    mouth.position.y = 1.08 + Math.sin(time * 0.6) * 0.005
   }
 
   if (controls) controls.update()
