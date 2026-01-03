@@ -122,7 +122,7 @@ let hatMesh: THREE.Mesh | null = null
 let backObjectMesh: THREE.Mesh | null = null
 let animationFrameId: number
 
-// Facial feature meshes for animation
+// Face meshes for animation
 let leftEyeWhite: THREE.Mesh
 let rightEyeWhite: THREE.Mesh
 let leftPupil: THREE.Mesh
@@ -130,12 +130,10 @@ let rightPupil: THREE.Mesh
 let leftEyebrow: THREE.Mesh
 let rightEyebrow: THREE.Mesh
 let mouth: THREE.Mesh
-
-// Animation state
 let lastBlinkTime = 0
 let isBlinking = false
-const blinkDuration = 0.15
-let nextBlinkInterval = 3
+let mouthState: 'smile' | 'neutral' | 'happy' = 'smile'
+let lastMouthChangeTime = 0
 
 // Setup Scene
 const initScene = () => {
@@ -604,6 +602,90 @@ const animate = () => {
     head.rotation.z = Math.sin(time * 2) * 0.02
   }
 
+  // === FACE IDLE ANIMATIONS ===
+
+  // Eye Blinking (random interval 2-5 seconds)
+  if (leftEyeWhite && rightEyeWhite) {
+    if (!isBlinking && time - lastBlinkTime > 2 + Math.random() * 3) {
+      isBlinking = true
+      lastBlinkTime = time
+    }
+
+    if (isBlinking) {
+      const blinkProgress = (time - lastBlinkTime) * 8 // Fast blink
+      if (blinkProgress < 1) {
+        // Close eyes
+        const scaleY = Math.max(0.1, 1.2 - blinkProgress * 1.1)
+        leftEyeWhite.scale.y = scaleY
+        rightEyeWhite.scale.y = scaleY
+        if (leftPupil) leftPupil.scale.y = Math.max(0.1, 1.1 - blinkProgress)
+        if (rightPupil) rightPupil.scale.y = Math.max(0.1, 1.1 - blinkProgress)
+      } else if (blinkProgress < 2) {
+        // Open eyes
+        const scaleY = 0.1 + (blinkProgress - 1) * 1.1
+        leftEyeWhite.scale.y = Math.min(1.2, scaleY)
+        rightEyeWhite.scale.y = Math.min(1.2, scaleY)
+        if (leftPupil) leftPupil.scale.y = Math.min(1.1, 0.1 + (blinkProgress - 1))
+        if (rightPupil) rightPupil.scale.y = Math.min(1.1, 0.1 + (blinkProgress - 1))
+      } else {
+        // Reset
+        leftEyeWhite.scale.y = 1.2
+        rightEyeWhite.scale.y = 1.2
+        if (leftPupil) leftPupil.scale.y = 1.1
+        if (rightPupil) rightPupil.scale.y = 1.1
+        isBlinking = false
+      }
+    }
+
+    // Subtle eye movement (looking around)
+    const eyeLookX = Math.sin(time * 0.3) * 0.02
+    const eyeLookY = Math.sin(time * 0.5) * 0.01
+    leftEyeWhite.position.x = -0.12 + eyeLookX
+    rightEyeWhite.position.x = 0.12 + eyeLookX
+    leftEyeWhite.position.y = 1.25 + eyeLookY
+    rightEyeWhite.position.y = 1.25 + eyeLookY
+    if (leftPupil) {
+      leftPupil.position.x = -0.12 + eyeLookX
+      leftPupil.position.y = 1.24 + eyeLookY
+    }
+    if (rightPupil) {
+      rightPupil.position.x = 0.12 + eyeLookX
+      rightPupil.position.y = 1.24 + eyeLookY
+    }
+  }
+
+  // Eyebrow subtle movement
+  if (leftEyebrow && rightEyebrow) {
+    const browMove = Math.sin(time * 0.7) * 0.01
+    leftEyebrow.position.y = 1.38 + browMove
+    rightEyebrow.position.y = 1.38 + browMove
+    // Slight rotation for expression
+    leftEyebrow.rotation.z = 0.15 + Math.sin(time * 0.4) * 0.05
+    rightEyebrow.rotation.z = -0.15 - Math.sin(time * 0.4) * 0.05
+  }
+
+  // Mouth expression changes (every 3-6 seconds)
+  if (mouth) {
+    if (time - lastMouthChangeTime > 3 + Math.random() * 3) {
+      const states: Array<'smile' | 'neutral' | 'happy'> = ['smile', 'neutral', 'happy']
+      mouthState = states[Math.floor(Math.random() * states.length)]
+      lastMouthChangeTime = time
+    }
+
+    // Animate mouth based on state
+    const targetScaleX = mouthState === 'happy' ? 1.3 : mouthState === 'smile' ? 1.0 : 0.7
+    const targetScaleY = mouthState === 'happy' ? 1.2 : mouthState === 'smile' ? 1.0 : 0.8
+    const targetPosY = mouthState === 'happy' ? 1.06 : mouthState === 'smile' ? 1.08 : 1.09
+
+    // Smooth transition
+    mouth.scale.x += (targetScaleX - mouth.scale.x) * 0.05
+    mouth.scale.y += (targetScaleY - mouth.scale.y) * 0.05
+    mouth.position.y += (targetPosY - mouth.position.y) * 0.05
+
+    // Subtle mouth movement (talking/breathing)
+    mouth.scale.x += Math.sin(time * 3) * 0.02
+  }
+
   // Walking arm swing - natural swing forward/back
   const armSwingAmount = Math.sin(time * 4) * 0.5 * walkingIntensity
   if (leftArm) {
@@ -632,75 +714,6 @@ const animate = () => {
     body.rotation.x = Math.sin(time * 2) * 0.02 // Slight forward lean
     body.scale.x = 1 + Math.sin(time * 2.5) * 0.01
     body.scale.z = 1 + Math.sin(time * 2.5) * 0.01
-  }
-
-  // === FACIAL IDLE ANIMATIONS ===
-
-  // Eye Blinking
-  if (leftEyeWhite && rightEyeWhite && leftPupil && rightPupil) {
-    // Check if it's time to blink
-    if (time - lastBlinkTime > nextBlinkInterval) {
-      isBlinking = true
-      lastBlinkTime = time
-      nextBlinkInterval = 2 + Math.random() * 4 // Random interval 2-6 seconds
-    }
-
-    // Blink animation (squash eyes vertically)
-    if (isBlinking) {
-      const blinkProgress = (time - lastBlinkTime) / blinkDuration
-      if (blinkProgress < 0.5) {
-        // Closing eyes
-        const closeAmount = blinkProgress * 2
-        const scaleY = 1.2 - closeAmount * 1.1 // 1.2 -> 0.1
-        leftEyeWhite.scale.y = Math.max(0.1, scaleY)
-        rightEyeWhite.scale.y = Math.max(0.1, scaleY)
-        leftPupil.scale.y = Math.max(0.1, 1.1 - closeAmount * 1.0)
-        rightPupil.scale.y = Math.max(0.1, 1.1 - closeAmount * 1.0)
-      } else if (blinkProgress < 1) {
-        // Opening eyes
-        const openAmount = (blinkProgress - 0.5) * 2
-        leftEyeWhite.scale.y = 0.1 + openAmount * 1.1
-        rightEyeWhite.scale.y = 0.1 + openAmount * 1.1
-        leftPupil.scale.y = 0.1 + openAmount * 1.0
-        rightPupil.scale.y = 0.1 + openAmount * 1.0
-      } else {
-        // Blink complete
-        isBlinking = false
-        leftEyeWhite.scale.y = 1.2
-        rightEyeWhite.scale.y = 1.2
-        leftPupil.scale.y = 1.1
-        rightPupil.scale.y = 1.1
-      }
-    }
-
-    // Subtle eye movement (looking around slightly)
-    const eyeLookX = Math.sin(time * 0.3) * 0.02
-    const eyeLookY = Math.sin(time * 0.5) * 0.01
-    leftPupil.position.x = -0.12 + eyeLookX
-    rightPupil.position.x = 0.12 + eyeLookX
-    leftPupil.position.y = 1.24 + eyeLookY
-    rightPupil.position.y = 1.24 + eyeLookY
-  }
-
-  // Eyebrow subtle movement
-  if (leftEyebrow && rightEyebrow) {
-    const browRaise = Math.sin(time * 0.7) * 0.008
-    leftEyebrow.position.y = 1.38 + browRaise
-    rightEyebrow.position.y = 1.38 + browRaise
-    // Slight angle change for expression
-    leftEyebrow.rotation.z = 0.15 + Math.sin(time * 0.4) * 0.05
-    rightEyebrow.rotation.z = -0.15 - Math.sin(time * 0.4) * 0.05
-  }
-
-  // Mouth expression cycling (smile <-> neutral)
-  if (mouth) {
-    // Cycle between smile and neutral every ~5 seconds
-    const mouthCycle = (Math.sin(time * 0.4) + 1) / 2 // 0 to 1
-    // Scale X affects smile width, scale Y affects openness
-    mouth.scale.x = 0.8 + mouthCycle * 0.4 // 0.8 to 1.2
-    mouth.scale.y = 0.8 + mouthCycle * 0.3
-    // Slight position adjustment
-    mouth.position.y = 1.08 + Math.sin(time * 0.6) * 0.005
   }
 
   if (controls) controls.update()
