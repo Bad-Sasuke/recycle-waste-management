@@ -1,5 +1,5 @@
 # ---------- Builder ----------
-FROM golang:1.23-alpine3.20 AS builder
+FROM golang:1.24-alpine3.20 AS builder
 
 RUN apk update && apk add --no-cache ca-certificates \
   libwebp-tools libpng libjpeg-turbo giflib tiff ffmpeg
