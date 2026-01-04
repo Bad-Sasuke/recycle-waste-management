@@ -22,6 +22,7 @@ export const useWastesStore = defineStore('wastes', {
     wastes: [] as RecycleWaste[], // ใช้ interface ที่นำเข้า
     groupedWastes: [] as GroupedRecyclableItem[], // สำหรับข้อมูลที่จัดกลุ่มตามชื่อสินค้า
     wasteToEdit: null as WasteToEdit | null,
+    loading: false, // Loading state
     pagination: {
       page: 1,
       limit: 12,
@@ -37,6 +38,7 @@ export const useWastesStore = defineStore('wastes', {
   }),
   actions: {
     async fetchWastes(page: number = 1, limit: number = 12, shopId?: string, category?: string) {
+      this.loading = true
       try {
         let url = webAPI + `/api/recycle-waste/get-wastes?page=${page}&limit=${limit}`
         if (shopId) {
@@ -100,6 +102,8 @@ export const useWastesStore = defineStore('wastes', {
         }
       } catch (error) {
         console.error('Error fetching waste data:', error)
+      } finally {
+        this.loading = false
       }
     },
     async addWaste(waste: unknown) {

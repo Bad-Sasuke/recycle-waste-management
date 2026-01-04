@@ -3,6 +3,10 @@ defineProps({
     colorClass: {
         type: String,
         default: 'bg-primary'
+    },
+    loading: {
+        type: Boolean,
+        default: false
     }
 })
 </script>
@@ -11,7 +15,11 @@ defineProps({
     <div class="liquid-marker">
         <div class="liquid-pin" :class="colorClass">
             <div class="liquid-glow"></div>
-            <slot>
+
+            <div v-if="loading" class="loading-wrapper">
+                <div class="loader-ring"></div>
+            </div>
+            <slot v-else>
                 <!-- Default Icon -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20"
                     style="position: relative; z-index: 2;">
@@ -49,10 +57,36 @@ defineProps({
     position: relative;
     z-index: 2;
     animation: float 3s ease-in-out infinite;
+    transition: all 0.3s ease;
 }
 
 .liquid-pin :deep(svg) {
     transform: rotate(45deg);
+}
+
+.loading-wrapper {
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader-ring {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+}
+
+.loader-ring:after {
+    content: " ";
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: 2px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: ring-spin 1.2s linear infinite;
 }
 
 .liquid-glow {
@@ -89,6 +123,16 @@ defineProps({
 
     50% {
         transform: translateY(-6px) rotate(-45deg);
+    }
+}
+
+@keyframes ring-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
     }
 }
 

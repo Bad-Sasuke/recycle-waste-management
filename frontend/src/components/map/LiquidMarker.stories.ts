@@ -7,6 +7,7 @@ const meta = {
   tags: ['autodocs'],
   argTypes: {
     colorClass: { control: 'text' },
+    loading: { control: 'boolean' },
   },
   parameters: {
     docs: {
@@ -23,6 +24,14 @@ type Story = StoryObj<typeof meta>
 export const Primary: Story = {
   args: {
     colorClass: 'bg-primary',
+    loading: false,
+  },
+}
+
+export const Loading: Story = {
+  args: {
+    colorClass: 'bg-primary',
+    loading: true,
   },
 }
 
@@ -74,6 +83,10 @@ export const AllColors: Story = {
         <div style="text-align: center;">
           <LiquidMarker colorClass="bg-info" />
           <p style="margin-top: 10px;">Info</p>
+        </div>
+        <div style="text-align: center;">
+          <LiquidMarker colorClass="bg-primary" :loading="true" />
+          <p style="margin-top: 10px;">Loading</p>
         </div>
       </div>
     `,

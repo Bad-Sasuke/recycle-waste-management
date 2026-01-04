@@ -7,31 +7,46 @@
       class="absolute bottom-0 right-0 w-96 h-96 bg-secondary/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2">
     </div>
 
+    <!-- Loading Overlay -->
+    <LoadingOverlay :loading="wastesStore.loading && wastesStore.groupedWastes.length === 0"
+      text="Connecting to Global Market..." />
+
     <!-- Ticker Tape -->
     <div
       class="bg-gray-800/80 backdrop-blur-md border-b border-gray-700 h-10 flex items-center overflow-hidden relative z-10">
       <div class="animate-marquee whitespace-nowrap flex gap-8 items-center">
-        <div v-for="(item, index) in tickerItems" :key="index" class="flex items-center gap-2">
-          <span class="font-bold text-gray-300">{{ item.name }}</span>
-          <span :class="item.change >= 0 ? 'text-green-400' : 'text-red-400'"
-            class="flex items-center text-sm font-mono">
-            <span v-if="item.change >= 0">▲</span>
-            <span v-else>▼</span>
-            {{ Math.abs(item.change.toFixed(2)) }}%
-          </span>
-          <span class="text-xs text-gray-500">฿{{ item.price.toFixed(2) }}</span>
+        <!-- Show Loading in Ticker if data is loading and empty -->
+        <div v-if="wastesStore.groupedWastes.length === 0 && wastesStore.loading" class="flex gap-4 px-4 text-gray-400">
+          <span>Initializing Data Feed...</span>
+          <span>•</span>
+          <span>Connecting to Exchanges...</span>
+          <span>•</span>
+          <span>Synchronizing Prices...</span>
         </div>
-        <!-- Repeat for seamless loop -->
-        <div v-for="(item, index) in tickerItems" :key="`dup-${index}`" class="flex items-center gap-2">
-          <span class="font-bold text-gray-300">{{ item.name }}</span>
-          <span :class="item.change >= 0 ? 'text-green-400' : 'text-red-400'"
-            class="flex items-center text-sm font-mono">
-            <span v-if="item.change >= 0">▲</span>
-            <span v-else>▼</span>
-            {{ Math.abs(item.change.toFixed(2)) }}%
-          </span>
-          <span class="text-xs text-gray-500">฿{{ item.price.toFixed(2) }}</span>
-        </div>
+
+        <template v-else>
+          <div v-for="(item, index) in tickerItems" :key="index" class="flex items-center gap-2">
+            <span class="font-bold text-gray-300">{{ item.name }}</span>
+            <span :class="item.change >= 0 ? 'text-green-400' : 'text-red-400'"
+              class="flex items-center text-sm font-mono">
+              <span v-if="item.change >= 0">▲</span>
+              <span v-else>▼</span>
+              {{ Math.abs(item.change.toFixed(2)) }}%
+            </span>
+            <span class="text-xs text-gray-500">฿{{ item.price.toFixed(2) }}</span>
+          </div>
+          <!-- Repeat for seamless loop -->
+          <div v-for="(item, index) in tickerItems" :key="`dup-${index}`" class="flex items-center gap-2">
+            <span class="font-bold text-gray-300">{{ item.name }}</span>
+            <span :class="item.change >= 0 ? 'text-green-400' : 'text-red-400'"
+              class="flex items-center text-sm font-mono">
+              <span v-if="item.change >= 0">▲</span>
+              <span v-else>▼</span>
+              {{ Math.abs(item.change.toFixed(2)) }}%
+            </span>
+            <span class="text-xs text-gray-500">฿{{ item.price.toFixed(2) }}</span>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -46,44 +61,81 @@
           <p class="text-gray-400">Real-time global recycling prices & trends</p>
         </div>
         <div class="flex gap-2 text-sm text-gray-500">
-          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse mt-1.5"></span>
-          Live Connection
+          <template v-if="wastesStore.loading">
+            <span class="w-2 h-2 rounded-full bg-yellow-500 animate-ping mt-1.5 opacity-75"></span>
+            Connecting...
+          </template>
+          <template v-else>
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse mt-1.5"></span>
+            Live Connection
+          </template>
         </div>
       </header>
 
       <div class="space-y-6">
         <!-- Market Overview Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div v-for="category in categories" :key="category.id"
-            class="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600 transition-all duration-300 group">
-            <div class="flex justify-between items-start mb-4">
-              <div class="flex items-center gap-3">
-                <div :class="`p-3 rounded-xl bg-gradient-to-br ${category.color}`">
-                  <component :is="category.icon" class="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 class="font-bold text-lg text-gray-200">{{ category.name }}</h3>
-                  <p class="text-xs text-gray-400">Global Avg.</p>
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="text-2xl font-mono font-bold text-white transition-all duration-300" :key="category.price">
-                  ฿{{ category.price.toFixed(2) }}
-                </div>
-                <div :class="category.trend >= 0 ? 'text-green-400' : 'text-red-400'"
-                  class="text-xs font-bold flex justify-end items-center gap-1">
-                  {{ category.trend >= 0 ? '+' : '' }}{{ category.trend.toFixed(2) }}%
-                </div>
-              </div>
-            </div>
 
-            <!-- Mini Chart Area (Simulated) -->
-            <div class="h-16 flex items-end gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
-              <div v-for="(bar, i) in category.history" :key="i" class="flex-1 rounded-t-sm transition-all duration-500"
-                :class="category.trend >= 0 ? 'bg-green-500/50' : 'bg-red-500/50'" :style="{ height: `${bar}%` }">
+          <!-- Skeleton Loading for Cards -->
+          <template v-if="wastesStore.loading && categories.length === 0">
+            <div v-for="i in 4" :key="`skel-${i}`"
+              class="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 animate-pulse">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-gray-700"></div>
+                  <div class="space-y-2">
+                    <div class="h-4 w-24 bg-gray-700 rounded"></div>
+                    <div class="h-3 w-16 bg-gray-700/50 rounded"></div>
+                  </div>
+                </div>
+                <div class="space-y-2 text-right">
+                  <div class="h-6 w-20 bg-gray-700 rounded ml-auto"></div>
+                  <div class="h-3 w-12 bg-gray-700/50 rounded ml-auto"></div>
+                </div>
+              </div>
+              <div class="h-16 w-full bg-gray-700/30 rounded-lg flex items-end gap-1 p-1">
+                <div class="w-full bg-gray-700 h-1/3 rounded-sm"></div>
+                <div class="w-full bg-gray-700 h-1/2 rounded-sm"></div>
+                <div class="w-full bg-gray-700 h-2/3 rounded-sm"></div>
+                <div class="w-full bg-gray-700 h-1/2 rounded-sm"></div>
               </div>
             </div>
-          </div>
+          </template>
+
+          <template v-else>
+            <div v-for="category in categories" :key="category.id"
+              class="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-gray-600 transition-all duration-300 group">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3">
+                  <div :class="`p-3 rounded-xl bg-gradient-to-br ${category.color}`">
+                    <component :is="category.icon" class="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-lg text-gray-200">{{ category.name }}</h3>
+                    <p class="text-xs text-gray-400">Global Avg.</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-mono font-bold text-white transition-all duration-300"
+                    :key="category.price">
+                    ฿{{ category.price.toFixed(2) }}
+                  </div>
+                  <div :class="category.trend >= 0 ? 'text-green-400' : 'text-red-400'"
+                    class="text-xs font-bold flex justify-end items-center gap-1">
+                    {{ category.trend >= 0 ? '+' : '' }}{{ category.trend.toFixed(2) }}%
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mini Chart Area (Simulated) -->
+              <div class="h-16 flex items-end gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                <div v-for="(bar, i) in category.history" :key="i"
+                  class="flex-1 rounded-t-sm transition-all duration-500"
+                  :class="category.trend >= 0 ? 'bg-green-500/50' : 'bg-red-500/50'" :style="{ height: `${bar}%` }">
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
@@ -100,8 +152,21 @@
               class="px-3 py-1 rounded-lg bg-gray-700 text-xs text-gray-300 hover:bg-gray-600 transition">1W</button>
           </div>
         </div>
-        <div class="h-64 w-full">
+        <div class="h-64 w-full relative">
           <Line v-if="chartData.datasets.length > 0" :data="chartData" :options="chartOptions" />
+
+          <!-- Chart Loading State -->
+          <div v-else-if="wastesStore.loading" class="absolute inset-0 flex items-center justify-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="flex gap-1 h-12 items-end">
+                <div class="w-2 bg-green-500/50 animate-[bounce_1s_infinite] h-4"></div>
+                <div class="w-2 bg-blue-500/50 animate-[bounce_1.2s_infinite] h-8"></div>
+                <div class="w-2 bg-purple-500/50 animate-[bounce_0.8s_infinite] h-6"></div>
+              </div>
+              <span class="text-gray-500 text-sm animate-pulse">Rendering Analytics...</span>
+            </div>
+          </div>
+
           <div v-else class="flex items-center justify-center h-full text-gray-500">
             Initializing Real-time Data...
           </div>
