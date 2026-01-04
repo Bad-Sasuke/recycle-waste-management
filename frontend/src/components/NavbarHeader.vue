@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser, IconMapPin, IconMapPinShare, IconUsers, IconLeaf, IconShirt } from '@tabler/icons-vue'
+import { IconUserCircle, IconBell, IconMenu, IconTrash, IconBellOff, IconBuildingStore, IconHome, IconBuildingWarehouse, IconSettings, IconLogout, IconUser, IconMapPin, IconMapPinShare, IconUsers, IconLeaf, IconShirt, IconChartLine } from '@tabler/icons-vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { ref, onBeforeMount, onMounted, watch, computed } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
@@ -92,6 +92,20 @@ const handleLogout = () => {
               :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
               <IconBuildingWarehouse stroke="1.5" size="20" />
               {{ $t('Navbar.menu.marketplace') }}
+            </a>
+          </li>
+          <li class="mr-2">
+            <RouterLink v-if="usersStore.isLogin" to="/live-market"
+              class="flex items-center gap-2 text-base font-medium transition-colors"
+              :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
+              <IconChartLine stroke="1.5" size="20" />
+              Live Market
+            </RouterLink>
+            <a v-else @click="handleLogin"
+              class="flex items-center gap-2 text-base font-medium transition-colors cursor-pointer"
+              :class="isHomePage ? 'text-slate-300 hover:text-primary' : 'hover:text-green-800'">
+              <IconChartLine stroke="1.5" size="20" />
+              Live Market
             </a>
           </li>
           <li class="mr-2" v-if="usersStore.user?.role !== 'moderator'">
@@ -250,6 +264,18 @@ const handleLogout = () => {
             class="flex items-center gap-3 text-base font-medium cursor-pointer">
             <IconBuildingWarehouse stroke="1.5" size="20" />
             <span>{{ $t('Navbar.menu.marketplace') }}</span>
+          </a>
+        </li>
+        <li class="py-2">
+          <RouterLink v-if="usersStore.isLogin" to="/live-market" @click="closeDrawer"
+            class="flex items-center gap-3 text-base font-medium">
+            <IconChartLine stroke="1.5" size="20" />
+            <span>Live Market</span>
+          </RouterLink>
+          <a v-else @click="() => { closeDrawer(); handleLogin(); }"
+            class="flex items-center gap-3 text-base font-medium cursor-pointer">
+            <IconChartLine stroke="1.5" size="20" />
+            <span>Live Market</span>
           </a>
         </li>
         <li class="py-2" v-if="usersStore.user?.role !== 'moderator'">

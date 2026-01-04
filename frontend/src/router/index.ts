@@ -26,6 +26,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/live-market',
+      name: 'live-market',
+      component: () => import('../views/LiveMarketView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/auth',
       name: 'auth',
       component: () => import('../views/AuthView.vue'),
