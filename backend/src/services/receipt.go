@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"recycle-waste-management-backend/src/domain/entities"
 	"recycle-waste-management-backend/src/repositories"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ type IReceiptService interface {
 	GetReceiptByID(receiptID string) (*ReceiptWithItemsResponse, error)
 	GetReceiptsByShopID(shopID string) ([]entities.ReceiptWithDetails, error)
 	GetUserAnalytics(userID string) (*entities.UserAnalyticsResponse, error)
+	GetMarketPriceHistory(name string, interval string) ([]entities.MarketCandle, error)
 }
 
 type ReceiptWithItemsResponse struct {
@@ -376,4 +378,73 @@ func (s *ReceiptService) GetUserAnalytics(userID string) (*entities.UserAnalytic
 		MonthlyCategoryStats:   monthlyCategoryStats,
 		DailyStats:             dailyStats,
 	}, nil
+}
+
+func (s *ReceiptService) GetMarketPriceHistory(name string, interval string) ([]entities.MarketCandle, error) {
+	items, err := s.ReceiptItemRepo.GetPriceHistoryByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return []entities.MarketCandle{}, nil
+	}
+
+	// Group into buckets
+	var duration time.Duration
+	switch interval {
+	case "1h":
+		duration = time.Hour
+	case "1d":
+		duration = 24 * time.Hour
+	case "15m":
+		duration = 15 * time.Minute
+	default:
+		duration = 24 * time.Hour
+	}
+
+	bucketMap := make(map[int64]*entities.MarketCandle)
+	var keys []int64
+
+	for _, item := range items {
+		bucketTime := item.CreatedAt.Truncate(duration).UnixMilli()
+
+		if candle, exists := bucketMap[bucketTime]; exists {
+			// Update High
+			if item.UnitPrice > candle.OHLC[1] {
+				candle.OHLC[1] = item.UnitPrice
+			}
+			// Update Low
+			if item.UnitPrice < candle.OHLC[2] {
+				candle.OHLC[2] = item.UnitPrice
+			}
+			// Update Close (Last item is close)
+			candle.OHLC[3] = item.UnitPrice
+			// Update Volume
+			candle.Volume += item.Weight
+		} else {
+			// Create new Candle
+			newCandle := &entities.MarketCandle{
+				Time:   bucketTime,
+				OHLC:   []float64{item.UnitPrice, item.UnitPrice, item.UnitPrice, item.UnitPrice},
+				Volume: item.Weight,
+			}
+			bucketMap[bucketTime] = newCandle
+			keys = append(keys, bucketTime)
+		}
+	}
+
+	var result []entities.MarketCandle
+	for _, k := range keys {
+		if c, ok := bucketMap[k]; ok {
+			result = append(result, *c)
+		}
+	}
+
+	// Ensure sorted
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Time < result[j].Time
+	})
+
+	return result, nil
 }

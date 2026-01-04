@@ -182,3 +182,29 @@ func (h *ReceiptGateway) GetUserAnalytics(ctx *fiber.Ctx) error {
 		"data":    analytics,
 	})
 }
+
+func (h *ReceiptGateway) GetMarketPriceHistory(ctx *fiber.Ctx) error {
+	name := ctx.Query("name")
+	interval := ctx.Query("interval", "1d")
+
+	if name == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "name query param is required",
+		})
+	}
+
+	history, err := h.ReceiptService.GetMarketPriceHistory(name, interval)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Failed to get market history",
+			"error":   err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"data":    history,
+	})
+}

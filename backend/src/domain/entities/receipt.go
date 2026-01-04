@@ -27,6 +27,13 @@ type ReceiptItem struct {
 	Price     float64 `json:"price" bson:"price"`           // Total price for this item
 }
 
+// ReceiptItemWithDate used for aggregation matches
+type ReceiptItemWithDate struct {
+	UnitPrice float64   `json:"unit_price" bson:"unit_price"`
+	Weight    float64   `json:"weight" bson:"weight"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+}
+
 type ReceiptWithDetails struct {
 	Receipt
 	CustomerName string `json:"customer_name"`
@@ -50,4 +57,10 @@ type MonthlyCategoryStat struct {
 type DailyStat struct {
 	Date   string  `json:"date"`
 	Weight float64 `json:"weight"`
+}
+
+type MarketCandle struct {
+	Time   int64     `json:"x"`
+	OHLC   []float64 `json:"y"`
+	Volume float64   `json:"volume,omitempty"`
 }

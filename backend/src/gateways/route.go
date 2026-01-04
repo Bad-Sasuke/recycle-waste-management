@@ -113,6 +113,7 @@ func RouteReceipt(receiptGateway *ReceiptGateway, app *fiber.App) {
 	api := app.Group("/api/receipts")
 
 	// Public routes
+	api.Get("/market/history", receiptGateway.GetMarketPriceHistory)
 	api.Get("/shop/:shop_id", receiptGateway.GetReceiptsByShopID)
 	api.Get("/:receipt_id", receiptGateway.GetReceiptByID)
 
