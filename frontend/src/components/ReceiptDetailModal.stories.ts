@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref, onMounted } from 'vue'
 import ReceiptDetailModal from './ReceiptDetailModal.vue'
-import type { ReceiptDetailData } from './ReceiptDetailModal.vue'
+import type { ReceiptDetailData } from './ReceiptDetailModal.types'
 
 const meta = {
   title: 'Components/ReceiptDetailModal',

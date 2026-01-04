@@ -1,33 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import type { ReceiptDetailData, ReceiptDetailProps } from './ReceiptDetailModal.types'
 
-export interface ReceiptDetailData {
-    receipt: {
-        id: string
-        created_at: string
-        payment_method: string
-        total_amount: number
-        vat_rate: number
-        vat: number
-        net_total: number
-    }
-    items: Array<{
-        id: string
-        name: string
-        category: string
-        weight: number
-        unit_price: number
-        price: number
-    }>
-    shop: {
-        name: string
-    }
-}
-
-export interface ReceiptDetailProps {
-    isLoading?: boolean
-    receiptData?: ReceiptDetailData | null
-}
+export type { ReceiptDetailData, ReceiptDetailProps }
 
 const _props = withDefaults(defineProps<ReceiptDetailProps>(), {
     isLoading: false,
@@ -170,21 +145,21 @@ defineExpose({
                         <span class="text-gray-600">ยอดรวม</span>
                         <span class="font-semibold text-lg">{{
                             formatCurrency(receiptData.receipt?.total_amount || 0)
-                            }}</span>
+                        }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-600">VAT ({{ ((receiptData.receipt?.vat_rate || 0) * 100).toFixed(0)
-                            }}%)</span>
+                        }}%)</span>
                         <span class="font-semibold text-lg">{{
                             formatCurrency(receiptData.receipt?.vat || 0)
-                            }}</span>
+                        }}</span>
                     </div>
                     <div class="divider my-2"></div>
                     <div class="flex justify-between items-center">
                         <span class="text-xl font-bold">ยอดสุทธิ</span>
                         <span class="text-2xl font-bold text-green-600">{{
                             formatCurrency(receiptData.receipt?.net_total || 0)
-                            }}</span>
+                        }}</span>
                     </div>
                 </div>
             </div>
