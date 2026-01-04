@@ -166,7 +166,8 @@
         <div class="bg-[#1e222d] border border-gray-800 rounded-lg p-6">
           <h3 class="text-lg font-bold text-white mb-4">Sector Performance Heatmap</h3>
           <div class="h-80 w-full">
-            <VueApexCharts type="treemap" height="100%" :options="treemapOptions" :series="treemapSeries" />
+            <VueApexCharts :type="'treemap' as any" height="100%" :options="treemapOptions" :series="treemapSeries" />
+
           </div>
         </div>
 
@@ -263,7 +264,6 @@ const candleSeries = computed(() => [{
   data: candleData.value
 }])
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const candleOptions = {
   chart: {
     type: 'candlestick' as const,
@@ -312,7 +312,6 @@ const volumeSeries = computed(() => [{
   data: volumeDataState.value
 }])
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const volumeOptions = {
   chart: {
     type: 'bar' as const,
@@ -358,7 +357,6 @@ const treemapSeries = [
   }
 ]
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const treemapOptions = {
   legend: { show: false },
   chart: {
@@ -389,7 +387,6 @@ const heatmapSeries = computed(() => {
   }))
 })
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const heatmapOptions = {
   chart: {
     type: 'heatmap' as const,
